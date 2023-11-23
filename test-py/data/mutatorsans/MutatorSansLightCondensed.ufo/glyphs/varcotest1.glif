@@ -57,7 +57,7 @@
             <key>scaleY</key>
             <real>0.5</real>
             <key>skewX</key>
-            <integer>-20</integer>
+            <integer>20</integer>
             <key>skewY</key>
             <integer>0</integer>
             <key>tCenterX</key>
@@ -103,6 +103,16 @@
           </dict>
         </dict>
       </array>
+      <key>xyz.fontra.layer-names</key>
+      <dict>
+        <key>MutatorSansBoldCondensed/foreground</key>
+        <string>weight=850</string>
+      </dict>
+      <key>xyz.fontra.source-names</key>
+      <dict>
+        <key>BoldCondensed</key>
+        <string>weight=850</string>
+      </dict>
     </dict>
   </lib>
 </glyph>

@@ -1,9 +1,24 @@
 {
 "name": "D",
+"axes": [
+{
+"name": "Lift",
+"minValue": 0,
+"defaultValue": 0,
+"maxValue": 100
+}
+],
 "sources": [
 {
 "name": "<default>",
 "layerName": "<default>"
+},
+{
+"name": "Lift=100",
+"layerName": "Lift=100",
+"location": {
+"Lift": 100
+}
 },
 {
 "name": "weight=400,width=150",
@@ -60,6 +75,36 @@
 {
 "x": 200,
 "y": 0
+}
+],
+"isClosed": true
+}
+]
+},
+"xAdvance": 500
+}
+},
+"Lift=100": {
+"glyph": {
+"path": {
+"contours": [
+{
+"points": [
+{
+"x": 0,
+"y": 200
+},
+{
+"x": 200,
+"y": 700
+},
+{
+"x": 300,
+"y": 700
+},
+{
+"x": 100,
+"y": 200
 }
 ],
 "isClosed": true

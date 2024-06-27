@@ -109,8 +109,8 @@
 ]
 },
 "xAdvance": 750,
-"yAdvance": 1000,
-"verticalOrigin": 880
+"yAdvance": 950,
+"verticalOrigin": 850
 }
 },
 "MutatorSansBoldWide/foreground": {
@@ -183,8 +183,8 @@
 ]
 },
 "xAdvance": 1360,
-"yAdvance": 1000,
-"verticalOrigin": 880
+"yAdvance": 950,
+"verticalOrigin": 850
 }
 },
 "MutatorSansLightCondensed/foreground": {
@@ -257,8 +257,8 @@
 ]
 },
 "xAdvance": 460,
-"yAdvance": 1000,
-"verticalOrigin": 880
+"yAdvance": 950,
+"verticalOrigin": 850
 }
 },
 "MutatorSansLightWide/foreground": {
@@ -331,8 +331,8 @@
 ]
 },
 "xAdvance": 1140,
-"yAdvance": 1000,
-"verticalOrigin": 880
+"yAdvance": 950,
+"verticalOrigin": 850
 }
 }
 }

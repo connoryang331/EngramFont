@@ -849,7 +849,7 @@ async def test_putSources_delete_revive(writableTestFont):
 
 
 async def test_putSources_variable_glyph_bug(writableTestFont):
-    # https://github.com/googlefonts/fontra/issues/2040
+    # https://github.com/fontra/fontra/issues/2040
     fontSources = await writableTestFont.getSources()
     await writableTestFont.putSources(fontSources)
 
@@ -1069,7 +1069,7 @@ async def test_changeUnitsPerEmCheckFontInfo(writableTestFont):
 
 
 async def test_putUnitsPerEmMissing(tmpdir, writableTestFont):
-    # https://github.com/googlefonts/fontra/issues/2196
+    # https://github.com/fontra/fontra/issues/2196
 
     await writableTestFont.putUnitsPerEm(2000)
     await writableTestFont.putFeatures(OpenTypeFeatures(text=""))
@@ -1159,7 +1159,7 @@ async def test_kerning_read_write(writableTestFont):
     ]
 
     # verify we wrote the correct prefixes
-    # https://github.com/googlefonts/fontra/issues/2238
+    # https://github.com/fontra/fontra/issues/2238
     someKerningPath = pathlib.Path(reopenedFont.dsDoc.sources[0].path) / "kerning.plist"
     someKerningData = someKerningPath.read_text()
     assert "<key>public.kern2.A</key>" in someKerningData

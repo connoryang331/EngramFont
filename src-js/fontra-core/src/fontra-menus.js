@@ -90,7 +90,7 @@ function getHelpMenu() {
           title: "GitHub",
           enabled: () => true,
           callback: () => {
-            window.open("https://github.com/googlefonts/fontra");
+            window.open("https://github.com/fontra/fontra");
           },
         },
       ];

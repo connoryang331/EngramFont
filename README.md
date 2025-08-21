@@ -1,6 +1,6 @@
 # Fontra
 
-![Fontra Icon](https://github.com/googlefonts/fontra/blob/main/fontra-icon.svg?raw=true)
+![Fontra Icon](https://github.com/fontra/fontra/blob/main/fontra-icon.svg?raw=true)
 
 Fontra is an in-development browser-based font editor. It consists of two main parts:
 
@@ -11,7 +11,7 @@ Fontra is an in-development browser-based font editor. It consists of two main p
 
 ### Download and install _Fontra Pak_
 
-[Fontra Pak](https://github.com/googlefonts/fontra-pak) is a Fontra distribution for macOS and Windows. It is a self-contained Fontra server application, which allows you to view and edit fonts in the default browser. We don't have releases for it yet, but you can grab the latest nightly build from the topmost [“Build Application”](https://github.com/googlefonts/fontra-pak/actions) workflow, or, more conveniently, directly from [fontra.xyz](https://fontra.xyz).
+[Fontra Pak](https://github.com/fontra/fontra-pak) is a Fontra distribution for macOS and Windows. It is a self-contained Fontra server application, which allows you to view and edit fonts in the default browser. We don't have releases for it yet, but you can grab the latest nightly build from the topmost [“Build Application”](https://github.com/fontra/fontra-pak/actions) workflow, or, more conveniently, directly from [fontra.xyz](https://fontra.xyz).
 
 Fontra Pak also works on Linux and other platforms, but we do not provide binaries. For Linux, there are community-supported options.
 
@@ -73,7 +73,7 @@ The following steps are needed if you want to run the automated tests and if you
 
   `http://localhost:8000/`
 
-- To use Fontra with .rcjk data on disk, or to connect to a remote rcjk server, install the [`fontra-rcjk`](https://github.com/googlefonts/fontra-rcjk) plugin package. Then you can start it with a robocjk server hostname, using the `rcjk` subcommand provided by the `fontra-rcjk` plugin:
+- To use Fontra with .rcjk data on disk, or to connect to a remote rcjk server, install the [`fontra-rcjk`](https://github.com/fontra/fontra-rcjk) plugin package. Then you can start it with a robocjk server hostname, using the `rcjk` subcommand provided by the `fontra-rcjk` plugin:
 
   `fontra --launch rcjk some-robocjk-server.some-domain.com`
 
@@ -101,8 +101,8 @@ The following list of features is not complete, but gives you a rough idea of wh
 - Write .otf + variable .otf ✅ (Via “export as” in Fontra Pak)
 - Respond to external .ttf and .otf changes (automatic reload)
 - Respond to external .fontra, .glyphs and .glyphspackage changes (automatic reload)
-- Read .glyphs and .glyphspackage ✅ (Via [fontra-glyphs](https://github.com/googlefonts/fontra-glyphs))
-- Write .glyphs and .glyphspackage ✅ (partial, via [fontra-glyphs](https://github.com/googlefonts/fontra-glyphs))
+- Read .glyphs and .glyphspackage ✅ (Via [fontra-glyphs](https://github.com/fontra/fontra-glyphs))
+- Write .glyphs and .glyphspackage ✅ (partial, via [fontra-glyphs](https://github.com/fontra/fontra-glyphs))
 
 ### Text viewing / editing
 
@@ -178,8 +178,8 @@ The following list of features is not complete, but gives you a rough idea of wh
 
 ### Deployment
 
-- Basic standalone desktop application for macOS, Windows and Linux ✅ (Via [Fontra Pak](https://github.com/googlefonts/fontra-pak))
-- Basic multi-user server deployment with database storage ✅ (Via [fontra-rcjk](https://github.com/googlefonts/fontra-rcjk), [django-robo-cjk](https://github.com/googlefonts/django-robo-cjk), behind [NGINX](https://www.nginx.com/))
+- Basic standalone desktop application for macOS, Windows and Linux ✅ (Via [Fontra Pak](https://github.com/fontra/fontra-pak))
+- Basic multi-user server deployment with database storage ✅ (Via [fontra-rcjk](https://github.com/fontra/fontra-rcjk), [django-robo-cjk](https://github.com/fontra/django-robo-cjk), behind [NGINX](https://www.nginx.com/))
 - Research GitHub REST API: can Fontra be a GitHub gateway in a practical way?
 - Research database solutions for server-based font storage
 - Desktop app with integrated browser and auto-update feature (made with Electron or similar)
@@ -198,7 +198,7 @@ The following list of features is not complete, but gives you a rough idea of wh
 - FontMake integration (in Fontra Pak) ✅
 - `fontc` integration
 - Incremental compilation using `fontc`
-- Experimental [`glyf1`](https://github.com/harfbuzz/boring-expansion-spec/blob/main/glyf1-varComposites.md) export ✅ (Via [fontra-compile](https://github.com/googlefonts/fontra-compile))
+- Experimental [`glyf1`](https://github.com/harfbuzz/boring-expansion-spec/blob/main/glyf1-varComposites.md) export ✅ (Via [fontra-compile](https://github.com/fontra/fontra-compile))
 
 ### Collaborative features
 

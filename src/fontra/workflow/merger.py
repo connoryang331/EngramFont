@@ -99,8 +99,16 @@ class FontBackendMerger:
             )
 
         mergedMappings = axesB.mappings or axesA.mappings
+        mergedElidedFallBackname = axesB.elidedFallBackname or axesA.elidedFallBackname
+        mergedCustomData = axesA.customData | axesB.customData
 
-        return replace(axesA, axes=mergedAxes, mappings=mergedMappings)
+        return replace(
+            axesB,
+            axes=mergedAxes,
+            mappings=mergedMappings,
+            elidedFallBackname=mergedElidedFallBackname,
+            customData=mergedCustomData,
+        )
 
     async def getAxes(self) -> Axes:
         return await self.mergedAxes

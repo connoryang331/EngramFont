@@ -93,7 +93,14 @@ class FontBackendMerger:
             if axis.name not in axisNamesB:
                 mergedAxes.append(axis)
 
-        return replace(axesA, axes=mergedAxes)
+        if axesB.mappings and axesA.mappings:
+            logger.warning(
+                "Merger: Both fonts use cross-axis mappings, taking the ones from B"
+            )
+
+        mergedMappings = axesB.mappings or axesA.mappings
+
+        return replace(axesA, axes=mergedAxes, mappings=mergedMappings)
 
     async def getAxes(self) -> Axes:
         return await self.mergedAxes

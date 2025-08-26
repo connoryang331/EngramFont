@@ -471,7 +471,7 @@ function normalizeChange(change) {
 export function collectChangePaths(change, depth) {
   //
   // Return a list of unique paths of the specified `depth` that the `change`
-  // includes. The order of the list is determined by the path occurances
+  // includes. The order of the list is determined by the path occurrences
   // in the change.
   //
   const pathsSet = new Set();

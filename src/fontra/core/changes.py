@@ -331,9 +331,11 @@ def patternIntersect(
 
 
 def collectChangePaths(change: dict[str, Any], depth: int) -> list[tuple]:
-    """Return a sorted list of paths of the specified `depth` that the `change`
-    includes."""
-    return sorted(set(_iterateChangePaths(change, depth)))
+    """Return a list of unique paths of the specified `depth` that the `change`
+    includes. The order of the list is determined by the path occurrences
+    in the change."""
+    # Remove duplicates, but maintain order
+    return list(dict.fromkeys(_iterateChangePaths(change, depth)))
 
 
 def _iterateChangePaths(

@@ -2,6 +2,7 @@
 
 ## 2025-08-26
 
+- [designspace] Fixed a bug where adding a font source caused an error when writing kerning. [Issue 2263](https://github.com/fontra/fontra/issues/2263), [PR 2264](https://github.com/fontra/fontra/pull/2264)
 - Fixed a bug where the glyph cells in the font overview would not respond to changes made in the editor. [Issue 2253](https://github.com/fontra/fontra/issues/2253), [PR 2262](https://github.com/fontra/fontra/pull/2262)
 
 ## 2025-08-19

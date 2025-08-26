@@ -1,5 +1,9 @@
 # Changelog for Fontra
 
+## 2025-08-26
+
+- Fixed a bug where the glyph cells in the font overview would not respond to changes made in the editor. [Issue 2253](https://github.com/fontra/fontra/issues/2253), [PR 2262](https://github.com/fontra/fontra/pull/2262)
+
 ## 2025-08-19
 
 - When adding a new font source, instantiate the kerning for the new location. [Issue 2252](https://github.com/fontra/fontra/issues/2252), [PR 2254](https://github.com/fontra/fontra/pull/2254)

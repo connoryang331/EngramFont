@@ -105,6 +105,14 @@ export default class TransformationPanel extends Panel {
       customDistributionSpacing: null,
     };
     this.registerActions();
+
+    this.sceneController.sceneSettingsController.addKeyListener(
+      ["selectedGlyph", "selectedGlyphName", "selection"],
+      (event) => this.updateDimensions()
+    );
+    this.sceneController.addCurrentGlyphChangeListener((event) => {
+      this.updateDimensions();
+    });
   }
 
   registerActions() {
@@ -607,6 +615,32 @@ export default class TransformationPanel extends Panel {
         });
       }
     };
+  }
+
+  async updateDimensions() {
+    const glyph =
+      await this.sceneController.sceneModel.getSelectedStaticGlyphController();
+
+    const settings = this.sceneController.sceneSettings;
+    const bounds =
+      glyph &&
+      settings.selectedGlyph?.isEditing &&
+      settings.selectedGlyphName &&
+      settings.selection?.size
+        ? glyph.getSelectionBounds(
+            this.sceneController.selection,
+            this.fontController.getBackgroundImageBoundsFunc
+          )
+        : null;
+
+    if (!bounds) {
+      this.infoForm.setValue("dimensionWidth", null);
+      this.infoForm.setValue("dimensionHeight", null);
+    } else {
+      const { width, height } = rectSize(bounds);
+      this.infoForm.setValue("dimensionWidth", width);
+      this.infoForm.setValue("dimensionHeight", height);
+    }
   }
 
   async doPathOperations(pathOperationFunc, key) {

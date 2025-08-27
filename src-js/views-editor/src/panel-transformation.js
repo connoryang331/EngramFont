@@ -342,12 +342,24 @@ export default class TransformationPanel extends Panel {
 
     const buttonDimensions = html.createDomElement("icon-button", {
       "src": "/tabler-icons/dimensions.svg",
-      "onclick": (event) => {
-        console.log("set dimensions");
-        // this.transformSelection(
-        //   new Transform().scale(x, y),
-        //   "skew"
-        // );
+      "onclick": async (event) => {
+        const glyph =
+          await this.sceneController.sceneModel.getSelectedStaticGlyphController();
+        const bounds = glyph?.getSelectionBounds(
+          this.sceneController.selection,
+          this.fontController.getBackgroundImageBoundsFunc
+        );
+        if (!bounds) {
+          return;
+        }
+        const { width, height } = rectSize(bounds);
+        const newWidth = this.infoForm.getValue("dimensionWidth") || width;
+        const newHeight = this.infoForm.getValue("dimensionHeight") || height;
+        const scaleX = newWidth / width;
+        const scaleY = newHeight / height;
+        if (scaleX !== 1 || scaleY !== 1) {
+          this.transformSelection(new Transform().scale(scaleX, scaleY), "scale");
+        }
       },
       "class": "ui-form-icon ui-form-icon-button",
       "data-tooltip": translate("sidebar.selection-transformation.dimensions"),

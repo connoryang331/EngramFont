@@ -635,14 +635,9 @@ export default class TransformationPanel extends Panel {
           )
         : null;
 
-    if (!bounds) {
-      this.infoForm.setValue("dimensionWidth", null);
-      this.infoForm.setValue("dimensionHeight", null);
-    } else {
-      const { width, height } = rectSize(bounds);
-      this.infoForm.setValue("dimensionWidth", width);
-      this.infoForm.setValue("dimensionHeight", height);
-    }
+    const { width, height } = bounds ? rectSize(bounds) : { width: null, height: null };
+    this.infoForm.setValue("dimensionWidth", width);
+    this.infoForm.setValue("dimensionHeight", height);
   }
 
   async doPathOperations(pathOperationFunc, key) {

@@ -107,7 +107,13 @@ export default class TransformationPanel extends Panel {
     this.registerActions();
 
     this.sceneController.sceneSettingsController.addKeyListener(
-      ["selectedGlyph", "selectedGlyphName", "selection"],
+      [
+        "selectedGlyph",
+        "selectedGlyphName",
+        "selection",
+        "fontLocationSourceMapped",
+        "glyphLocation",
+      ],
       (event) => this.updateDimensions()
     );
     this.sceneController.addCurrentGlyphChangeListener((event) => {

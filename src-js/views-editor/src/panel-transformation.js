@@ -358,7 +358,10 @@ export default class TransformationPanel extends Panel {
         const scaleX = newWidth / width;
         const scaleY = newHeight / height;
         if (scaleX !== 1 || scaleY !== 1) {
-          this.transformSelection(new Transform().scale(scaleX, scaleY), "scale");
+          this.transformSelection(
+            new Transform().scale(scaleX, scaleY),
+            "set dimensions"
+          );
         }
       },
       "class": "ui-form-icon ui-form-icon-button",

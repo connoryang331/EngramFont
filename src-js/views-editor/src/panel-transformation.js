@@ -332,6 +332,38 @@ export default class TransformationPanel extends Panel {
 
     formContents.push({ type: "divider" });
 
+    const buttonDimensions = html.createDomElement("icon-button", {
+      "src": "/tabler-icons/dimensions.svg",
+      "onclick": (event) => {
+        console.log("set dimensions");
+        // this.transformSelection(
+        //   new Transform().scale(x, y),
+        //   "skew"
+        // );
+      },
+      "class": "ui-form-icon ui-form-icon-button",
+      "data-tooltip": translate("sidebar.selection-transformation.dimensions"),
+      "data-tooltipposition": "top",
+    });
+
+    formContents.push({
+      type: "edit-number-x-y",
+      key: '["selectionTransformationDimensions"]',
+      label: buttonDimensions,
+      fieldX: {
+        key: "dimensionWidth",
+        id: "selection-transformation-dimension-width",
+        value: null,
+      },
+      fieldY: {
+        key: "dimensionHeight",
+        id: "selection-transformation-dimension-height",
+        value: null,
+      },
+    });
+
+    formContents.push({ type: "divider" });
+
     formContents.push({
       type: "universal-row",
       field1: {

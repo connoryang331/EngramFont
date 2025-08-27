@@ -830,7 +830,8 @@ export default class TransformationPanel extends Panel {
     this.transformParameters.originY = keyY;
     this.transformParameters.originXButton = undefined;
     this.transformParameters.originYButton = undefined;
-    this.update();
+    this.infoForm.setValue("originXButton", null);
+    this.infoForm.setValue("originYButton", null);
   }
 
   _splitSelection(layerGlyphController, selection) {

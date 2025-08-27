@@ -615,6 +615,8 @@ export default class TransformationPanel extends Panel {
         });
       }
     };
+
+    this.updateDimensions();
   }
 
   async updateDimensions() {

@@ -1,5 +1,10 @@
 # Changelog for Fontra
 
+## 2025-08-28
+
+- Add editable "Dimensions" fields to the Transformation panel. These show the width and height of the selection, and allow the selection to be scaled to the entered dimensions. [Issue 2265](https://github.com/fontra/fontra/issues/2265), [PR 2266](https://github.com/fontra/fontra/pull/2266)
+- Add "hit Enter to apply transformation" behavior to all numeric transformation fields. [PR 2266](https://github.com/fontra/fontra/pull/2266)
+
 ## 2025-08-26
 
 - [designspace] Fixed a bug where adding a font source caused an error when writing kerning. [Issue 2263](https://github.com/fontra/fontra/issues/2263), [PR 2264](https://github.com/fontra/fontra/pull/2264)

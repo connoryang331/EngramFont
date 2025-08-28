@@ -2,6 +2,9 @@
 
 ## 2025-08-28
 
+- [Selecte next/previous source] Fix bad behavior when doing "select next source" or "select previous source" when no glyph is selected and there are no font sources. [PR 2269](https://github.com/fontra/fontra/pull/2269)
+- [Clean view] Fix edge case where Fontra wouldn't exit "clean mode", despite the space key being released. [PR 2270](https://github.com/fontra/fontra/pull/2270)
+- [Transformations panel] Fixed Flip buttons (regression) [PR 2267](https://github.com/fontra/fontra/pull/2267)
 - [Transformations panel] Add editable "Dimensions" fields to the Transformation panel. These show the width and height of the selection, and allow the selection to be scaled to the entered dimensions. [Issue 2265](https://github.com/fontra/fontra/issues/2265), [PR 2266](https://github.com/fontra/fontra/pull/2266)
 - [Transformations panel] Add "Type Enter to apply transformation" behavior to all numeric transformation fields. Typing Enter is often much more convenient than clicking the icon button. [PR 2266](https://github.com/fontra/fontra/pull/2266)
 

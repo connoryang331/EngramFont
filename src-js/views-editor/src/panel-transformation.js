@@ -365,16 +365,19 @@ export default class TransformationPanel extends Panel {
           return;
         }
         const { width, height } = rectSize(bounds);
-        const newWidth = this.transformParameters.dimensionWidth || width;
-        const newHeight = this.transformParameters.dimensionHeight || height;
-        const scaleX = newWidth / width;
-        const scaleY = newHeight / height;
-        if (scaleX !== 1 || scaleY !== 1) {
-          this.transformSelection(
-            (layerGlyphController, selectionBounds) =>
-              new Transform().scale(scaleX, scaleY),
-            "set dimensions"
-          );
+        const doScaleX = this.transformParameters.dimensionWidth != width;
+        const doScaleY = this.transformParameters.dimensionHeight != height;
+
+        if (doScaleX || doScaleY) {
+          this.transformSelection((layerGlyphController, selectionBounds) => {
+            const { width, height } = rectSize(selectionBounds);
+            const newWidth = this.transformParameters.dimensionWidth || width;
+            const newHeight = this.transformParameters.dimensionHeight || height;
+            const scaleX = doScaleX ? newWidth / width : 1;
+            const scaleY = doScaleY ? newHeight / height : 1;
+
+            return new Transform().scale(scaleX, scaleY);
+          }, "set dimensions");
         }
       },
       "class": "ui-form-icon ui-form-icon-button",

@@ -201,6 +201,15 @@ export class Form extends SimpleElement {
         throw new Error(`Unknown field type: ${fieldItem.type}`);
       }
       this[methodName](valueElement, fieldItem, labelElement);
+
+      if (fieldItem.onEnterKey) {
+        valueElement.addEventListener("keyup", (event) => {
+          if (event.key != "Enter") {
+            return;
+          }
+          fieldItem.onEnterKey(event);
+        });
+      }
     }
   }
 

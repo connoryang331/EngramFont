@@ -103,6 +103,8 @@ export default class TransformationPanel extends Panel {
       skewX: 0,
       skewY: 0,
       customDistributionSpacing: null,
+      dimensionWidth: null,
+      dimensionHeight: null,
     };
     this.registerActions();
 
@@ -359,8 +361,8 @@ export default class TransformationPanel extends Panel {
           return;
         }
         const { width, height } = rectSize(bounds);
-        const newWidth = this.infoForm.getValue("dimensionWidth") || width;
-        const newHeight = this.infoForm.getValue("dimensionHeight") || height;
+        const newWidth = this.transformParameters.dimensionWidth || width;
+        const newHeight = this.transformParameters.dimensionHeight || height;
         const scaleX = newWidth / width;
         const scaleY = newHeight / height;
         if (scaleX !== 1 || scaleY !== 1) {
@@ -382,11 +384,13 @@ export default class TransformationPanel extends Panel {
       fieldX: {
         key: "dimensionWidth",
         id: "selection-transformation-dimension-width",
+        numDigits: 1,
         value: null,
       },
       fieldY: {
         key: "dimensionHeight",
         id: "selection-transformation-dimension-height",
+        numDigits: 1,
         value: null,
       },
     });
@@ -659,6 +663,8 @@ export default class TransformationPanel extends Panel {
     const { width, height } = bounds ? rectSize(bounds) : { width: null, height: null };
     this.infoForm.setValue("dimensionWidth", width);
     this.infoForm.setValue("dimensionHeight", height);
+    this.transformParameters.dimensionWidth = width;
+    this.transformParameters.dimensionHeight = height;
   }
 
   async doPathOperations(pathOperationFunc, key) {

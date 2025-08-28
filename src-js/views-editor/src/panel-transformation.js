@@ -263,6 +263,9 @@ export default class TransformationPanel extends Panel {
         key: "moveY",
         value: this.transformParameters.moveY,
       },
+      onEnterKey: (event) => {
+        buttonMove.click();
+      },
     });
 
     const buttonScale = html.createDomElement("icon-button", {
@@ -296,6 +299,9 @@ export default class TransformationPanel extends Panel {
         id: "selection-transformation-scaleY",
         value: this.transformParameters.scaleY,
       },
+      onEnterKey: (event) => {
+        buttonScale.click();
+      },
     });
 
     const buttonRotate = html.createDomElement("icon-button", {
@@ -316,6 +322,9 @@ export default class TransformationPanel extends Panel {
       key: "rotation",
       label: buttonRotate,
       value: this.transformParameters.rotation,
+      onEnterKey: (event) => {
+        buttonRotate.click();
+      },
     });
 
     const buttonSkew = html.createDomElement("icon-button", {
@@ -347,6 +356,9 @@ export default class TransformationPanel extends Panel {
         key: "skewY",
         id: "selection-transformation-skewY",
         value: this.transformParameters.skewY,
+      },
+      onEnterKey: (event) => {
+        buttonSkew.click();
       },
     });
 
@@ -400,6 +412,9 @@ export default class TransformationPanel extends Panel {
         id: "selection-transformation-dimension-height",
         numDigits: 1,
         value: null,
+      },
+      onEnterKey: (event) => {
+        buttonDimensions.click();
       },
     });
 

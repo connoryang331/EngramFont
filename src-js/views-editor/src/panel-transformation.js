@@ -437,8 +437,7 @@ export default class TransformationPanel extends Panel {
           "data-tooltipposition": "top",
           "onclick": (event) =>
             this.transformSelection(
-              () =>
-                new Transform().scale(-1, 1),
+              () => new Transform().scale(-1, 1),
               "flip vertically"
             ),
         }),
@@ -455,8 +454,7 @@ export default class TransformationPanel extends Panel {
           "data-tooltipposition": "top-right",
           "onclick": (event) =>
             this.transformSelection(
-              () =>
-                new Transform().scale(1, -1),
+              () => new Transform().scale(1, -1),
               "flip horizontally"
             ),
         }),

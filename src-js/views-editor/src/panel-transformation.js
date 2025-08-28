@@ -373,7 +373,7 @@ export default class TransformationPanel extends Panel {
         }
       },
       "class": "ui-form-icon ui-form-icon-button",
-      "data-tooltip": translate("sidebar.selection-transformation.dimensions"),
+      "data-tooltip": translate("sidebar.selection-info.dimensions"),
       "data-tooltipposition": "top",
     });
 

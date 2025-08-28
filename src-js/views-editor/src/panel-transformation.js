@@ -236,7 +236,7 @@ export default class TransformationPanel extends Panel {
 
     formContents.push({ type: "divider" });
 
-    let buttonMove = html.createDomElement("icon-button", {
+    const buttonMove = html.createDomElement("icon-button", {
       "src": "/tabler-icons/arrow-move-right.svg",
       "onclick": (event) =>
         this.transformSelection(
@@ -264,7 +264,7 @@ export default class TransformationPanel extends Panel {
       },
     });
 
-    let buttonScale = html.createDomElement("icon-button", {
+    const buttonScale = html.createDomElement("icon-button", {
       "src": "/tabler-icons/resize.svg",
       "onclick": (event) =>
         this.transformSelection(
@@ -296,7 +296,7 @@ export default class TransformationPanel extends Panel {
       },
     });
 
-    let buttonRotate = html.createDomElement("icon-button", {
+    const buttonRotate = html.createDomElement("icon-button", {
       "src": "/tabler-icons/rotate.svg",
       "onclick": (event) =>
         this.transformSelection(
@@ -315,7 +315,7 @@ export default class TransformationPanel extends Panel {
       value: this.transformParameters.rotation,
     });
 
-    let buttonSkew = html.createDomElement("icon-button", {
+    const buttonSkew = html.createDomElement("icon-button", {
       "src": "/images/skew.svg",
       "onclick": (event) =>
         this.transformSelection(

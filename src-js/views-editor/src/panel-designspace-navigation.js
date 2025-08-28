@@ -1151,8 +1151,6 @@ export default class DesignspaceNavigationPanel extends Panel {
         }));
         const index = findNearestLocationIndex(targetLocation, locations);
         this.sceneSettings.fontLocationSourceMapped = locations[index];
-      } else {
-        this.sceneSettings.fontLocationSourceMapped = targetLocation;
       }
       return;
     }

@@ -636,11 +636,11 @@ export class Form extends SimpleElement {
 }
 
 function maybeRound(value, digits) {
-  return digits === undefined ? value : round(value, digits);
+  return digits == undefined || value == undefined ? value : round(value, digits);
 }
 
 function maybeRoundToString(value, digits) {
-  return value === undefined ? "" : digits === undefined ? value : round(value, digits);
+  return value == undefined ? "" : digits == undefined ? value : round(value, digits);
 }
 
 customElements.define("ui-form", Form);

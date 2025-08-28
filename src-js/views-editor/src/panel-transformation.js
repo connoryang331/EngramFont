@@ -436,7 +436,11 @@ export default class TransformationPanel extends Panel {
           "data-tooltip": translate("sidebar.selection-transformation.flip.vertically"),
           "data-tooltipposition": "top",
           "onclick": (event) =>
-            this.transformSelection(() => new Transform().scale(-1, 1), "flip vertically"),
+            this.transformSelection(
+              () =>
+                new Transform().scale(-1, 1),
+              "flip vertically"
+            ),
         }),
       },
       field3: {
@@ -450,7 +454,11 @@ export default class TransformationPanel extends Panel {
           ),
           "data-tooltipposition": "top-right",
           "onclick": (event) =>
-            this.transformSelection(() => new Transform().scale(1, -1), "flip horizontally"),
+            this.transformSelection(
+              () =>
+                new Transform().scale(1, -1),
+              "flip horizontally"
+            ),
         }),
       },
     });

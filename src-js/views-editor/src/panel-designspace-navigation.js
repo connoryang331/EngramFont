@@ -1139,17 +1139,19 @@ export default class DesignspaceNavigationPanel extends Panel {
 
       const defaultLocation =
         this.fontController.fontSourcesInstancer.defaultSourceLocation;
-      const sourceIdentifiers = this.fontController.getSortedSourceIdentifiers();
-      const locations = sourceIdentifiers.map((sourceIdentifier) => ({
-        ...defaultLocation,
-        ...this.fontController.sources[sourceIdentifier].location,
-      }));
       const targetLocation = {
         ...defaultLocation,
         ...this.sceneSettings.fontLocationSourceMapped,
       };
-      const index = findNearestLocationIndex(targetLocation, locations);
-      this.sceneSettings.fontLocationSourceMapped = locations[index];
+      const sourceIdentifiers = this.fontController.getSortedSourceIdentifiers();
+      if (sourceIdentifiers.length) {
+        const locations = sourceIdentifiers.map((sourceIdentifier) => ({
+          ...defaultLocation,
+          ...this.fontController.sources[sourceIdentifier].location,
+        }));
+        const index = findNearestLocationIndex(targetLocation, locations);
+        this.sceneSettings.fontLocationSourceMapped = locations[index];
+      }
       return;
     }
     const targetLocation = {

@@ -240,10 +240,11 @@ export default class TransformationPanel extends Panel {
       "src": "/tabler-icons/arrow-move-right.svg",
       "onclick": (event) =>
         this.transformSelection(
-          new Transform().translate(
-            this.transformParameters.moveX,
-            this.transformParameters.moveY
-          ),
+          () =>
+            new Transform().translate(
+              this.transformParameters.moveX,
+              this.transformParameters.moveY
+            ),
           "move"
         ),
       "class": "ui-form-icon ui-form-icon-button",
@@ -268,12 +269,13 @@ export default class TransformationPanel extends Panel {
       "src": "/tabler-icons/resize.svg",
       "onclick": (event) =>
         this.transformSelection(
-          new Transform().scale(
-            this.transformParameters.scaleX / 100,
-            (this.transformParameters.scaleY
-              ? this.transformParameters.scaleY
-              : this.transformParameters.scaleX) / 100
-          ),
+          () =>
+            new Transform().scale(
+              this.transformParameters.scaleX / 100,
+              (this.transformParameters.scaleY
+                ? this.transformParameters.scaleY
+                : this.transformParameters.scaleX) / 100
+            ),
           "scale"
         ),
       "class": "ui-form-icon ui-form-icon-button",
@@ -300,7 +302,8 @@ export default class TransformationPanel extends Panel {
       "src": "/tabler-icons/rotate.svg",
       "onclick": (event) =>
         this.transformSelection(
-          new Transform().rotate((this.transformParameters.rotation * Math.PI) / 180),
+          () =>
+            new Transform().rotate((this.transformParameters.rotation * Math.PI) / 180),
           "rotate"
         ),
       "class": "ui-form-icon ui-form-icon-button",
@@ -319,10 +322,11 @@ export default class TransformationPanel extends Panel {
       "src": "/images/skew.svg",
       "onclick": (event) =>
         this.transformSelection(
-          new Transform().skew(
-            (this.transformParameters.skewX * Math.PI) / 180,
-            (this.transformParameters.skewY * Math.PI) / 180
-          ),
+          () =>
+            new Transform().skew(
+              (this.transformParameters.skewX * Math.PI) / 180,
+              (this.transformParameters.skewY * Math.PI) / 180
+            ),
           "skew"
         ),
       "class": "ui-form-icon ui-form-icon-button",
@@ -367,7 +371,8 @@ export default class TransformationPanel extends Panel {
         const scaleY = newHeight / height;
         if (scaleX !== 1 || scaleY !== 1) {
           this.transformSelection(
-            new Transform().scale(scaleX, scaleY),
+            (layerGlyphController, selectionBounds) =>
+              new Transform().scale(scaleX, scaleY),
             "set dimensions"
           );
         }
@@ -758,7 +763,7 @@ export default class TransformationPanel extends Panel {
     this.sceneController.selection = new Set(); // Clear selection
   }
 
-  async transformSelection(transformation, undoLabel) {
+  async transformSelection(transformationForLayer, undoLabel) {
     let {
       point: pointIndices,
       component: componentIndices,
@@ -803,18 +808,19 @@ export default class TransformationPanel extends Panel {
       const rollbackChanges = [];
       for (const { changePath, editBehavior, layerGlyphController } of layerInfo) {
         const layerGlyph = layerGlyphController.instance;
+        const selectionBounds = layerGlyphController.getSelectionBounds(
+          this.sceneController.selection,
+          this.fontController.getBackgroundImageBoundsFunc
+        );
         const pinPoint = getPinPoint(
-          layerGlyphController.getSelectionBounds(
-            this.sceneController.selection,
-            this.fontController.getBackgroundImageBoundsFunc
-          ),
+          selectionBounds,
           this.transformParameters.originX,
           this.transformParameters.originY
         );
 
         const pinnedTransformation = new Transform()
           .translate(pinPoint.x, pinPoint.y)
-          .transform(transformation)
+          .transform(transformationForLayer(layerGlyphController, selectionBounds))
           .translate(-pinPoint.x, -pinPoint.y);
 
         const editChange =

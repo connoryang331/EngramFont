@@ -921,7 +921,11 @@ export default class DesignspaceNavigationPanel extends Panel {
       });
       sourceController.addKeyListener("active", async (event) => {
         await this.sceneController.editGlyphAndRecordChanges((glyph) => {
+          this.sceneController.scrollAdjustBehavior =
+            this.getScrollAdjustBehavior("pin-glyph-center");
+
           glyph.sources[index].inactive = !event.newValue;
+
           return translate(
             event.newValue
               ? "sidebar.designspace-navigation.source.activate"

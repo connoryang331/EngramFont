@@ -1,5 +1,9 @@
 # Changelog for Fontra
 
+## 2025-09-11
+
+- Improved behavior of "inactive" glyph sources. [PR 2277](https://github.com/fontra/fontra/pull/2277)
+
 ## 2025-08-28
 
 - [Select next/previous source] Fix bad behavior when doing "select next source" or "select previous source" when no glyph is selected and there are no font sources. [PR 2269](https://github.com/fontra/fontra/pull/2269)

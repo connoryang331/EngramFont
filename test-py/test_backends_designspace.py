@@ -238,7 +238,7 @@ async def test_addLocalAxis(writableTestFont):
     assert asdict(glyph) == asdict(savedGlyph)
 
 
-async def test_addNewGlyph(writableTestFont):
+async def test_addNewGlyph_glyphOrder(writableTestFont):
     glyphName = "testglyph"
     sourceGlyphName = "period"
     glyph = await writableTestFont.getGlyph(sourceGlyphName)

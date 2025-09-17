@@ -1,5 +1,9 @@
 # Changelog for Fontra
 
+## 2025-09-17
+
+- [designspace/ufo] Keep UFO's public.glyphOrder up-to-date when adding or removing glyphs. This is a general improvement, but also specifically improves how RoboFont responds to Fontra adding or deleting glyphs, improving RoboFont/Fontra interoperability. [PR 2278](https://github.com/fontra/fontra/pull/2278)
+
 ## 2025-09-11
 
 - Improved behavior of "inactive" glyph sources. [PR 2277](https://github.com/fontra/fontra/pull/2277)

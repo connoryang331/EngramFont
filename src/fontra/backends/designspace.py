@@ -752,7 +752,8 @@ class DesignspaceBackend:
             glyphSet.deleteGlyph(glyphName)
             # FIXME: this is inefficient if we write many glyphs
             self.updateGlyphSetContents(glyphSet)
-            self.ensureGlyphNotInGlyphOrder(ufoLayer.reader, glyphName)
+            if ufoLayer.isDefaultLayer:
+                self.ensureGlyphNotInGlyphOrder(ufoLayer.reader, glyphName)
             modTimes.add(None)
 
         self.savedGlyphModificationTimes[glyphName] = modTimes
@@ -996,7 +997,8 @@ class DesignspaceBackend:
             if glyphName in glyphSet:
                 glyphSet.deleteGlyph(glyphName)
                 glyphSet.writeContents()
-                self.ensureGlyphNotInGlyphOrder(ufoLayer.reader, glyphName)
+                if ufoLayer.isDefaultLayer:
+                    self.ensureGlyphNotInGlyphOrder(ufoLayer.reader, glyphName)
         del self.glyphMap[glyphName]
         self.savedGlyphModificationTimes[glyphName] = None
         if self._glyphDependencies is not None:

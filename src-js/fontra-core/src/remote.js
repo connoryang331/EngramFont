@@ -38,6 +38,7 @@ export class RemoteObject {
     this._handlers = {
       close: this._default_onclose,
       error: this._default_onerror,
+      initializationError: this._default_onInitializationError,
       messageFromServer: undefined,
       externalChange: undefined,
       reloadData: undefined,
@@ -74,7 +75,7 @@ export class RemoteObject {
     if (this._handlers.hasOwnProperty(event)) {
       return await this._handlers[event](...args);
     } else {
-      throw new Error(`Recieved unknown event from server: ${event}`);
+      throw new Error(`Received unknown event from server: ${event}`);
     }
   }
 
@@ -112,14 +113,21 @@ export class RemoteObject {
     console.log(`websocket error`, event);
   }
 
+  _default_onInitializationError(error) {
+    console.log(`initialization error: ${error}`);
+  }
+
   async _handleIncomingMessage(event) {
     const message = JSON.parse(event.data);
     const clientCallID = message["client-call-id"];
     const serverCallID = message["server-call-id"];
+    const initializationError = message["initialization-error"];
 
     // console.log("incoming message");
     // console.log(message);
-    if (clientCallID !== undefined) {
+    if (initializationError !== undefined) {
+      this._trigger("initializationError", initializationError);
+    } else if (clientCallID !== undefined) {
       // this is a response to a client -> server call
       const returnCallbacks = this._callReturnCallbacks[clientCallID];
       if (message["exception"] !== undefined) {

@@ -1,7 +1,8 @@
 import { ensureLanguageHasLoaded } from "@fontra/core/localization.js";
-import { dialogSetup, message } from "@fontra/web-components/modal-dialog.js";
+import { dialog, dialogSetup, message } from "@fontra/web-components/modal-dialog.js";
 import { registerAction } from "./actions.js";
 import { Backend } from "./backend-api.js";
+import { RemoteError } from "./errors.js";
 import { FontController } from "./font-controller.js";
 import { getRemoteProxy } from "./remote.js";
 
@@ -36,6 +37,9 @@ export class ViewController {
     const controller = new this(remoteFontEngine);
     remoteFontEngine.on("close", (event) => controller.handleRemoteClose(event));
     remoteFontEngine.on("error", (event) => controller.handleRemoteError(event));
+    remoteFontEngine.on("initializationError", (error) =>
+      controller.handleInitializationError(error)
+    );
     remoteFontEngine.on("messageFromServer", (headline, msg) =>
       controller.messageFromServer(headline, msg)
     );
@@ -67,7 +71,12 @@ export class ViewController {
   }
 
   async start() {
-    await this.fontController.initialize();
+    try {
+      await this.fontController.initialize();
+    } catch (e) {
+      const err = e instanceof RemoteError ? e.message : e.toString();
+      this.handleInitializationError(err);
+    }
   }
 
   afterStart() {
@@ -174,6 +183,11 @@ export class ViewController {
   }
 
   async handleRemoteClose(event) {
+    if (this._ignoreClose) {
+      // See handleInitializationError
+      return;
+    }
+
     this._reconnectDialog = await dialogSetup(
       "Connection closed", // TODO: translation
       "The connection to the server closed unexpectedly.",
@@ -218,6 +232,17 @@ export class ViewController {
       `There was a problem with the connection to the server.
       See the JavaScript Console for details.`,
       [{ title: "Reconnect", resultValue: "ok" }]
+    );
+    location.reload();
+  }
+
+  async handleInitializationError(error) {
+    this._ignoreClose = true;
+    console.log("initialization error:", error);
+    await dialog(
+      "Initialization problem", // TODO: translation
+      `There was a problem with loading the data:\n\n${error}`,
+      [{ title: "Try again", resultValue: "ok" }]
     );
     location.reload();
   }

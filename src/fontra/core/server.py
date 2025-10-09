@@ -163,6 +163,7 @@ class FontraServer:
         except Exception as e:
             logger.error("error while handling incoming websocket messages: %r", e)
             traceback.print_exc()
+            await websocket.send_json({"initialization-error": repr(e)})
             await websocket.close()
         else:
             connection = RemoteObjectConnection(

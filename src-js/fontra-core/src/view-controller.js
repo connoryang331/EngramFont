@@ -245,7 +245,7 @@ export class ViewController {
     this._ignoreClose = true;
     await dialog(
       "Initialization problem", // TODO: translation
-      `There was a problem with loading the data:\n\n${error}`,
+      `There was a problem loading the data:\n\n${error}`,
       [{ title: "Try again", resultValue: "ok" }]
     );
     location.reload();

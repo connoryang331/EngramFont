@@ -51,8 +51,12 @@ export class ViewController {
     );
     remoteFontEngine.on("reconnect", () => controller.onReconnect());
 
-    await controller.start();
-    controller.afterStart();
+    try {
+      await controller.start();
+      controller.afterStart();
+    } catch (e) {
+      console.log(e);
+    }
     return controller;
   }
 
@@ -76,6 +80,7 @@ export class ViewController {
     } catch (e) {
       const err = e instanceof RemoteError ? e.message : e.toString();
       this.handleInitializationError(err);
+      throw e;
     }
   }
 
@@ -238,7 +243,6 @@ export class ViewController {
 
   async handleInitializationError(error) {
     this._ignoreClose = true;
-    console.log("initialization error:", error);
     await dialog(
       "Initialization problem", // TODO: translation
       `There was a problem with loading the data:\n\n${error}`,

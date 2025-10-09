@@ -1,5 +1,9 @@
 # Changelog for Fontra
 
+## 2025-10-09
+
+- Report a better error message when failing to open a font file. [PR 2286](https://github.com/fontra/fontra/pull/2286)
+
 ## 2025-09-17
 
 - [designspace/ufo] Keep UFO's public.glyphOrder up-to-date when adding or removing glyphs. This is a general improvement, but also specifically improves how RoboFont responds to Fontra adding or deleting glyphs, improving RoboFont/Fontra interoperability. [PR 2278](https://github.com/fontra/fontra/pull/2278)

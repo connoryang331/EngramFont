@@ -20,8 +20,8 @@ const panelClasses = [
 ];
 
 export class FontInfoController extends ViewController {
-  static titlePattern(displayPath) {
-    return `Fontra Font Info — ${decodeURI(displayPath)}`;
+  static titlePattern(displayName) {
+    return `Fontra Font Info — ${displayName}`;
   }
 
   async start() {

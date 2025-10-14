@@ -2,7 +2,7 @@
 
 ## 2025-10-13
 
-- Fixed bug with project identifiers (file system path names in Fontra Pak) containing `%` characters. [PR 2287](https://github.com/fontra/fontra/pull/2287)
+- Fixed bug with project identifiers (file system paths in Fontra Pak) containing `%` characters. [PR 2287](https://github.com/fontra/fontra/pull/2287)
 
 ## 2025-10-09
 

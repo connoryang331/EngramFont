@@ -1,5 +1,9 @@
 # Changelog for Fontra
 
+## 2025-10-13
+
+- Fixed bug with project identifiers (file system path names in Fontra Pak) containing `%` characters. [PR 2287](https://github.com/fontra/fontra/pull/2287)
+
 ## 2025-10-09
 
 - Report a better error message when failing to open a font file. [PR 2286](https://github.com/fontra/fontra/pull/2286)

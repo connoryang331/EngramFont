@@ -55,7 +55,7 @@ export function registerActionInfo(actionIdentifier, actionInfo) {
   const storedActionInfo = getActionInfo(actionIdentifier);
   actionInfoController.model[actionIdentifier] = {
     ...actionInfo,
-    customShortCuts: storedActionInfo.customShortCuts,
+    customShortCuts: storedActionInfo?.customShortCuts,
     sortIndex,
   };
   topicSortIndices[actionInfo.topic] = sortIndex + 1;

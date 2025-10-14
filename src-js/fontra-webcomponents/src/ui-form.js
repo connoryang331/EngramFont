@@ -641,6 +641,11 @@ export class Form extends SimpleElement {
   }
 
   setValue(key, value) {
+    if (!this._fieldSetters) {
+      // The object isn't functional yet, eg. before a call to setFieldDescriptions()
+      // This happens when the Form is in a sidebar that hasn't been visible yet.
+      return;
+    }
     const setter = this._fieldSetters[key];
     if (setter === undefined) {
       throw new Error(`setting unknown Form key: ${key}`);

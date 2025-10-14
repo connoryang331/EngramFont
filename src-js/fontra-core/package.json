@@ -4,7 +4,7 @@
     "@fontra/core": "file:",
     "bezier-js": "^6.1.4",
     "fflate": "^0.8.2",
-    "lib-font": "^2.4.3",
+    "lib-font": "^2.5.0",
     "tsc": "^2.0.4"
   },
   "exports": {
@@ -17,8 +17,8 @@
   },
   "type": "module",
   "devDependencies": {
-    "chai": "^6.0.1",
+    "chai": "^6.2.0",
     "chai-almost": "^1.0.1",
-    "mocha": "^11.7.2"
+    "mocha": "^11.7.3"
   }
 }

@@ -1,5 +1,9 @@
 # Changelog for Fontra
 
+## 2025-10-16
+
+- Display the project name in the top bar, next to the menu bar. [Issue 2089](https://github.com/fontra/fontra/issues/2089), [PR 2289](https://github.com/fontra/fontra/pull/2289)
+
 ## 2025-10-13
 
 - Fixed bug with project identifiers (file system paths in Fontra Pak) containing `%` characters. [PR 2287](https://github.com/fontra/fontra/pull/2287)

@@ -1,3 +1,4 @@
+import * as html from "@fontra/core/html-utils.js";
 import { ensureLanguageHasLoaded } from "@fontra/core/localization.js";
 import { dialog, dialogSetup, message } from "@fontra/web-components/modal-dialog.js";
 import { registerAction } from "./actions.js";
@@ -68,9 +69,11 @@ export class ViewController {
   }
 
   afterStart() {
-    document.title = this.constructor.titlePattern(
-      this.fontController.metaInfo.projectName
-    );
+    const projectName = this.fontController.metaInfo.projectName;
+    document.title = this.constructor.titlePattern(projectName);
+
+    const topBar = document.querySelector(".top-bar-container");
+    topBar?.appendChild(html.div({ id: "fontra-project-name" }, [projectName]));
 
     for (const format of this.fontController.backendInfo.projectManagerFeatures[
       "export-as"

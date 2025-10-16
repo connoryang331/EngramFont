@@ -1,0 +1,175 @@
+{
+"name": "A",
+"sources": [
+{
+"name": "",
+"layerName": "::fontra000",
+"locationBase": "::fontra000"
+},
+{
+"name": "",
+"layerName": "::fontra001",
+"locationBase": "::fontra001"
+},
+{
+"name": "",
+"layerName": "::fontra002",
+"locationBase": "::fontra002"
+}
+],
+"layers": {
+"::fontra000": {
+"glyph": {
+"path": {
+"contours": [
+{
+"points": [
+{
+"x": 0,
+"y": 500
+},
+{
+"x": 0,
+"y": 0
+},
+{
+"x": 500,
+"y": 0
+},
+{
+"x": 500,
+"y": 500
+}
+],
+"isClosed": true
+},
+{
+"points": [
+{
+"x": 50,
+"y": 150
+},
+{
+"x": 150,
+"y": 150
+},
+{
+"x": 150,
+"y": 50
+},
+{
+"x": 50,
+"y": 50
+}
+],
+"isClosed": true
+}
+]
+},
+"xAdvance": 500
+}
+},
+"::fontra001": {
+"glyph": {
+"path": {
+"contours": [
+{
+"points": [
+{
+"x": 0,
+"y": 500
+},
+{
+"x": 0,
+"y": 0
+},
+{
+"x": 500,
+"y": 0
+},
+{
+"x": 500,
+"y": 500
+}
+],
+"isClosed": true
+},
+{
+"points": [
+{
+"x": 350,
+"y": 150
+},
+{
+"x": 450,
+"y": 150
+},
+{
+"x": 450,
+"y": 50
+},
+{
+"x": 350,
+"y": 50
+}
+],
+"isClosed": true
+}
+]
+},
+"xAdvance": 500
+}
+},
+"::fontra002": {
+"glyph": {
+"path": {
+"contours": [
+{
+"points": [
+{
+"x": 0,
+"y": 500
+},
+{
+"x": 0,
+"y": 0
+},
+{
+"x": 500,
+"y": 0
+},
+{
+"x": 500,
+"y": 500
+}
+],
+"isClosed": true
+},
+{
+"points": [
+{
+"x": 50,
+"y": 450
+},
+{
+"x": 150,
+"y": 450
+},
+{
+"x": 150,
+"y": 350
+},
+{
+"x": 50,
+"y": 350
+}
+],
+"isClosed": true
+}
+]
+},
+"xAdvance": 500
+}
+}
+}
+}

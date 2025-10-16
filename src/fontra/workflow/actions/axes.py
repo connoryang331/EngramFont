@@ -948,3 +948,10 @@ def updateSource(source, instancer, fontSourcesInstancer):
     return replace(
         source, name=sourceName, locationBase=locationBase, location=glyphLocation
     )
+
+
+@registerFilterAction("drop-cross-axis-mappings")
+@dataclass(kw_only=True)
+class DropCrossAxisMappings(BaseFilter):
+    async def processAxes(self, axes: Axes) -> Axes:
+        return replace(axes, mappings=[])

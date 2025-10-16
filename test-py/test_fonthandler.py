@@ -8,6 +8,7 @@ import pytest
 
 from fontra.backends.designspace import DesignspaceBackend
 from fontra.core.fonthandler import FontHandler
+from fontra.filesystem.projectmanager import FileSystemProjectManager
 
 mutatorSansDir = pathlib.Path(__file__).resolve().parent / "data" / "mutatorsans"
 
@@ -41,7 +42,11 @@ def testFontPath(tmp_path_factory):
 async def testFontHandler(testFontPath):
     assert testFontPath.exists(), testFontPath
     backend = DesignspaceBackend.fromPath(testFontPath)
-    return FontHandler(backend)
+    return FontHandler(
+        backend=backend,
+        projectIdentifier="dummy",
+        metaInfoProvider=FileSystemProjectManager(),
+    )
 
 
 @pytest.mark.asyncio

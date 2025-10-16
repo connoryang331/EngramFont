@@ -23,7 +23,8 @@ from .changes import (
 from .classes import Font, FontInfo, FontSource, ImageData, VariableGlyph
 from .lrucache import LRUCache
 from .protocols import (
-    ProjectManager,
+    ExportManager,
+    MetaInfoProvider,
     ReadableFontBackend,
     WatchableFontBackend,
     WritableFontBackend,
@@ -41,14 +42,15 @@ def remoteMethod(method):
     return method
 
 
-@dataclass
+@dataclass(kw_only=True)
 class FontHandler:
     backend: ReadableFontBackend
+    projectIdentifier: str
+    metaInfoProvider: MetaInfoProvider
+    exportManager: ExportManager | None = None
     readOnly: bool = False
     dummyEditor: bool = False  # allow editing in read-only mode, don't write to backend
     allConnectionsClosedCallback: Optional[Callable[[], Awaitable[Any]]] = None
-    projectManager: ProjectManager | None = None
-    projectIdentifier: str | None = None
 
     def __post_init__(self):
         if self.writableBackend is None:
@@ -169,20 +171,13 @@ class FontHandler:
         ]:
             features[key] = hasattr(self.backend, methodName)
         projectManagerFeatures = {}
-        if hasattr(self.projectManager, "exportAs") and hasattr(
-            self.projectManager, "getSupportedExportFormats"
-        ):
+        if self.exportManager is not None:
             projectManagerFeatures["export-as"] = (
-                self.projectManager.getSupportedExportFormats()  # type: ignore[union-attr]
+                self.exportManager.getSupportedExportFormats()  # type: ignore[union-attr]
             )
         return dict(
             name=self.backend.__class__.__name__,
             features=features,
-            projectManagerName=(
-                None
-                if self.projectManager is None
-                else self.projectManager.__class__.__name__
-            ),
             projectManagerFeatures=projectManagerFeatures,
         )
 
@@ -229,6 +224,8 @@ class FontHandler:
                 value = await self.backend.getFeatures()
             case "kerning":
                 value = await self.backend.getKerning()
+            case "metaInfo":
+                value = await self.metaInfoProvider.getMetaInfo(self.projectIdentifier)
             case _:
                 raise KeyError(key)
 
@@ -253,6 +250,8 @@ class FontHandler:
                 await self.writableBackend.putFeatures(value)
             case "kerning":
                 await self.writableBackend.putKerning(value)
+            case "metaInfo":
+                await self.metaInfoProvider.putMetaInfo(self.projectIdentifier, value)
             case _:
                 raise KeyError(key)
 
@@ -288,6 +287,10 @@ class FontHandler:
     @remoteMethod
     async def getCustomData(self, *, connection):
         return await self.getData("customData")
+
+    @remoteMethod
+    async def getMetaInfo(self, *, connection):
+        return await self.getData("metaInfo")
 
     @remoteMethod
     async def getBackgroundImage(
@@ -569,8 +572,8 @@ class FontHandler:
 
     @remoteMethod
     async def exportAs(self, options: dict, *, connection):
-        if self.projectManager is not None and hasattr(self.projectManager, "exportAs"):
-            return await self.projectManager.exportAs(self, options)
+        if self.exportManager is not None and hasattr(self.exportManager, "exportAs"):
+            return await self.exportManager.exportAs(self.projectIdentifier, options)
 
 
 def popFirstItem(d):

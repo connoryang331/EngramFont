@@ -72,6 +72,10 @@ const CELL_MAGNIFICATION_MIN = 0.25;
 const CELL_MAGNIFICATION_MAX = 4;
 
 export class FontOverviewController extends ViewController {
+  static titlePattern(displayName) {
+    return `Fontra Font Overview — ${displayName}`;
+  }
+
   constructor(font) {
     super(font);
 

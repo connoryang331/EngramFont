@@ -3,6 +3,7 @@
 ## 2025-10-16
 
 - Display the project name in the top bar, next to the menu bar. [Issue 2089](https://github.com/fontra/fontra/issues/2089), [PR 2289](https://github.com/fontra/fontra/pull/2289)
+- [fontra-workflow] Add `drop-cross-axis-mappings` filter that drops all cross-axis (avar-2) mappings. [PR 2290](https://github.com/fontra/fontra/pull/2290)
 
 ## 2025-10-13
 

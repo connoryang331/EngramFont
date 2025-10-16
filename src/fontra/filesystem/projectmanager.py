@@ -5,13 +5,13 @@ from importlib import resources
 from importlib.metadata import entry_points
 from os import PathLike, fspath
 from types import SimpleNamespace
-from typing import Callable
+from typing import Any, Callable
 
 from aiohttp import web
 
 from ..backends import getFileSystemBackend
 from ..core.fonthandler import FontHandler
-from ..core.protocols import ProjectManager
+from ..core.protocols import ExportManager, ProjectManager
 
 logger = logging.getLogger(__name__)
 
@@ -57,9 +57,10 @@ def existingFolderOrFontFile(path):
 class FileSystemProjectManager:
     def __init__(
         self,
-        rootPath: pathlib.Path | None,
+        rootPath: pathlib.Path | None = None,
         maxFolderDepth: int = 3,
         readOnly: bool = False,
+        exportManager: ExportManager | None = None,
     ):
         self.rootPath = rootPath
         self.singleFilePath = None
@@ -69,6 +70,7 @@ class FileSystemProjectManager:
             self.singleFilePath = self.rootPath
             self.rootPath = self.rootPath.parent
         self.fontHandlers: dict[str, FontHandler] = {}
+        self.exportManager = exportManager
 
     async def aclose(self) -> None:
         for fontHandler in self.fontHandlers.values():
@@ -106,11 +108,12 @@ class FileSystemProjectManager:
 
             logger.info(f"new FontHandler for '{projectIdentifier}'")
             fontHandler = FontHandler(
-                backend,
+                backend=backend,
+                projectIdentifier=fspath(projectPath),
+                metaInfoProvider=self,
+                exportManager=self.exportManager,
                 readOnly=self.readOnly,
                 allConnectionsClosedCallback=closeFontHandler,
-                projectManager=self,
-                projectIdentifier=fspath(projectPath),
             )
             await fontHandler.startTasks()
             self.fontHandlers[projectIdentifier] = fontHandler
@@ -146,6 +149,17 @@ class FileSystemProjectManager:
         return projectPaths
 
     def setupWebRoutes(self, server):
+        pass
+
+    async def getMetaInfo(self, projectIdentifier: str) -> dict[str, Any]:
+        return {
+            "projectName": projectIdentifier.split("/")[-1],
+            "projectIdentifier": projectIdentifier,
+        }
+
+    async def putMetaInfo(
+        self, projectIdentifier: str, metaInfo: dict[str, Any]
+    ) -> None:
         pass
 
 

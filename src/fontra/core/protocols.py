@@ -145,3 +145,23 @@ class ProjectManager(Protocol):
 
     def setupWebRoutes(self, server) -> None:
         pass
+
+
+@runtime_checkable
+class MetaInfoProvider(Protocol):
+    async def getMetaInfo(self, projectIdentifier: str) -> dict[str, Any]:
+        pass
+
+    async def putMetaInfo(
+        self, projectIdentifier: str, metaInfo: dict[str, Any]
+    ) -> None:
+        pass
+
+
+@runtime_checkable
+class ExportManager(Protocol):
+    async def exportAs(self, projectIdentifier: str, options: dict):
+        pass
+
+    def getSupportedExportFormats(self) -> list[str]:
+        pass

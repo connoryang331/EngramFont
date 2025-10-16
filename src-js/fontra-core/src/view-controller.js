@@ -11,25 +11,8 @@ export class ViewController {
     return `Fontra — ${displayName}`;
   }
 
-  static displayName(projectIdentifier) {
-    // TODO: this should be delegated to the project manager, which should then
-    // properly maintain a (user editable) "display name" for a project.
-    //
-    // For now, just shorten the projectIdentifier in case it is long and contains
-    // slash characters.
-    const displayNameItems = projectIdentifier.split("/");
-    let displayName = displayNameItems.join("/");
-    while (displayNameItems.length > 2 && displayName.length > 60) {
-      displayNameItems.splice(0, 1);
-      displayName = ["...", ...displayNameItems].join("/");
-    }
-    return displayName;
-  }
-
   static async fromBackend() {
     const projectIdentifier = new URL(window.location).searchParams.get("project");
-    const displayName = this.displayName(projectIdentifier);
-    document.title = this.titlePattern(displayName);
 
     await ensureLanguageHasLoaded;
 
@@ -85,6 +68,10 @@ export class ViewController {
   }
 
   afterStart() {
+    document.title = this.constructor.titlePattern(
+      this.fontController.metaInfo.projectName
+    );
+
     for (const format of this.fontController.backendInfo.projectManagerFeatures[
       "export-as"
     ] || []) {

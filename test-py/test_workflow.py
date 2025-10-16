@@ -567,6 +567,20 @@ def test_command(tmpdir, configYAMLSources, substitutions):
             [],
         ),
         (
+            "drop-cross-axis-mappings",
+            """
+            steps:
+            - input: fontra-read
+              source: "test-py/data/workflow/input-cross-axis-mappings.fontra"
+            - filter: drop-cross-axis-mappings
+
+            - output: fontra-write
+              destination: "output-drop-cross-axis-mappings.fontra"
+            """,
+            False,
+            [],
+        ),
+        (
             "decompose-composites",
             """
             steps:

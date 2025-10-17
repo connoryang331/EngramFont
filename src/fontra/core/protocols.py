@@ -138,9 +138,7 @@ class ProjectManager(Protocol):
     async def getProjectList(self, token: str) -> list[str]:
         pass
 
-    async def projectPageHandler(
-        self, request: web.Request, filterContent: Callable | None = None
-    ) -> web.Response:
+    async def rootDocumentHandler(self, request: web.Request) -> web.Response:
         pass
 
     def setupWebRoutes(self, server) -> None:

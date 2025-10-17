@@ -5,7 +5,7 @@ from importlib import resources
 from importlib.metadata import entry_points
 from os import PathLike, fspath
 from types import SimpleNamespace
-from typing import Any, Callable
+from typing import Any
 
 from aiohttp import web
 
@@ -79,15 +79,9 @@ class FileSystemProjectManager:
     async def authorize(self, request: web.Request) -> str:
         return "yes"  # arbitrary non-false string token
 
-    async def projectPageHandler(
-        self,
-        request: web.Request,
-        filterContent: Callable[[bytes, str], bytes] | None = None,
-    ) -> web.Response:
+    async def rootDocumentHandler(self, request: web.Request) -> web.Response:
         htmlPath = resources.files("fontra") / "client" / "landing.html"
         html = htmlPath.read_bytes()
-        if filterContent is not None:
-            html = filterContent(html, "text/html")
         return web.Response(body=html, content_type="text/html")
 
     async def projectAvailable(self, projectIdentifier: str, token: str) -> bool:

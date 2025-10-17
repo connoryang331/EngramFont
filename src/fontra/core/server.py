@@ -288,7 +288,7 @@ class FontraServer:
         return web.HTTPNotFound()
 
     async def rootDocumentHandler(self, request: web.Request) -> web.Response:
-        response = await self.projectManager.projectPageHandler(request)
+        response = await self.projectManager.rootDocumentHandler(request)
         return response
 
     # Support pre-2025 paths

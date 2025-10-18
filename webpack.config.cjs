@@ -25,7 +25,7 @@ module.exports = (_env, argv) => {
           js: {
             // JS output filename, relative to `output.path` Webpack option
             filename: "js/[name].[contenthash:8].js",
-            chunkFilename: "js/[name].chunk.js",
+            chunkFilename: "[name].chunk.js",
           },
           css: {
             // CSS output filename, relative to `output.path` Webpack option

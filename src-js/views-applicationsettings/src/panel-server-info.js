@@ -1,7 +1,7 @@
 import * as html from "@fontra/core/html-utils.js";
 import { addStyleSheet } from "@fontra/core/html-utils.js";
+import { MultiPanelBasePanel } from "@fontra/core/multi-panel.js";
 import { fetchJSON } from "@fontra/core/utils.js";
-import { BaseInfoPanel } from "./panel-base.js";
 
 const serverInfo = await fetchJSON("/serverinfo");
 
@@ -16,7 +16,7 @@ addStyleSheet(`
   }
   `);
 
-export class ServerInfoPanel extends BaseInfoPanel {
+export class ServerInfoPanel extends MultiPanelBasePanel {
   static title = "application-settings.server-info.title";
   static id = "server-info-panel";
 

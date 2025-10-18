@@ -1,8 +1,8 @@
 import { applicationSettingsController } from "@fontra/core/application-settings.js";
 import * as html from "@fontra/core/html-utils.js";
 import { addStyleSheet } from "@fontra/core/html-utils.js";
+import { MultiPanelBasePanel } from "@fontra/core/multi-panel.js";
 import { labeledCheckbox } from "@fontra/core/ui-utils.js";
-import { BaseInfoPanel } from "./panel-base.js";
 
 addStyleSheet(`
   .fontra-ui-editor-behavior-panel-card {
@@ -12,7 +12,7 @@ addStyleSheet(`
   }
   `);
 
-export class EditorBehaviorPanel extends BaseInfoPanel {
+export class EditorBehaviorPanel extends MultiPanelBasePanel {
   static title = "application-settings.editor-behavior.title";
   static id = "editor-behavior-panel";
 

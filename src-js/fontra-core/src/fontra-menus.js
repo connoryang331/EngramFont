@@ -53,7 +53,13 @@ function getFontraMenu() {
         title: translate(`application-settings.${panelID}.title`),
         enabled: () => true,
         callback: () => {
-          window.open(`/applicationsettings.html#${panelID}-panel`);
+          const url = new URL(window.location);
+          console.log(url.pathname);
+          const target = "/applicationsettings.html";
+          window.open(
+            `${target}#${panelID}-panel`,
+            url.pathname.includes(target) ? "_self" : undefined
+          );
         },
       }));
     },
@@ -152,27 +158,34 @@ function getViewMenuItems() {
 
 function getFontMenuItems() {
   const menuItems = [
-    [translate("font-info.title"), "#font-info-panel", true],
-    [translate("axes.title"), "#axes-panel", true],
-    [translate("sources.title"), "#sources-panel", true],
-    [translate("opentype-feature-code.title"), "#opentype-feature-code-panel", true],
-    [translate("cross-axis-mapping.title"), "#cross-axis-mapping-panel", true],
-    [
-      translate("development-status-definitions.title"),
-      "#development-status-definitions-panel",
-      true,
-    ],
+    ["font-info.title", "#font-info-panel"],
+    ["axes.title", "#axes-panel"],
+    ["sources.title", "#sources-panel"],
+    ["opentype-feature-code.title", "#opentype-feature-code-panel"],
+    ["cross-axis-mapping.title", "#cross-axis-mapping-panel"],
+    ["development-status-definitions.title", "#development-status-definitions-panel"],
+    [undefined, undefined], // divider
+    ["font-overview.title", "fontoverview"],
   ];
-  return menuItems.map(([title, panelID, enabled]) => ({
-    title,
-    enabled: () => enabled,
-    callback: () => {
-      const url = new URL(window.location);
-      url.pathname = rerouteViewPath(url.pathname, "fontinfo");
-      url.hash = panelID;
-      window.open(url.toString());
-    },
-  }));
+  return menuItems.map(([title, panelID]) =>
+    title
+      ? {
+          title: translate(title),
+          callback: () => {
+            const url = new URL(window.location);
+            const openNewTab = !url.pathname.includes("fontinfo");
+            if (panelID === "fontoverview") {
+              url.pathname = rerouteViewPath(url.pathname, "fontoverview");
+              url.hash = "";
+            } else {
+              url.pathname = rerouteViewPath(url.pathname, "fontinfo");
+              url.hash = panelID;
+            }
+            window.open(url.toString(), openNewTab ? undefined : "_self");
+          },
+        }
+      : MenuItemDivider
+  );
 }
 
 function getGlyphMenuItems() {

@@ -1,8 +1,8 @@
 import * as html from "@fontra/core/html-utils.js";
 import { addStyleSheet } from "@fontra/core/html-utils.js";
 import { translate } from "@fontra/core/localization.js";
+import { MultiPanelBasePanel } from "@fontra/core/multi-panel.js";
 import { themeController } from "@fontra/core/theme-settings.js";
-import { BaseInfoPanel } from "./panel-base.js";
 
 addStyleSheet(`
   .fontra-ui-theme-settings-panel-card {
@@ -12,7 +12,7 @@ addStyleSheet(`
   }
   `);
 
-export class ThemeSettingsPanel extends BaseInfoPanel {
+export class ThemeSettingsPanel extends MultiPanelBasePanel {
   static title = "application-settings.theme-settings.title";
   static id = "theme-settings-panel";
 

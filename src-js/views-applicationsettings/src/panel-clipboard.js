@@ -2,7 +2,7 @@ import { applicationSettingsController } from "@fontra/core/application-settings
 import * as html from "@fontra/core/html-utils.js";
 import { addStyleSheet } from "@fontra/core/html-utils.js";
 import { translate } from "@fontra/core/localization.js";
-import { BaseInfoPanel } from "./panel-base.js";
+import { MultiPanelBasePanel } from "@fontra/core/multi-panel.js";
 
 addStyleSheet(`
   .fontra-ui-clipboard-panel-card {
@@ -12,7 +12,7 @@ addStyleSheet(`
   }
   `);
 
-export class ClipboardPanel extends BaseInfoPanel {
+export class ClipboardPanel extends MultiPanelBasePanel {
   static title = "application-settings.clipboard.title";
   static id = "clipboard-panel";
 

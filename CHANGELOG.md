@@ -3,6 +3,7 @@
 ## 2025-10-18
 
 - Add "Font overview" menu item to "Font" menu, so users can go to the Font overview from other views. [PR 2293](https://github.com/fontra/fontra/pull/2293)
+- Fixed the Reference Font panel for Safari. [Issue 2156](https://github.com/fontra/fontra/issues/2156), [PR 2165](https://github.com/fontra/fontra/pull/2165)
 
 ## 2025-10-16
 

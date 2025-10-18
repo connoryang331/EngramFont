@@ -174,9 +174,10 @@ function getFontMenuItems() {
     enabled: () => enabled,
     callback: () => {
       const url = new URL(window.location);
+      const openNewTab = !url.pathname.includes("fontinfo");
       url.pathname = rerouteViewPath(url.pathname, "fontinfo");
       url.hash = panelID;
-      window.open(url.toString());
+      window.open(url.toString(), openNewTab ? undefined : "_self");
     },
   }));
 }

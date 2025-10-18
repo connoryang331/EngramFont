@@ -167,7 +167,7 @@ function getFontMenuItems() {
     [undefined, undefined], // divider
     ["font-overview.title", "fontoverview"],
   ];
-  return menuItems.map(([title, panelID, enabled]) =>
+  return menuItems.map(([title, panelID]) =>
     title
       ? {
           title: translate(title),

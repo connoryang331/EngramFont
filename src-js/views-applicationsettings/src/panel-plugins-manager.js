@@ -1,6 +1,6 @@
 import * as html from "@fontra/core/html-utils.js";
 import { addStyleSheet } from "@fontra/core/html-utils.js";
-import { BaseInfoPanel } from "./panel-base.js";
+import { MultiPanelBasePanel } from "@fontra/core/multi-panel.js";
 
 addStyleSheet(`
   .fontra-ui-plugins-manager-panel-card {
@@ -10,7 +10,7 @@ addStyleSheet(`
   }
   `);
 
-export class PluginsManagerPanel extends BaseInfoPanel {
+export class PluginsManagerPanel extends MultiPanelBasePanel {
   static title = "application-settings.plugins-manager.title";
   static id = "plugins-manager-panel";
 

@@ -1,7 +1,7 @@
 import * as html from "@fontra/core/html-utils.js";
 import { addStyleSheet } from "@fontra/core/html-utils.js";
 import { languageController, languages, translate } from "@fontra/core/localization.js";
-import { BaseInfoPanel } from "./panel-base.js";
+import { MultiPanelBasePanel } from "@fontra/core/multi-panel.js";
 
 addStyleSheet(`
   .fontra-ui-display-language-panel-card {
@@ -11,7 +11,7 @@ addStyleSheet(`
   }
   `);
 
-export class DisplayLanguagePanel extends BaseInfoPanel {
+export class DisplayLanguagePanel extends MultiPanelBasePanel {
   static title = "application-settings.display-language.title";
   static id = "display-language-panel";
 

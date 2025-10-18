@@ -2,28 +2,22 @@ import {
   doPerformAction,
   getActionIdentifierFromKeyEvent,
 } from "@fontra/core/actions.js";
-
 import { UndoStack, reverseUndoRecord } from "@fontra/core/font-controller.js";
 import * as html from "@fontra/core/html-utils.js";
 import { translate } from "@fontra/core/localization.js";
+import { MultiPanelBasePanel } from "@fontra/core/multi-panel.js";
 import { commandKeyProperty } from "@fontra/core/utils.js";
 
-export class BaseInfoPanel {
-  constructor(fontInfoController, panelElement) {
-    this.fontInfoController = fontInfoController;
-    this.fontController = fontInfoController.fontController;
-    this.panelElement = panelElement;
-  }
+export class BaseInfoPanel extends MultiPanelBasePanel {
+  constructor(viewController, panelElement) {
+    super(viewController, panelElement);
 
-  visibilityChanged(onOff) {
-    this.visible = onOff;
-    if (onOff && !this.initialized) {
-      this.initializePanel();
-      this.initialized = true;
-    }
+    this.fontController = viewController.fontController;
   }
 
   initializePanel() {
+    super.initializePanel();
+
     this.undoStack = new UndoStack();
 
     const subscribePattern = Object.fromEntries(
@@ -39,7 +33,6 @@ export class BaseInfoPanel {
       },
       false
     );
-    this.setupUI();
   }
 
   handleKeyDown(event) {

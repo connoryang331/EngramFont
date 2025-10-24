@@ -23,11 +23,13 @@ class RemoteObjectConnection:
         path: str,
         subject: Any,
         verboseErrors: bool,
+        authorizationToken: str = "",
     ):
         self.websocket = websocket
         self.path = path
         self.subject = subject
         self.verboseErrors = verboseErrors
+        self.authorizationToken = authorizationToken
         self.clientUUID = None
         self.callReturnFutures: dict[str, asyncio.Future] = {}
         self.getNextServerCallID = _genNextServerCallID()

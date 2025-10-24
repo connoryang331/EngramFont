@@ -147,11 +147,13 @@ class ProjectManager(Protocol):
 
 @runtime_checkable
 class MetaInfoProvider(Protocol):
-    async def getMetaInfo(self, projectIdentifier: str) -> dict[str, Any]:
+    async def getMetaInfo(
+        self, projectIdentifier: str, authorizationToken: str
+    ) -> dict[str, Any]:
         pass
 
     async def putMetaInfo(
-        self, projectIdentifier: str, metaInfo: dict[str, Any]
+        self, projectIdentifier: str, metaInfo: dict[str, Any], authorizationToken: str
     ) -> None:
         pass
 

@@ -9,7 +9,6 @@ import traceback
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from functools import partial
-from http.cookies import SimpleCookie
 from importlib import resources
 
 try:
@@ -147,10 +146,7 @@ class FontraServer:
         remote = request.headers.get("X-FORWARDED-FOR", request.remote)
         logger.info(f"incoming connection from {remote} for {projectIdentifier!r}")
 
-        cookies = SimpleCookie()
-        cookies.load(request.headers.get("Cookie", ""))
-        cookieValues = {k: v.value for k, v in cookies.items()}
-        token = cookieValues.get("fontra-authorization-token", "")
+        token = await self.projectManager.authorize(request) or ""
 
         websocket = web.WebSocketResponse(heartbeat=55, max_msg_size=0x2000000)
         await websocket.prepare(request)
@@ -167,7 +163,11 @@ class FontraServer:
             await websocket.close()
         else:
             connection = RemoteObjectConnection(
-                websocket, projectIdentifier, subject, True
+                websocket,
+                projectIdentifier,
+                subject,
+                True,
+                authorizationToken=token,
             )
             async with subject.useConnection(connection):
                 await connection.handleConnection()

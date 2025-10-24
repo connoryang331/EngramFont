@@ -145,14 +145,16 @@ class FileSystemProjectManager:
     def setupWebRoutes(self, server):
         pass
 
-    async def getMetaInfo(self, projectIdentifier: str) -> dict[str, Any]:
+    async def getMetaInfo(
+        self, projectIdentifier: str, authorizationToken: str
+    ) -> dict[str, Any]:
         return {
             "projectName": projectIdentifier.split("/")[-1],
             "projectIdentifier": projectIdentifier,
         }
 
     async def putMetaInfo(
-        self, projectIdentifier: str, metaInfo: dict[str, Any]
+        self, projectIdentifier: str, metaInfo: dict[str, Any], authorizationToken: str
     ) -> None:
         pass
 

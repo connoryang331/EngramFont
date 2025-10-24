@@ -197,14 +197,14 @@ class FontHandler:
     async def _getGlyphFromBackend(self, glyphName) -> VariableGlyph | None:
         return await self.backend.getGlyph(glyphName)
 
-    async def getData(self, key: str) -> Any:
+    async def getData(self, key: str, connection=None) -> Any:
         data = self.localData.get(key)
         if data is None:
-            data = await self._getData(key)
+            data = await self._getData(key, connection)
             self.localData[key] = data
         return data
 
-    async def _getData(self, key: str) -> Any:
+    async def _getData(self, key: str, connection=None) -> Any:
         value: Any
 
         match key:
@@ -225,13 +225,15 @@ class FontHandler:
             case "kerning":
                 value = await self.backend.getKerning()
             case "metaInfo":
-                value = await self.metaInfoProvider.getMetaInfo(self.projectIdentifier)
+                value = await self.metaInfoProvider.getMetaInfo(
+                    self.projectIdentifier, connection.authorizationToken
+                )
             case _:
                 raise KeyError(key)
 
         return value
 
-    async def _putData(self, key: str, value: Any) -> None:
+    async def _putData(self, key: str, value: Any, connection=None) -> None:
         assert self.writableBackend is not None
         match key:
             case "fontInfo":
@@ -251,7 +253,9 @@ class FontHandler:
             case "kerning":
                 await self.writableBackend.putKerning(value)
             case "metaInfo":
-                await self.metaInfoProvider.putMetaInfo(self.projectIdentifier, value)
+                await self.metaInfoProvider.putMetaInfo(
+                    self.projectIdentifier, value, connection.authorizationToken
+                )
             case _:
                 raise KeyError(key)
 
@@ -290,7 +294,7 @@ class FontHandler:
 
     @remoteMethod
     async def getMetaInfo(self, *, connection):
-        return await self.getData("metaInfo")
+        return await self.getData("metaInfo", connection=connection)
 
     @remoteMethod
     async def getBackgroundImage(
@@ -498,7 +502,9 @@ class FontHandler:
                     continue
                 assert self.writableBackend is not None
                 writeFunc = functools.partial(
-                    self._putData, rootKey, deepcopy(self.localData[rootKey])
+                    self._putData,
+                    rootKey,
+                    deepcopy(self.localData[rootKey], sourceConnection),
                 )
                 await self.scheduleDataWrite(rootKey, writeFunc, sourceConnection)
 

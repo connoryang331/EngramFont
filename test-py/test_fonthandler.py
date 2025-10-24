@@ -49,11 +49,17 @@ async def testFontHandler(testFontPath):
     )
 
 
+class MockRemoteObjectConnection:
+    pass
+
+
 @pytest.mark.asyncio
 async def test_fontHandler_basic(testFontHandler):
     async with aclosing(testFontHandler):
         await testFontHandler.startTasks()
-        glyph = await testFontHandler.getGlyph("A", connection=None)
+        glyph = await testFontHandler.getGlyph(
+            "A", connection=MockRemoteObjectConnection()
+        )
 
     layerName, layer = firstLayerItem(glyph)
     assert "light-condensed" == layerName
@@ -94,7 +100,9 @@ async def test_fontHandler_externalChange(testFontHandler):
 async def test_fontHandler_editGlyph(testFontHandler):
     async with aclosing(testFontHandler):
         await testFontHandler.startTasks()
-        glyph = await testFontHandler.getGlyph("A", connection=None)
+        glyph = await testFontHandler.getGlyph(
+            "A", connection=MockRemoteObjectConnection()
+        )
         layerName, layer = firstLayerItem(glyph)
         assert 0 == layer.glyph.path.coordinates[1]
 
@@ -110,10 +118,16 @@ async def test_fontHandler_editGlyph(testFontHandler):
         }
 
         await testFontHandler.editFinal(
-            change, rollbackChange, "Test edit", False, connection=None
+            change,
+            rollbackChange,
+            "Test edit",
+            False,
+            connection=MockRemoteObjectConnection(),
         )
 
-        glyph = await testFontHandler.getGlyph("A", connection=None)
+        glyph = await testFontHandler.getGlyph(
+            "A", connection=MockRemoteObjectConnection()
+        )
         layerName, layer = firstLayerItem(glyph)
         assert [20, 55] == layer.glyph.path.coordinates[:2]
 
@@ -135,7 +149,9 @@ async def test_fontHandler_editGlyph(testFontHandler):
 async def test_fontHandler_editGlyph_delete_layer(testFontHandler):
     async with aclosing(testFontHandler):
         await testFontHandler.startTasks()
-        glyph = await testFontHandler.getGlyph("A", connection=None)
+        glyph = await testFontHandler.getGlyph(
+            "A", connection=MockRemoteObjectConnection()
+        )
 
         sourceIndex = 3
         source = glyph.sources[sourceIndex]
@@ -156,7 +172,11 @@ async def test_fontHandler_editGlyph_delete_layer(testFontHandler):
         rollbackChange = {}  # dummy
 
         await testFontHandler.editFinal(
-            change, rollbackChange, "Test edit", False, connection=None
+            change,
+            rollbackChange,
+            "Test edit",
+            False,
+            connection=MockRemoteObjectConnection(),
         )
 
         # give the write queue the opportunity to complete
@@ -194,7 +214,11 @@ async def test_fontHandler_setData(testFontHandler, caplog):
             "a": ["A", [65, 97]],
         }
         await testFontHandler.editFinal(
-            change, rollbackChange, "Test edit", False, connection=None
+            change,
+            rollbackChange,
+            "Test edit",
+            False,
+            connection=MockRemoteObjectConnection(),
         )
 
         glyphMap = await testFontHandler.getData("glyphMap")
@@ -218,7 +242,11 @@ async def test_fontHandler_setData_unitsPerEm(testFontHandler, caplog):
             "a": ["unitsPerEm", 1000],
         }
         await testFontHandler.editFinal(
-            change, rollbackChange, "Test edit", False, connection=None
+            change,
+            rollbackChange,
+            "Test edit",
+            False,
+            connection=MockRemoteObjectConnection(),
         )
 
         unitsPerEm = await testFontHandler.getData("unitsPerEm")
@@ -281,7 +309,11 @@ async def test_fontHandler_new_glyph(testFontHandler):
         }
 
         await testFontHandler.editFinal(
-            change, rollbackChange, "Test edit", False, connection=None
+            change,
+            rollbackChange,
+            "Test edit",
+            False,
+            connection=MockRemoteObjectConnection(),
         )
 
         await testFontHandler.finishWriting()
@@ -304,12 +336,14 @@ async def test_getBackgroundImage(testFontHandler):
 
 
 async def test_getFeatures(testFontHandler):
-    features = await testFontHandler.getFeatures(connection=None)
+    features = await testFontHandler.getFeatures(
+        connection=MockRemoteObjectConnection()
+    )
     assert features.language == "fea"
 
 
 async def test_getKerning(testFontHandler):
-    kerning = await testFontHandler.getKerning(connection=None)
+    kerning = await testFontHandler.getKerning(connection=MockRemoteObjectConnection())
     assert "kern" in kerning
 
 

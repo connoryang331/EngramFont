@@ -504,7 +504,8 @@ class FontHandler:
                 writeFunc = functools.partial(
                     self._putData,
                     rootKey,
-                    deepcopy(self.localData[rootKey], sourceConnection),
+                    deepcopy(self.localData[rootKey]),
+                    sourceConnection,
                 )
                 await self.scheduleDataWrite(rootKey, writeFunc, sourceConnection)
 

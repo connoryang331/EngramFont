@@ -18,7 +18,6 @@ except ImportError:
     from importlib.abc import Traversable
 from importlib.metadata import entry_points
 from typing import Any, Optional
-from urllib.parse import quote
 
 from aiohttp import WSCloseCode, web
 
@@ -64,31 +63,29 @@ class FontraServer:
         routes.append(web.get("/projectlist", self.projectListHandler))
         routes.append(web.get("/serverinfo", self.serverInfoHandler))
         routes.append(web.post("/api/{function:.*}", self.webAPIHandler))
-        for ep in entry_points(group="fontra.views"):
-            routes.append(
-                web.get(
-                    f"/{{path:{ep.name}.html}}",
-                    partial(self.viewHandler, ep.value),
-                )
-            )
-            # Legacy URL formats
-            routes.append(web.get(f"/{{view:{ep.name}}}/", self.viewRedirectHandler))
-            routes.append(
-                web.get(
-                    f"/{{view:{ep.name}}}/-/{{project:.*}}", self.viewRedirectHandler
-                )
-            )
+
         for ep in entry_points(group="fontra.webcontent"):
             routes.append(
                 web.get(
                     f"/{ep.name}/{{path:.*}}",
-                    partial(self.staticContentHandler, ep.value),
+                    partial(
+                        self.staticContentHandler,
+                        contentRoot=getPackageResourcePath(ep.value),
+                        pathPrefix=f"/{ep.name}",
+                    ),
                 )
             )
+
+        contentRoot = getPackageResourcePath("fontra.client")
         routes.append(
-            web.get("/{path:.*}", partial(self.staticContentHandler, "fontra.client"))
+            web.get(
+                "/{path:.*}",
+                partial(self.staticContentHandler, contentRoot=contentRoot),
+            )
         )
+
         self.httpApp.add_routes(routes)
+
         if self.launchWebBrowser:
             self.httpApp.on_startup.append(self.launchWebBrowserCallback)
         self.httpApp.on_shutdown.append(self.closeActiveWebsockets)
@@ -245,37 +242,25 @@ class FontraServer:
             result = {"returnValue": returnValue}
         return web.Response(text=json.dumps(result), content_type="application/json")
 
-    async def viewHandler(self, packageName: str, request: web.Request) -> web.Response:
-        authToken = await self.projectManager.authorize(request)
-        if not authToken:
-            qs = quote(request.path_qs, safe="")
-            raise web.HTTPFound(f"/?ref={qs}")
-
-        project = request.query.get("project")
-        # Skip applicationsettings.html, as it is the only view that does
-        # *not* require a valid project in the query
-        if request.match_info.get("path") != "applicationsettings.html" and (
-            not project
-            or not await self.projectManager.projectAvailable(project, authToken)
-        ):
-            raise web.HTTPForbidden()
-
-        return await self.staticContentHandler(packageName, request)
-
     async def staticContentHandler(
-        self, packageName: str, request: web.Request
+        self, request: web.Request, *, contentRoot: Traversable, pathPrefix: str = ""
     ) -> web.Response:
+        path = request.path
+        if pathPrefix and path.startswith(pathPrefix):
+            path = path[len(pathPrefix) :]
+
         ifModSince = request.if_modified_since
         if ifModSince is not None and ifModSince >= self.startupTime:
             raise web.HTTPNotModified()
 
-        pathItems = [""] + request.match_info["path"].split("/")
-        modulePath = packageName + ".".join(pathItems[:-1])
-        resourceName = pathItems[-1]
+        resourcePath = joinpath(contentRoot, *path.split("/"))
+
         try:
-            data = getResourcePath(modulePath, resourceName).read_bytes()
+            data = resourcePath.read_bytes()
         except (FileNotFoundError, IsADirectoryError, ModuleNotFoundError):
             raise web.HTTPNotFound()
+
+        resourceName = resourcePath.name
         ext = resourceName.rsplit(".", 1)[-1].lower()
         if ext not in self.allowedFileExtensions:
             raise web.HTTPNotFound()
@@ -291,23 +276,18 @@ class FontraServer:
         response = await self.projectManager.rootDocumentHandler(request)
         return response
 
-    # Support pre-2025 paths
-    async def viewRedirectHandler(self, request: web.Request) -> web.Response:
-        view = request.match_info["view"]
-        project = request.match_info.get("project")
-        if project is None:
-            project = request.query.get("project")
 
-        raise web.HTTPFound(f"/{view}.html?project={project}")
+def getPackageResourcePath(packageName: str) -> Traversable:
+    rootPart, *children = packageName.split(".")
+    return joinpath(resources.files(rootPart), *children)
 
 
-def getResourcePath(modulePath: str, resourceName: str) -> Traversable:
-    moduleParts = modulePath.split(".")
-    moduleRoot = resources.files(moduleParts[0])
-    resourcePath = moduleRoot
-    for pathItem in [*moduleParts[1:], resourceName]:
-        resourcePath = resourcePath.joinpath(pathItem)
-    return resourcePath
+def joinpath(path: Traversable, *parts: str) -> Traversable:
+    # This function is not needed for Python 3.11 and up, since t.joinpath()
+    # has been improved to accept multiple arguments
+    for part in parts:
+        path = path / part
+    return path
 
 
 def splitVersionToken(fileName: str) -> tuple[str, str | None]:

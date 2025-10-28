@@ -52,6 +52,7 @@ class FontraServer:
     versionToken: Optional[str] = None
     cookieMaxAge: int = 7 * 24 * 60 * 60
     allowedFileExtensions: frozenset[str] = frozenset(mimeTypes.keys())
+    contentRoot: Traversable | None = None
 
     def setup(self) -> None:
         self.startupTime = datetime.now(timezone.utc).replace(microsecond=0)
@@ -76,7 +77,11 @@ class FontraServer:
                 )
             )
 
-        contentRoot = getPackageResourcePath("fontra.client")
+        contentRoot = (
+            getPackageResourcePath("fontra.client")
+            if self.contentRoot is None
+            else self.contentRoot
+        )
         routes.append(
             web.get(
                 "/{path:.*}",

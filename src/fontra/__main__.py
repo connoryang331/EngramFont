@@ -1,5 +1,6 @@
 import argparse
 import logging
+import pathlib
 import secrets
 import subprocess
 from importlib.metadata import entry_points
@@ -29,6 +30,7 @@ def main() -> None:
     parser.add_argument(
         "--launch", action="store_true", help="Launch the default browser"
     )
+    parser.add_argument("--content-root", type=pathlib.Path)
     parser.add_argument(
         "-V",
         "--version",
@@ -67,6 +69,7 @@ def main() -> None:
         projectManager=manager,
         launchWebBrowser=args.launch,
         versionToken=secrets.token_hex(4),
+        contentRoot=args.content_root,
     )
     server.setup()
     server.run()

@@ -30,6 +30,34 @@ export function message(headline, message) {
   ]);
 }
 
+export async function askString(headline, initialString = "") {
+  const dialog = await dialogSetup(headline, null, [
+    { title: translate("dialog.cancel"), isCancelButton: true },
+    {
+      title: translate("dialog.okay"),
+      isDefaultButton: true,
+      disabled: !initialString,
+      resultValue: true,
+    },
+  ]);
+
+  const textInput = html.input({
+    type: "text",
+    value: initialString,
+    oninput: (event) =>
+      dialog.defaultButton.classList.toggle("disabled", !textInput.value),
+  });
+
+  dialog.setContent(textInput);
+
+  setTimeout(() => {
+    textInput.focus();
+    textInput.select();
+  }, 0);
+
+  return (await dialog.run()) ? textInput.value : null;
+}
+
 export class ModalDialog extends SimpleElement {
   static styles = `
 

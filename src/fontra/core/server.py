@@ -78,10 +78,15 @@ class FontraServer:
             )
 
         contentRoot = (
-            getPackageResourcePath("fontra.client")
+            (
+                self.projectManager.getContentRoot()
+                if hasattr(self.projectManager, "getContentRoot")
+                else getPackageResourcePath("fontra.client")
+            )
             if self.contentRoot is None
             else self.contentRoot
         )
+
         routes.append(
             web.get(
                 "/{path:.*}",

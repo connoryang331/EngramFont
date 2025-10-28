@@ -80,5 +80,8 @@ export function makeConfig(options) {
   if (options.custom) {
     Object.assign(config, options.custom);
   }
+  if (options.watchOptions) {
+    config.watchOptions = options.watchOptions;
+  }
   return config;
 }

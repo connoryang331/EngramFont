@@ -90,9 +90,13 @@ export class VariableGlyphController {
     return this._combinedAxes;
   }
 
+  get glyphAxisNames() {
+    return new Set(this.axes.map((axis) => axis.name));
+  }
+
   get fontAxisNames() {
     if (this._fontAxisNames === undefined) {
-      const glyphAxisNames = new Set(this.glyph.axes.map((axis) => axis.name));
+      const glyphAxisNames = this.glyphAxisNames;
       this._fontAxisNames = new Set(
         this.fontAxesSourceSpace
           .map((axis) => axis.name)
@@ -112,7 +116,7 @@ export class VariableGlyphController {
 
   _setupAxisMapping() {
     const combinedAxes = Array.from(this.axes);
-    const glyphAxisNames = new Set(this.axes.map((axis) => axis.name));
+    const glyphAxisNames = this.glyphAxisNames;
 
     for (let fontAxis of this.fontAxesSourceSpace) {
       if (!glyphAxisNames.has(fontAxis.name)) {
@@ -460,7 +464,7 @@ export class VariableGlyphController {
   }
 
   splitLocation(location) {
-    const glyphAxisNames = new Set(this.axes.map((axis) => axis.name));
+    const glyphAxisNames = this.glyphAxisNames;
 
     const fontLocation = {};
     const glyphLocation = {};

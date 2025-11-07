@@ -112,7 +112,7 @@ export class Form extends SimpleElement {
       gap: 0.35rem;
     }
 
-    .ui-form-value.selection-edit-number-slider {
+    .ui-form-value.slider-has-checkbox {
       display: grid;
       gap: 0.25em;
       grid-template-columns: auto 1.5em;
@@ -504,52 +504,28 @@ export class Form extends SimpleElement {
 
   _addEditNumberSlider(valueElement, fieldItem) {
     const rangeElement = new RangeSlider();
-    rangeElement.value = fieldItem.value;
-    rangeElement.minValue = fieldItem.minValue;
-    rangeElement.defaultValue = fieldItem.defaultValue;
-    rangeElement.maxValue = fieldItem.maxValue;
-
-    {
-      // Slider change closure
-      let valueStream = undefined;
-
-      rangeElement.onChangeCallback = (event) => {
-        const value = event.value;
-        if (event.dragBegin) {
-          valueStream = new QueueIterator(5, true);
-          this._fieldChanging(fieldItem, value, valueStream);
-        }
-
-        if (valueStream) {
-          valueStream.put(value);
-          this._dispatchEvent("doChange", { key: fieldItem.key, value: value });
-          if (event.dragEnd) {
-            valueStream.done();
-            valueStream = undefined;
-            this._dispatchEvent("endChange", { key: fieldItem.key });
-          }
-        } else {
-          this._fieldChanging(fieldItem, value, undefined);
-        }
-      };
-    }
-
-    valueElement.appendChild(rangeElement);
-  }
-
-  _addSelectionEditNumberSlider(valueElement, fieldItem) {
-    let displayedValue = fieldItem.value;
-    if (displayedValue === undefined) {
-      displayedValue = fieldItem.defaultValue;
-    }
-
-    const rangeElement = new RangeSlider();
-    rangeElement.value = displayedValue;
+    rangeElement.value = getInitialValueWithFallback(fieldItem);
     rangeElement.minValue = fieldItem.minValue;
     rangeElement.defaultValue = fieldItem.defaultValue;
     rangeElement.maxValue = fieldItem.maxValue;
 
     let checkboxElement;
+    if (fieldItem.hasCheckBox) {
+      checkboxElement = html.input({
+        type: "checkbox",
+        checked: fieldItem.value !== undefined,
+        onchange: (event) => {
+          const isChecked = event.target.checked;
+          const changeToValue = isChecked
+            ? getInitialValueWithFallback(fieldItem)
+            : null;
+          console.log("changing", fieldItem.key, "to", changeToValue);
+          this._fieldChanging(fieldItem, changeToValue, undefined);
+        },
+      });
+      valueElement.classList.add("slider-has-checkbox");
+    }
+
     {
       // Slider change closure
       let valueStream = undefined;
@@ -577,25 +553,12 @@ export class Form extends SimpleElement {
           this._fieldChanging(fieldItem, value, undefined);
         }
       };
-
-      checkboxElement = html.input({
-        type: "checkbox",
-        checked: fieldItem.value !== undefined,
-        onchange: (event) => {
-          const isChecked = event.target.checked;
-          const changeToValue = isChecked
-            ? fieldItem.value !== undefined
-              ? fieldItem.value
-              : fieldItem.defaultValue
-            : null;
-          console.log("changing", fieldItem.key, "to", changeToValue);
-          this._fieldChanging(fieldItem, changeToValue, undefined);
-        },
-      });
     }
 
     valueElement.appendChild(rangeElement);
-    valueElement.appendChild(checkboxElement);
+    if (checkboxElement) {
+      valueElement.appendChild(checkboxElement);
+    }
   }
 
   _addColorPicker(valueElement, fieldItem) {
@@ -727,6 +690,10 @@ function maybeRound(value, digits) {
 
 function maybeRoundToString(value, digits) {
   return value == undefined ? "" : digits == undefined ? value : round(value, digits);
+}
+
+function getInitialValueWithFallback(fieldItem) {
+  return fieldItem.value ?? fieldItem.fallbackValue ?? fieldItem.defaultValue;
 }
 
 customElements.define("ui-form", Form);

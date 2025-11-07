@@ -31,9 +31,12 @@ import {
   areGuidelinesCompatible,
   assert,
   enumerate,
+  filterObject,
+  mapObjectValues,
   normalizeGuidelines,
   parseSelection,
   range,
+  zip,
 } from "./utils.js";
 import { addItemwise } from "./var-funcs.js";
 import { StaticGlyph, copyComponent } from "./var-glyph.js";
@@ -251,7 +254,10 @@ export class VariableGlyphController {
       const masterValues = ensureGlyphCompatibility(
         this.sources
           .filter((source) => !source.inactive)
-          .map((source) => this.layers[source.layerName].glyph),
+          .map((source) => ({
+            sourceLocation: this.getSourceLocation(source),
+            glyph: this.layers[source.layerName].glyph,
+          })),
         glyphDependencies
       );
 
@@ -1190,46 +1196,24 @@ function makeEmptyComponentPlaceholderGlyph() {
   return StaticGlyph.fromObject({ path: path });
 }
 
-function ensureGlyphCompatibility(layerGlyphs, glyphDependencies) {
-  const baseGlyphFallbackValues = {};
+function ensureGlyphCompatibility(layers, glyphDependencies) {
+  const layerGlyphs = layers.map(({ glyph }) => glyph);
 
-  layerGlyphs.forEach((glyph) =>
-    glyph.components.forEach((compo) => {
-      let fallbackValues = baseGlyphFallbackValues[compo.name];
-      if (!fallbackValues) {
-        fallbackValues = {};
-        baseGlyphFallbackValues[compo.name] = fallbackValues;
-      }
-      for (const axisName in compo.location) {
-        fallbackValues[axisName] = 0;
-      }
-    })
-  );
+  const componentsAreCompatible = areComponentsCompatible(layerGlyphs);
 
-  for (const [glyphName, fallbackValues] of Object.entries(baseGlyphFallbackValues)) {
-    const baseGlyph = glyphDependencies[glyphName];
-    for (const axis of baseGlyph?.combinedAxes || []) {
-      if (axis.name in fallbackValues) {
-        fallbackValues[axis.name] = axis.defaultValue;
-      }
-    }
+  if (componentsAreCompatible) {
+    setupComponentLocationFallbackValues(layers, glyphDependencies);
   }
 
   const guidelinesAreCompatible = areGuidelinesCompatible(layerGlyphs);
 
-  return layerGlyphs.map((glyph) =>
+  return layers.map(({ sourceLocation, glyph, componentLocationFallbackValues }) =>
     StaticGlyph.fromObject(
       {
         ...glyph,
-        components: glyph.components.map((component) => {
-          return {
-            ...component,
-            location: {
-              ...baseGlyphFallbackValues[component.name],
-              ...component.location,
-            },
-          };
-        }),
+        components: componentsAreCompatible
+          ? normalizeComponents(glyph, sourceLocation, componentLocationFallbackValues)
+          : glyph.components,
         guidelines: guidelinesAreCompatible
           ? normalizeGuidelines(glyph.guidelines, true)
           : [],
@@ -1238,6 +1222,94 @@ function ensureGlyphCompatibility(layerGlyphs, glyphDependencies) {
       true // noCopy
     )
   );
+}
+
+function areComponentsCompatible(glyphs) {
+  const allComponents = glyphs.map((glyph) => glyph.components);
+  const firstComponents = allComponents[0];
+
+  for (const components of allComponents.slice(1)) {
+    if (firstComponents.length != components.length) {
+      return false;
+    }
+    for (const [a, b] of zip(firstComponents, components)) {
+      if (a.name != b.name) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+function setupComponentLocationFallbackValues(layers, glyphDependencies) {
+  const componentInfo = layers[0].glyph.components.map((compo) => ({
+    name: compo.name,
+    usedAxisNames: new Set(),
+  }));
+
+  const baseGlyphAxesByName = Object.fromEntries(
+    componentInfo.map(({ name }) => [
+      name,
+      Object.fromEntries(
+        glyphDependencies[name].combinedAxes.map((axis) => [axis.name, axis])
+      ),
+    ])
+  );
+
+  const baseGlyphAxisNames = mapObjectValues(
+    baseGlyphAxesByName,
+    (axesByName) => new Set(Object.keys(axesByName))
+  );
+
+  const numComponents = layers[0].glyph.components.length;
+
+  // populate usedAxisNames
+  for (const componentIndex of range(numComponents)) {
+    for (const { sourceLocation, glyph } of layers) {
+      const compo = glyph.components[componentIndex];
+      for (const axisName of Object.keys(compo.location)) {
+        if (baseGlyphAxisNames[compo.name]?.has(axisName)) {
+          componentInfo[componentIndex].usedAxisNames.add(axisName);
+        }
+      }
+    }
+  }
+
+  // populate componentLocationFallbackValues
+  for (const layer of layers) {
+    layer.componentLocationFallbackValues = componentInfo.map(
+      ({ name, usedAxisNames }) => {
+        return Object.fromEntries(
+          [...usedAxisNames].map((axisName) => [
+            axisName,
+            glyphDependencies[name].fontAxisNames.has(axisName)
+              ? layer.sourceLocation[axisName]
+              : baseGlyphAxesByName[name][axisName].defaultValue,
+          ])
+        );
+      }
+    );
+  }
+}
+
+function normalizeComponents(glyph, sourceLocation, componentLocationFallbackValues) {
+  const normalizedComponents = [];
+
+  for (const [compo, fallbackValues] of zip(
+    glyph.components,
+    componentLocationFallbackValues
+  )) {
+    const location = {
+      ...fallbackValues,
+      ...filterObject(compo.location, (axisName, axisValue) =>
+        fallbackValues.hasOwnProperty(axisName)
+      ),
+    };
+    normalizedComponents.push({ ...compo, location });
+  }
+
+  return normalizedComponents;
 }
 
 function stripNonInterpolatables(glyph) {

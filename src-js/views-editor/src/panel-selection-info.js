@@ -417,7 +417,7 @@ export default class SelectionInfoPanel extends Panel {
 
         const fontAxisNames = baseGlyph.fontAxisNames;
         const selectedFontAxisNames = [...baseGlyph.fontAxisNames].filter(
-          (axisName) => showGlobalAxes || axis.name in component.location
+          (axisName) => showGlobalAxes || axisName in component.location
         );
 
         const glyphAxisNames = [...baseGlyph.glyphAxisNames].sort((a, b) => {

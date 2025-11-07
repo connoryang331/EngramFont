@@ -409,39 +409,48 @@ export default class SelectionInfoPanel extends Panel {
       addTransformationItems(formContents, componentKey, component.transformation);
 
       const baseGlyph = await this.fontController.getGlyph(component.name);
+
       if (baseGlyph) {
+        const showGlobalAxes =
+          this.sceneController.applicationSettings
+            .alwaysShowGlobalAxesInComponentLocation;
+
+        const fontAxisNames = baseGlyph.fontAxisNames;
+        const selectedFontAxisNames = [...baseGlyph.fontAxisNames].filter(
+          (axisName) => showGlobalAxes || axis.name in component.location
+        );
+
+        const glyphAxisNames = [...baseGlyph.glyphAxisNames].sort((a, b) => {
+          const firstCharAIsUpper = a[0] === a[0].toUpperCase();
+          const firstCharBIsUpper = b[0] === b[0].toUpperCase();
+          if (firstCharAIsUpper != firstCharBIsUpper) {
+            return firstCharBIsUpper ? -1 : 1;
+          } else {
+            return a < b ? -1 : +1;
+          }
+        });
+
+        const axisNames = [...selectedFontAxisNames, ...glyphAxisNames];
+
         const locationItems = [];
 
-        // display the global font axes then the component glyph axes in creation order
-        // to match the order shown in the glyph editor
-        const globalFontAxes = this.fontController.fontAxes;
-        const componentGlyphAxes = baseGlyph.axes || [];
+        // TODO: this needs more thinking, as the axes of *nested* components
+        // may also be of interest. Also: we need to be able to *add* such a value
+        // to component.location.
 
-        for (const axis of globalFontAxes) {
-          let currentGlobalAxisLocationValue =
-            // this.sceneController.sceneModel.fontSourceInstance.location?[axis.name] ??
-            this.sceneController.sceneSettingsController.model.fontLocationUser[
-              axis.name
+        const combinedAxes = Object.fromEntries(
+          baseGlyph.combinedAxes.map((axis) => [axis.name, axis])
+        );
+
+        for (const axisName of axisNames) {
+          const isGlobalAxis = fontAxisNames.has(axisName);
+          const axis = combinedAxes[axisName];
+          const value = component.location[axis.name];
+          const currentGlobalAxisLocationValue =
+            this.sceneController.sceneSettingsController.model.fontLocationSourceMapped[
+              axisName
             ] ?? axis.defaultValue;
-          let value = component.location[axis.name];
-          if (
-            value != null ||
-            this.sceneController.applicationSettings
-              .alwaysShowGlobalAxesInComponentLocation
-          ) {
-            locationItems.push({
-              type: "selection-edit-number-slider",
-              key: componentKey("location", axis.name),
-              label: axis.name,
-              value: value,
-              minValue: axis.minValue,
-              defaultValue: currentGlobalAxisLocationValue,
-              maxValue: axis.maxValue,
-            });
-          }
-        }
-        for (const axis of componentGlyphAxes) {
-          let value = component.location[axis.name];
+
           locationItems.push({
             type: "edit-number-slider",
             key: componentKey("location", axis.name),
@@ -450,8 +459,11 @@ export default class SelectionInfoPanel extends Panel {
             minValue: axis.minValue,
             defaultValue: axis.defaultValue,
             maxValue: axis.maxValue,
+            hasCheckBox: isGlobalAxis,
+            fallbackValue: isGlobalAxis ? currentGlobalAxisLocationValue : undefined,
           });
         }
+
         if (locationItems.length) {
           formContents.push({
             type: "header",

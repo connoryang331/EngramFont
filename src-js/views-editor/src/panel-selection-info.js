@@ -443,7 +443,7 @@ export default class SelectionInfoPanel extends Panel {
         for (const axis of componentGlyphAxes) {
           let value = component.location[axis.name];
           locationItems.push({
-            type: "selection-edit-number-slider",
+            type: "edit-number-slider",
             key: componentKey("location", axis.name),
             label: axis.name,
             value: value,

@@ -255,7 +255,7 @@ export class VariableGlyphController {
         this.sources
           .filter((source) => !source.inactive)
           .map((source) => ({
-            sourceLocation: this.getSourceLocation(source),
+            sourceLocation: this.getDenseSourceLocationForSource(source),
             glyph: this.layers[source.layerName].glyph,
           })),
         glyphDependencies

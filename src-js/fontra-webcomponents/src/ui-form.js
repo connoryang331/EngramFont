@@ -519,7 +519,6 @@ export class Form extends SimpleElement {
           const changeToValue = isChecked
             ? getInitialValueWithFallback(fieldItem)
             : null;
-          console.log("changing", fieldItem.key, "to", changeToValue);
           this._fieldChanging(fieldItem, changeToValue, undefined);
         },
       });

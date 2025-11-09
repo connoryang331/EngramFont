@@ -321,7 +321,11 @@ export function isActiveElementTypeable() {
   if (element.tagName.toLowerCase() === "textarea") {
     return true;
   }
-  if (element.tagName.toLowerCase() === "input" && element.type !== "range") {
+  if (
+    element.tagName.toLowerCase() === "input" &&
+    element.type !== "range" &&
+    element.type !== "checkbox"
+  ) {
     return true;
   }
   return false;

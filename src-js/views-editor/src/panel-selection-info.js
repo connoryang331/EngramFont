@@ -999,6 +999,7 @@ function deleteNestedValue(subject, path) {
 
 function applyNewValue(glyph, layerInfo, value, fieldItem, absolute) {
   const setFieldValue = fieldItem.setValue || defaultSetFieldValue;
+  const deleteFieldValue = fieldItem.deleteValue || defaultDeleteFieldValue;
 
   const primaryOrgValue = layerInfo[0].orgValue;
   const isNumber = typeof primaryOrgValue === "number";
@@ -1007,14 +1008,24 @@ function applyNewValue(glyph, layerInfo, value, fieldItem, absolute) {
   return recordChanges(glyph, (glyph) => {
     const layers = glyph.layers;
     for (const { layerName, layerGlyphController, orgValue } of layerInfo) {
-      const layerValue = value?.getValue ? value.getValue(layerName) : value;
+      if (value == null) {
+        deleteFieldValue(layers[layerName].glyph, layerGlyphController, fieldItem);
+      } else {
+        const layerValue = value?.getValue ? value.getValue(layerName) : value;
 
-      let newValue =
-        delta === null || orgValue === undefined ? layerValue : orgValue + delta;
-      if (isNumber) {
-        newValue = maybeClampValue(newValue, fieldItem.minValue, fieldItem.maxValue);
+        let newValue =
+          delta === null || orgValue === undefined ? layerValue : orgValue + delta;
+
+        if (isNumber) {
+          newValue = maybeClampValue(newValue, fieldItem.minValue, fieldItem.maxValue);
+        }
+        setFieldValue(
+          layers[layerName].glyph,
+          layerGlyphController,
+          fieldItem,
+          newValue
+        );
       }
-      setFieldValue(layers[layerName].glyph, layerGlyphController, fieldItem, newValue);
     }
   });
 }

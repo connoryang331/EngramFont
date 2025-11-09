@@ -773,42 +773,14 @@ export default class SelectionInfoPanel extends Panel {
           await sendIncrementalChange(changes.change, true); // true: "may drop"
         }
       } else {
-        const keyitem = JSON.parse(fieldItem.key);
-        // Handle the specific case for component location changes
-        if (keyitem[0] === "components" && keyitem[2] === "location") {
-          changes = recordChanges(glyph, (glyph) => {
-            // Apply the change to all layers
-            for (const [layerName, layer] of Object.entries(glyph.layers)) {
-              const loopLayerGlyph = layer.glyph;
-              const loopLayerGlyphController =
-                this.fontController.getLayerGlyphController(
-                  glyphName,
-                  layerName,
-                  varGlyph.getSourceIndexForLayerName(layerName)
-                );
-              // Remove the component axis location
-              if (value === null) {
-                deleteFieldValue(loopLayerGlyph, loopLayerGlyphController, fieldItem);
-              } else {
-                setFieldValue(
-                  loopLayerGlyph,
-                  loopLayerGlyphController,
-                  fieldItem,
-                  value
-                );
-              }
-            }
-          });
-        } else {
-          // Simple, atomic change
-          changes = applyNewValue(
-            glyph,
-            layerInfo,
-            value,
-            fieldItem,
-            this.multiEditChangesAreAbsolute
-          );
-        }
+        // Simple, atomic change
+        changes = applyNewValue(
+          glyph,
+          layerInfo,
+          value,
+          fieldItem,
+          this.multiEditChangesAreAbsolute
+        );
       }
 
       const undoLabel =

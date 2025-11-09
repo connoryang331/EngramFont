@@ -516,9 +516,7 @@ export class Form extends SimpleElement {
         checked: fieldItem.value !== undefined,
         onchange: (event) => {
           const isChecked = event.target.checked;
-          const changeToValue = isChecked
-            ? getInitialValueWithFallback(fieldItem)
-            : null;
+          const changeToValue = isChecked ? rangeElement.value : null;
           this._fieldChanging(fieldItem, changeToValue, undefined);
         },
       });

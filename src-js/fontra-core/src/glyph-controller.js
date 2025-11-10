@@ -109,6 +109,18 @@ export class VariableGlyphController {
     return this._fontAxisNames;
   }
 
+  get continuousFontAxisNames() {
+    return new Set(
+      this.fontAxesSourceSpace.filter((axis) => !axis.values).map((axis) => axis.name)
+    );
+  }
+
+  get discreteFontAxisNames() {
+    return new Set(
+      this.fontAxesSourceSpace.filter((axis) => !!axis.values).map((axis) => axis.name)
+    );
+  }
+
   getSourceName(source) {
     return source.name || this.fontSources[source.locationBase]?.name;
   }

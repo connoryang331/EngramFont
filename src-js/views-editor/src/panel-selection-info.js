@@ -560,7 +560,7 @@ export default class SelectionInfoPanel extends Panel {
       "#component-axis-options-button"
     );
     const buttonRect = button.getBoundingClientRect();
-    showMenu(menuItems, { x: buttonRect.left, y: buttonRect.bottom });
+    showMenu(menuItems, { x: buttonRect.right, y: buttonRect.bottom });
   }
 
   async _toggleGlyphLock(varGlyph) {

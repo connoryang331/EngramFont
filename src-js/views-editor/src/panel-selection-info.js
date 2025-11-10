@@ -16,6 +16,7 @@ import {
   splitGlyphNameExtension,
   throttleCalls,
 } from "@fontra/core/utils.js";
+import { showMenu } from "@fontra/web-components/menu-panel.js";
 import { dialog } from "@fontra/web-components/modal-dialog.js";
 import { Form } from "@fontra/web-components/ui-form.js";
 import Panel from "./panel.js";
@@ -424,15 +425,18 @@ export default class SelectionInfoPanel extends Panel {
             )
         );
 
-        const glyphAxisNames = [...baseGlyph.glyphAxisNames].sort((a, b) => {
-          const firstCharAIsUpper = a[0] === a[0].toUpperCase();
-          const firstCharBIsUpper = b[0] === b[0].toUpperCase();
-          if (firstCharAIsUpper != firstCharBIsUpper) {
-            return firstCharBIsUpper ? -1 : 1;
-          } else {
-            return a < b ? -1 : +1;
-          }
-        });
+        const glyphAxisNames = [...baseGlyph.glyphAxisNames];
+        if (this.sceneController.applicationSettings.sortComponentLocationGlyphAxes) {
+          glyphAxisNames.sort((a, b) => {
+            const firstCharAIsUpper = a[0] === a[0].toUpperCase();
+            const firstCharBIsUpper = b[0] === b[0].toUpperCase();
+            if (firstCharAIsUpper != firstCharBIsUpper) {
+              return firstCharBIsUpper ? -1 : 1;
+            } else {
+              return a < b ? -1 : +1;
+            }
+          });
+        }
 
         const axisNames = [...selectedFontAxisNames, ...glyphAxisNames];
 
@@ -468,7 +472,7 @@ export default class SelectionInfoPanel extends Panel {
           });
         }
 
-        if (locationItems.length) {
+        if (locationItems.length || true) {
           formContents.push({
             type: "header",
             label: "Location",
@@ -478,10 +482,13 @@ export default class SelectionInfoPanel extends Panel {
               },
               [
                 html.createDomElement("icon-button", {
+                  "id": "component-axis-options-button",
                   "style": `width: 1.3em;`,
-                  "src": "/tabler-icons/world.svg",
-                  "onclick": (event) => this._toggleShowComponentGlobalAxes(),
-                  "data-tooltip": translate("Show global font axes"),
+                  "src": "/tabler-icons/menu-2.svg",
+                  "onclick": (event) => this.showComponentAxesOptionsMenu(event),
+                  "data-tooltip": translate(
+                    "sidebar.designspace-navigation.font-axes-view-options-button.tooltip"
+                  ),
                   "data-tooltipposition": "left",
                 }),
                 html.createDomElement("icon-button", {
@@ -521,6 +528,39 @@ export default class SelectionInfoPanel extends Panel {
         await this._setupSelectionInfoHandlers(glyphName);
       }
     }
+  }
+
+  showComponentAxesOptionsMenu(event) {
+    const menuItems = [
+      {
+        title: translate("Show global axes"),
+        callback: () => {
+          this.sceneController.applicationSettings.alwaysShowGlobalAxesInComponentLocation =
+            !this.sceneController.applicationSettings
+              .alwaysShowGlobalAxesInComponentLocation;
+          this.update();
+        },
+        checked:
+          this.sceneController.applicationSettings
+            .alwaysShowGlobalAxesInComponentLocation,
+      },
+      {
+        title: translate("Sort glyph axes"),
+        callback: () => {
+          this.sceneController.applicationSettings.sortComponentLocationGlyphAxes =
+            !this.sceneController.applicationSettings.sortComponentLocationGlyphAxes;
+          this.update();
+        },
+        checked:
+          this.sceneController.applicationSettings.sortComponentLocationGlyphAxes,
+      },
+    ];
+
+    const button = this.infoForm.shadowRoot.querySelector(
+      "#component-axis-options-button"
+    );
+    const buttonRect = button.getBoundingClientRect();
+    showMenu(menuItems, { x: buttonRect.left, y: buttonRect.bottom });
   }
 
   async _toggleGlyphLock(varGlyph) {
@@ -588,14 +628,6 @@ export default class SelectionInfoPanel extends Panel {
       }
       return translate("sidebar.selection-info.component.reset-transformation");
     });
-  }
-
-  async _toggleShowComponentGlobalAxes() {
-    const sceneController = this.sceneController;
-    sceneController.applicationSettings.alwaysShowGlobalAxesInComponentLocation =
-      !sceneController.applicationSettings.alwaysShowGlobalAxesInComponentLocation;
-    this.update();
-    return translate("Show global font axes");
   }
 
   async _resetAxisValuesForComponent(componentIndex) {

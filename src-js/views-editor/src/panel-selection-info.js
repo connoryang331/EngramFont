@@ -415,8 +415,8 @@ export default class SelectionInfoPanel extends Panel {
           this.sceneController.applicationSettings
             .alwaysShowGlobalAxesInComponentLocation;
 
-        const fontAxisNames = baseGlyph.fontAxisNames;
-        const selectedFontAxisNames = [...baseGlyph.fontAxisNames].filter(
+        const fontAxisNames = baseGlyph.continuousFontAxisNames;
+        const selectedFontAxisNames = [...fontAxisNames].filter(
           (axisName) => showGlobalAxes || axisName in component.location
         );
 

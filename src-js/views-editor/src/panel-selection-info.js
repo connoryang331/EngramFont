@@ -448,9 +448,10 @@ export default class SelectionInfoPanel extends Panel {
 
         const locationItems = [];
 
-        // TODO: this needs more thinking, as the axes of *nested* components
-        // may also be of interest. Also: we need to be able to *add* such a value
-        // to component.location.
+        // TODO: this needs more thinking, as the axes of *nested* components may also
+        // be of interest. We would then need to be able to *add* such a value to
+        // component.location. This could work somewhat similar to showing global axes.
+        // Given we have no direct use case, we'll leave this for now.
 
         const combinedAxes = Object.fromEntries(
           baseGlyph.combinedAxes.map((axis) => [axis.name, axis])

@@ -1,3 +1,4 @@
+import { applicationSettingsController } from "@fontra/core/application-settings.js";
 import { recordChanges } from "@fontra/core/change-recorder.js";
 import * as html from "@fontra/core/html-utils.js";
 import { translate } from "@fontra/core/localization.js";
@@ -62,6 +63,11 @@ export default class SelectionInfoPanel extends Panel {
     this.sceneController.addEventListener("glyphEditLocationNotAtSource", async () => {
       this.update();
     });
+
+    applicationSettingsController.addKeyListener(
+      ["alwaysShowGlobalAxesInComponentLocation", "sortComponentLocationGlyphAxes"],
+      (event) => this.update()
+    );
   }
 
   getContentElement() {
@@ -538,7 +544,6 @@ export default class SelectionInfoPanel extends Panel {
           this.sceneController.applicationSettings.alwaysShowGlobalAxesInComponentLocation =
             !this.sceneController.applicationSettings
               .alwaysShowGlobalAxesInComponentLocation;
-          this.update();
         },
         checked:
           this.sceneController.applicationSettings
@@ -549,7 +554,6 @@ export default class SelectionInfoPanel extends Panel {
         callback: () => {
           this.sceneController.applicationSettings.sortComponentLocationGlyphAxes =
             !this.sceneController.applicationSettings.sortComponentLocationGlyphAxes;
-          this.update();
         },
         checked:
           this.sceneController.applicationSettings.sortComponentLocationGlyphAxes,

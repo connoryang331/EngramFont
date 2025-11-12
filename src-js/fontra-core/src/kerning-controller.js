@@ -103,24 +103,30 @@ export class KerningController {
   getPairFunction(leftName, rightName) {
     let pairFunction = this._pairFunctions[leftName]?.[rightName];
     if (pairFunction === undefined) {
-      let sourceValues = this.getPairValues(leftName, rightName);
-      if (sourceValues === undefined) {
-        // We don't have kerning for this pair
-        pairFunction = null;
-      } else {
-        // Replace missing values with zeros and ensure there are enough values
-        sourceValues = sourceValues.map((v) => (v == null ? 0 : v));
-        while (sourceValues.length < this.sourceIdentifiers.length) {
-          sourceValues.push(0);
-        }
-        const deltas = this.model.getDeltas(sourceValues);
-        pairFunction = (location) =>
-          this.model.interpolateFromDeltas(location, deltas).instance;
-      }
+      pairFunction = this._getPairFunction(leftName, rightName);
       if (!this._pairFunctions[leftName]) {
         this._pairFunctions[leftName] = {};
       }
       this._pairFunctions[leftName][rightName] = pairFunction;
+    }
+    return pairFunction;
+  }
+
+  _getPairFunction(leftName, rightName) {
+    let pairFunction;
+    let sourceValues = this.getPairValues(leftName, rightName);
+    if (sourceValues === undefined) {
+      // We don't have kerning for this pair
+      pairFunction = null;
+    } else {
+      // Replace missing values with zeros and ensure there are enough values
+      sourceValues = sourceValues.map((v) => (v == null ? 0 : v));
+      while (sourceValues.length < this.sourceIdentifiers.length) {
+        sourceValues.push(0);
+      }
+      const deltas = this.model.getDeltas(sourceValues);
+      pairFunction = (location) =>
+        this.model.interpolateFromDeltas(location, deltas).instance;
     }
     return pairFunction;
   }

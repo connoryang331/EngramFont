@@ -41,6 +41,7 @@ describe("KerningController Tests", () => {
         "@O": {
           "@O": [10, null, null, null, null, null],
           "Q": [20, null, 40, null, null, null],
+          "C": [null, 20, null, null, null, null],
         },
         "Q": { Q: [1, null, null, null, null] }, // missing value
       },
@@ -52,12 +53,14 @@ describe("KerningController Tests", () => {
     { leftGlyph: "T", rightGlyph: "A", expectedValue: -150, location: { Width: 150 } },
     { leftGlyph: "T", rightGlyph: "A", expectedValue: -200, location: { Width: 200 } },
     { leftGlyph: "O", rightGlyph: "O", expectedValue: 10, location: {} },
+    { leftGlyph: "O", rightGlyph: "O", expectedValue: 5, location: { Weight: 500 } },
     { leftGlyph: "D", rightGlyph: "G", expectedValue: 10, location: {} },
     { leftGlyph: "O", rightGlyph: "Q", expectedValue: 20, location: {} },
     { leftGlyph: "O", rightGlyph: "Q", expectedValue: 10, location: { Weight: 500 } },
     { leftGlyph: "O", rightGlyph: "Q", expectedValue: null, location: { Weight: 600 } },
     { leftGlyph: "Q", rightGlyph: "Q", expectedValue: 1, location: {} },
     { leftGlyph: "Q", rightGlyph: "Q", expectedValue: 0.5, location: { Weight: 500 } },
+    { leftGlyph: "O", rightGlyph: "C", expectedValue: 15, location: { Weight: 500 } },
   ];
 
   parametrize("KerningController basic test", testCasesBasic, (testCase) => {
@@ -217,6 +220,7 @@ describe("KerningController Tests", () => {
           "@O": {
             "@O": [10, null, null, null, null, null, 5],
             "Q": [20, null, 40, null, null, null, 10],
+            "C": [null, 20, null, null, null, null, 15],
           },
           "Q": { Q: [1, null, null, null, null, null, 1] }, // rounded: 0.5 -> 1
         },
@@ -242,6 +246,7 @@ describe("KerningController Tests", () => {
           "@O": {
             "@O": [10, null, null, null, null],
             "Q": [20, null, null, null, null],
+            "C": [null, 20, null, null, null],
           },
           "Q": { Q: [1, null, null, null] },
         },

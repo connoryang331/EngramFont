@@ -1268,24 +1268,27 @@ class KerningTool extends MetricsBaseTool {
       const leftIsGroup = leftName.startsWith("@");
       const rightIsGroup = rightName.startsWith("@");
 
+      const exceptions = [];
+
       if (leftIsGroup || rightIsGroup) {
-        contextMenuItems.push({
-          title: `Make kerning exception ${leftGlyph} ${rightGlyph}`,
-          callback: (event) =>
-            this.makeKerningException(leftName, rightName, leftGlyph, rightGlyph),
-        });
+        exceptions.push({ leftException: leftGlyph, rightException: rightGlyph });
       }
 
       if (leftIsGroup && rightIsGroup) {
+        exceptions.push({ leftException: leftGlyph, rightException: rightName });
+        exceptions.push({ leftException: leftName, rightException: rightGlyph });
+      }
+
+      for (const { leftException, rightException } of exceptions) {
         contextMenuItems.push({
-          title: `Make kerning exception ${leftGlyph} ${rightName}`,
+          title: `Make kerning exception ${leftException} ${rightException}`,
           callback: (event) =>
-            this.makeKerningException(leftName, rightName, leftGlyph, rightName),
-        });
-        contextMenuItems.push({
-          title: `Make kerning exception ${leftName} ${rightGlyph}`,
-          callback: (event) =>
-            this.makeKerningException(leftName, rightName, leftName, rightGlyph),
+            this.makeKerningException(
+              leftName,
+              rightName,
+              leftException,
+              rightException
+            ),
         });
       }
     }

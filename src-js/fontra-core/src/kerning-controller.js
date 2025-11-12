@@ -157,33 +157,43 @@ export class KerningController {
   }
 
   getGlyphPairValue(leftGlyph, rightGlyph, location, sourceIdentifier = null) {
-    const pairsToTry = this.getPairsToTry(leftGlyph, rightGlyph);
+    return sourceIdentifier && this.sourceIdentifiers.includes(sourceIdentifier)
+      ? this.getGlyphPairValueForSource(leftGlyph, rightGlyph, sourceIdentifier)
+      : this.getGlyphPairValueForLocation(leftGlyph, rightGlyph, location);
+  }
 
+  getGlyphPairValueForSource(leftGlyph, rightGlyph, sourceIdentifier) {
+    assert(sourceIdentifier);
+    const pairsToTry = this.getPairsToTry(leftGlyph, rightGlyph);
     let value = null;
 
-    if (sourceIdentifier && this.sourceIdentifiers.includes(sourceIdentifier)) {
-      for (const [leftName, rightName] of pairsToTry) {
-        const sourceValue = this.getPairValueForSource(
-          leftName,
-          rightName,
-          sourceIdentifier
-        );
-        if (sourceValue != undefined /* nullish! */) {
-          value = sourceValue;
-          break;
-        }
-      }
-    } else {
-      for (const [leftName, rightName] of pairsToTry) {
-        const pairFunction = this.getPairFunction(leftName, rightName);
-
-        if (pairFunction) {
-          value = pairFunction(location);
-          break;
-        }
+    for (const [leftName, rightName] of pairsToTry) {
+      const sourceValue = this.getPairValueForSource(
+        leftName,
+        rightName,
+        sourceIdentifier
+      );
+      if (sourceValue != undefined /* nullish! */) {
+        value = sourceValue;
+        break;
       }
     }
 
+    return value;
+  }
+
+  getGlyphPairValueForLocation(leftGlyph, rightGlyph, location) {
+    const pairsToTry = this.getPairsToTry(leftGlyph, rightGlyph);
+    let value = null;
+
+    for (const [leftName, rightName] of pairsToTry) {
+      const pairFunction = this.getPairFunction(leftName, rightName);
+
+      if (pairFunction) {
+        value = pairFunction(location);
+        break;
+      }
+    }
     return value;
   }
 

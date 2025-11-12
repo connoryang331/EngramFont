@@ -100,7 +100,7 @@ export class KerningController {
     }
   }
 
-  _getPairFunction(leftName, rightName) {
+  getPairFunction(leftName, rightName) {
     let pairFunction = this._pairFunctions[leftName]?.[rightName];
     if (pairFunction === undefined) {
       let sourceValues = this.getPairValues(leftName, rightName);
@@ -169,7 +169,7 @@ export class KerningController {
       }
     } else {
       for (const [leftName, rightName] of pairsToTry) {
-        const pairFunction = this._getPairFunction(leftName, rightName);
+        const pairFunction = this.getPairFunction(leftName, rightName);
 
         if (pairFunction) {
           value = pairFunction(location);
@@ -267,7 +267,7 @@ export class KerningController {
           newValues.push(null);
         }
 
-        const pairFunction = this._getPairFunction(leftName, rightName);
+        const pairFunction = this.getPairFunction(leftName, rightName);
         assert(pairFunction);
 
         newValues.push(Math.round(pairFunction(location)));

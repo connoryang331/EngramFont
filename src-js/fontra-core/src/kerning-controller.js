@@ -113,22 +113,58 @@ export class KerningController {
   }
 
   _getPairFunction(leftName, rightName) {
-    let pairFunction;
-    let sourceValues = this.getPairValues(leftName, rightName);
-    if (sourceValues === undefined) {
-      // We don't have kerning for this pair
-      pairFunction = null;
+    if (!this.kernData.values[leftName]?.[rightName]) {
+      // We don't have kerning for this exact pair
+      return null;
     } else {
-      // Replace missing values with zeros and ensure there are enough values
-      sourceValues = sourceValues.map((v) => (v == null ? 0 : v));
-      while (sourceValues.length < this.sourceIdentifiers.length) {
-        sourceValues.push(0);
-      }
-      const deltas = this.model.getDeltas(sourceValues);
-      pairFunction = (location) =>
-        this.model.interpolateFromDeltas(location, deltas).instance;
+      const finalSourceValues = Array(this.sourceIdentifiers.length).fill(null);
+      const namesWithFallbacks = [
+        ...this._getPairNamesWithFallbacks(leftName, rightName),
+      ];
+
+      namesWithFallbacks
+        .map(([leftName, rightName]) => this.getPairValues(leftName, rightName))
+        .filter((sourceValues) => !!sourceValues)
+        .forEach((sourceValues) => {
+          for (let i = 0; i < finalSourceValues.length; i++) {
+            if (finalSourceValues[i] != undefined) {
+              continue;
+            }
+            const value = sourceValues[i];
+            if (value != undefined) {
+              finalSourceValues[i] = value;
+            }
+          }
+        });
+
+      // Replace missing (nullish) values with zeros
+      const denseSourceValues = finalSourceValues.map((v) => (v == null ? 0 : v));
+      const deltas = this.model.getDeltas(denseSourceValues);
+      return (location) => this.model.interpolateFromDeltas(location, deltas).instance;
     }
-    return pairFunction;
+  }
+
+  _getPairNamesWithFallbacks(leftName, rightName) {
+    const namesWithFallbacks = [[leftName, rightName]];
+
+    const leftGroup = !leftName.startsWith("@")
+      ? addGroupPrefix(this.leftPairGroupMapping[leftName])
+      : null;
+    const rightGroup = !rightName.startsWith("@")
+      ? addGroupPrefix(this.rightPairGroupMapping[rightName])
+      : null;
+
+    if (leftGroup) {
+      namesWithFallbacks.push([leftGroup, rightName]);
+    }
+    if (rightGroup) {
+      namesWithFallbacks.push([leftName, rightGroup]);
+    }
+    if (leftGroup && rightGroup) {
+      namesWithFallbacks.push([leftGroup, rightGroup]);
+    }
+
+    return namesWithFallbacks;
   }
 
   getPairNames(leftGlyph, rightGlyph) {

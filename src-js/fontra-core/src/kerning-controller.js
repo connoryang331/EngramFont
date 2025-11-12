@@ -155,18 +155,20 @@ export class KerningController {
 
     let value = null;
 
-    for (const [leftName, rightName] of pairsToTry) {
-      if (sourceIdentifier && this.sourceIdentifiers.includes(sourceIdentifier)) {
+    if (sourceIdentifier && this.sourceIdentifiers.includes(sourceIdentifier)) {
+      for (const [leftName, rightName] of pairsToTry) {
         const sourceValue = this.getPairValueForSource(
           leftName,
           rightName,
           sourceIdentifier
         );
-        if (sourceValue !== undefined) {
+        if (sourceValue != undefined /* nullish! */) {
           value = sourceValue;
           break;
         }
-      } else {
+      }
+    } else {
+      for (const [leftName, rightName] of pairsToTry) {
         const pairFunction = this._getPairFunction(leftName, rightName);
 
         if (pairFunction) {

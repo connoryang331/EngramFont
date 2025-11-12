@@ -167,12 +167,16 @@ export class KerningController {
     return namesWithFallbacks;
   }
 
-  getPairNames(leftGlyph, rightGlyph) {
+  getPairNames(leftGlyph, rightGlyph, sourceIdentifier) {
+    const index = sourceIdentifier
+      ? this.sourceIdentifiers.indexOf(sourceIdentifier)
+      : -1;
+
     const pairsToTry = this.getPairsToTry(leftGlyph, rightGlyph);
 
     for (const [leftName, rightName] of pairsToTry) {
       const sourceValues = this.getPairValues(leftName, rightName);
-      if (sourceValues) {
+      if (sourceValues && (index < 0 || sourceValues[index] != null)) {
         return { leftName, rightName };
       }
     }

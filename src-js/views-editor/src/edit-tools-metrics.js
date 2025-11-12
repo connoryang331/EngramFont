@@ -1141,7 +1141,11 @@ class KerningTool extends MetricsBaseTool {
 
   getPairNamesFromSelector(selector) {
     const { leftGlyph, rightGlyph } = this.getGlyphNamesFromSelector(selector);
-    return this.kerningController.getPairNames(leftGlyph, rightGlyph);
+    return this.kerningController.getPairNames(
+      leftGlyph,
+      rightGlyph,
+      this.getSourceIdentifier()
+    );
   }
 
   async showDialogLocationNotAtSource() {

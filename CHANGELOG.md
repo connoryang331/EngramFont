@@ -3,6 +3,7 @@
 ## 2025-12-?
 
 - Add support for sparse kerning exceptions. These are kerning exceptions that only exist in some locations and not all. [Issue 2305](https://github.com/fontra/fontra/issues/2305), [PR 2306](https://github.com/fontra/fontra/pull/2306)
+- Improve support for global axes in variable components, by allowing the designer to override or fine-tune global axis values. The component sections in selection info panel now have a "hamburger" menu with some options: 1. Show global axes (as part of the component location) (default off), 2. Sort glyph axes (default on). Co-authored with NightFurySL2001. [Issue 2155](https://github.com/fontra/fontra/issues/2155), [PR 2276](https://github.com/fontra/fontra/pull/2276)
 
 ## 2025-10-18
 

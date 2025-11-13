@@ -427,7 +427,7 @@ export default class SelectionInfoPanel extends Panel {
           (axisName) =>
             showGlobalAxes ||
             Object.values(varGlyphController.layers).some((layer) =>
-              layer.glyph.components[index].location.hasOwnProperty(axisName)
+              layer.glyph.components[index]?.location.hasOwnProperty(axisName)
             )
         );
 

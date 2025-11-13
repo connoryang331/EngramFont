@@ -1,5 +1,9 @@
 # Changelog for Fontra
 
+## 2025-12-?
+
+- Add support for sparse kerning exceptions. These are kerning exceptions that only exist in some locations and not all. [Issue 2305](https://github.com/fontra/fontra/issues/2305), [PR 2306](https://github.com/fontra/fontra/pull/2306)
+
 ## 2025-10-18
 
 - Add "Font overview" menu item to "Font" menu, so users can go to the Font overview from other views. [PR 2293](https://github.com/fontra/fontra/pull/2293)

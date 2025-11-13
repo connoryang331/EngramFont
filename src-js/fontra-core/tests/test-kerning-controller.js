@@ -71,6 +71,51 @@ describe("KerningController Tests", () => {
     ).to.equal(testCase.expectedValue);
   });
 
+  const testCasesPairNames = [
+    {
+      leftGlyph: "T",
+      rightGlyph: "A",
+      expectedLeftName: "T",
+      expectedRightName: "A",
+      sourceIdentifier: undefined,
+    },
+    {
+      leftGlyph: "D",
+      rightGlyph: "G",
+      expectedLeftName: "@O",
+      expectedRightName: "@O",
+      sourceIdentifier: undefined,
+    },
+    {
+      leftGlyph: "D",
+      rightGlyph: "C",
+      expectedLeftName: "@O",
+      expectedRightName: "C",
+      sourceIdentifier: undefined,
+    },
+    {
+      leftGlyph: "D",
+      rightGlyph: "C",
+      expectedLeftName: "@O",
+      expectedRightName: "@O",
+      sourceIdentifier: "a",
+    },
+  ];
+
+  parametrize("KerningController test getPairName", testCasesPairNames, (testCase) => {
+    const controller = new KerningController("kern", testKerning, testFontController);
+    expect(
+      controller.getPairNames(
+        testCase.leftGlyph,
+        testCase.rightGlyph,
+        testCase.sourceIdentifier
+      )
+    ).to.deep.equal({
+      leftName: testCase.expectedLeftName,
+      rightName: testCase.expectedRightName,
+    });
+  });
+
   const testCasesEditing = [
     {
       pairSelectors: [{ sourceIdentifier: "a", leftName: "v", rightName: "q" }],

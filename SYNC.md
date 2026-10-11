@@ -4,17 +4,17 @@
 - `upstream` = https://github.com/fontra/fontra （上游，只读 fetch）
 - `origin` = 你自己的 EngramFont 仓库（建好后 `git remote add origin <你的仓库>`）
 - `main` = 上游镜像分支（保持纯净，只接受来自 upstream 的合并）
-- `engram-main` = 产品分支（品牌 + 全部功能改动；发版从这里出）
-- 功能分支从 `engram-main` 切出，完成后合回
+- `engramfont-main` = 产品分支（品牌 + 全部功能改动；发版从这里出）
+- 功能分支从 `engramfont-main` 切出，完成后合回
 
 ## 同步 SOP（建议每 1-3 个月，或需要上游某个修复时）
 ```bash
 git fetch upstream
 git checkout main && git merge --ff-only upstream/main     # 快进上游镜像
-git checkout engram-main && git merge main                  # 合入产品分支
+git checkout engramfont-main && git merge main                  # 合入产品分支
 npm ci && npm run bundle                                    # 重建
 # 冒烟验收：start-EngramFont.bat → landing/editor/导出菜单/键盘输入
-# 全绿后：git push origin engram-main
+# 全绿后：git push origin engramfont-main
 ```
 
 ## 冲突预算（改动越集中，同步越便宜）

@@ -9,7 +9,7 @@
 - DoD：点 g → 画布 g 字形编辑态（e2e 断言 selectedGlyph）
 
 ## T3.3 特殊键（1d）
-- 步骤：DEL/space 改 characterLines；100% 调 editor 缩放复位；move 接 sceneView pan
+- 步骤：DEL=reset 文本（恢复默认预览文本，v5 定案）；space 追加空格；100% 缩放复位；move 接 pan
 - DoD：各键 e2e 断言（文本变化/viewBox 复位/pan 态）
 
 ## T3.4 模式键（0.5d）

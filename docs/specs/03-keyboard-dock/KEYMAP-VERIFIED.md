@@ -200,3 +200,24 @@
   这就是 R5 proof 模式的排版控制交互（不新增控件，复用 Dock 滑块）
 - 实现：滑块 handler 按 canvasMode 分派到不同后端（edit→字形编辑 API；view→sceneSettings
   的 wordSpacing/letterSpacing/lineHeight/canvasMode 导线开关）
+
+
+## 实测键帽色值（meshfont 原色 · 视觉 1:1 用 · 1600px 视口采样）
+| 键 | background（rgb） | hex |
+|---|---|---|
+| 普通键（数字/字母） | rgb(45,45,48) | #2D2D30 |
+| 当前选中字形键 | rgb(232,230,225) | #E8E6E1 |
+| DEL（橙） | rgb(255,135,65) | #FF8741 |
+| 网格显隐（紫） | rgb(156,111,255) | #9C6FFF |
+| 粗细滑块（黄胶囊） | rgb(234,215,48) | #EAD730 |
+| shift-l（红） | rgb(255,81,81) | #FF5151 |
+| shift-r（绿） | rgb(0,175,88) | #00AF58 |
+| view/edit（蓝） | rgb(6,102,238) | #0666EE |
+| move（宽，深灰） | rgb(60,60,64) | #3C3C40 |
+| snap-grid（红，off 态） | rgb(255,81,81) | #FF5151 |
+| snap-guides（黄，on 态） | rgb(234,215,48) | #EAD730 |
+| mode-bezier（蓝） | rgb(6,102,238) | #0666EE |
+| outline（米） | rgb(234,215,201) | #EAD7C9 |
+| 画布背景（浅主题） | #faf9f7 系 | —— |
+- toggle 键的 on/off 底色策略（红=off、黄/绿/蓝=on 的示例）实现时再采（切一次对比）
+- 暗色主题色值：执行时切暗色采样补录

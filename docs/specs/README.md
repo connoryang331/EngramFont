@@ -7,7 +7,7 @@
 |---|---|---|---|---|
 | R1 | 浏览器内导出字体（TTF/OTF/WOFF2/家族） | [01-export](./01-export/) | 文档就绪 | ≈3.5d |
 | R2 | 导入字体 → 可编辑工程 | [02-import](./02-import/) | 文档就绪 | ≈2.5d |
-| R3 | 虚拟键盘 Dock | [03-keyboard-dock](./03-keyboard-dock/) | 文档就绪 | ≈4d |
+| R3 | 虚拟键盘 Dock（+可拆分双簇布局 +按键自定义） | [03-keyboard-dock](./03-keyboard-dock/) | 文档就绪 | ≈6-6.5d |
 | R4 | 新建字体/模板流 | [04-new-font-templates](./04-new-font-templates/) | 文档就绪 | ≈3d |
 | R5 | Proof/Edit 双模式画布 | [05-proof-edit-mode](./05-proof-edit-mode/) | 文档就绪 | ≈2.5d |
 | R6 | 路径操作工具集（straighten/soften/circle/锚点密度） | [06-path-ops](./06-path-ops/) | 文档就绪 | ≈4-5d |

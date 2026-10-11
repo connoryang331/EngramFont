@@ -140,3 +140,34 @@ modeEditKey.onclick  = () => setCanvasMode("edit");
 | Dock 背景 | var(--engramfont-ui-element-background-color)；圆角 12px |
 | 层级 | z-index 高于 canvas，低于对话框（modal-dialog） |
 | 折叠态 | 56px 圆形按钮，右下角固定 |
+
+## 10. 可拆分/合并布局（EngramFont 原创，meshfont 无此功能）
+```
+merged（默认）：底部居中整键盘（现有布局）
+split：左簇锚定画布左下 + 右簇锚定画布右下，中段留空（不遮挡画布中央的编辑焦点）
+  左簇：row1 前段(~1-5) / eye + q-t / capsule + a-g / 红 + z-b / ctrl+alt
+  右簇：row1 后段(6-=-DEL) / y-p+括号 / h-l+'+edit / n-/+绿 / space右半+4开关
+切换：Dock 上的 split/merge 拨钮（或拖拽分离手势——P2）；280ms 过渡
+持久化：localStorage "engramfont-dock-layout"
+```
+- 实现要点：键位数据（DOCK_ROWS）不变，按 split 点拆成两个容器渲染；
+  键的动作接线完全不变（同一 selectedGlyph/action 通路）
+- DoD：两簇所有键功能与合并态一致；切换 <300ms；状态持久化
+
+## 11. 按键自定义功能（EngramFont 原创）
+```
+绑定表：{ keyId: actionId }  存 localStorage "engramfont-key-bindings"
+默认绑定 = 现行行为；改绑 = 右键键帽 → action 选择器（menu-panel web component）
+可绑定项 = Fontra 已注册 action（zoom/export-as/网格显隐/模式切换…）
+         + 导航类（"切到字形 X"）+ 无功能
+分发：键点击 → 查绑定表 → 调 registerAction 注册的 callback（Fontra action 体系）
+重置：settings 里"恢复默认绑定"
+```
+- 范围：功能键与字母键均可改绑；DEL/mode 键建议锁定（防误改核心流程）——P2 再开放
+- DoD：改绑后行为即时生效、持久化、重置可用
+
+## 12. 估时修正
+| 项 | 原 | 新 |
+|---|---|---|
+| R3 合计 | ≈4d | **≈6-6.5d**（+T3.7 拆分合并 0.5-1d，+T3.8 自定义绑定 1-2d）|
+| 文档包总计 | ≈20d | ≈22.5d |

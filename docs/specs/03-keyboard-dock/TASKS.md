@@ -21,3 +21,15 @@
 
 ## T3.6 i18n/主题（0.5d）
 - DoD：lang 键齐全（zh-CN/en 至少）；暗色截图对照
+
+## T3.7 可拆分/合并布局（0.5-1d，EngramFont 原创）
+- 文件：keyboard-dock.js（布局拆分渲染）/ editor.css（双簇定位/过渡）
+- 步骤：layout 状态（merged/split）→ split 时按列边界拆两容器 → 锚定左下/右下 →
+  过渡动画 → localStorage 持久化
+- DoD：两态切换 <300ms；两簇键功能与合并态一致；持久化
+
+## T3.8 按键自定义功能（1-2d，EngramFont 原创）
+- 文件：keyboard-dock.js（绑定表/改绑 UI）/ editor.css
+- 步骤：绑定表（localStorage）→ 右键键帽弹 action 选择器（menu-panel）→
+  分发走 Fontra action 体系 → 重置默认
+- DoD：改绑即时生效且持久化；重置可用；DEL/mode 键锁定不可改

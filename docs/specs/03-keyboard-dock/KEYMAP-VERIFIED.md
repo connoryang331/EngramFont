@@ -140,3 +140,10 @@
 - 绿滑块：**路径控制点增密/简化操作**——新编辑能力（沿曲线插值加点 / 按容差抽稀删点），
   非简单开关；工作量上调至 1-1.5d，且依赖轮廓数据模型的点操作 API
 - 红圈 shift-l：维持原记录，实现时与用户核对一次
+
+## 语义修正 v4（2026-10-11 深夜 · 用户实测权威）
+
+| 键 | 修正 |
+|---|---|
+| 红圈（row4 左） | **背景网点显示滑块**（调节画布背景网点/点阵密度的拖拽滑块）——**占位**（v1 不实现） |
+| stroke width | **Fontra 没有**：Fontra 是轮廓字形（filled outlines），无描边宽度概念。meshfont 的 thickness 滑块能工作是因为其字形由笔画骨架生成（width=生成参数）。EngramFont 做 thickness 的两条路线：① 字形保留笔画骨架数据（customData），thickness=按骨架重生成轮廓（推荐——若引入 engram-generator 遗产的骨架表示）；② 轮廓偏移引擎（stroke-to-outline：skia-python getFillPath 或 wasm 方案，含自交处理，中等偏上难度）。→ 维持 P2 选型 |

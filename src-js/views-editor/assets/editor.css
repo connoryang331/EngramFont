@@ -647,3 +647,220 @@ kerning-handle.negative {
   cursor: pointer;
   color: #24d;
 }
+
+/* R3 · keyboard dock */
+#keyboard-dock {
+  position: absolute;
+  bottom: 0.75em;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(920px, 92%);
+  z-index: 25;
+  background-color: #262629fa;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 4px 18px #0006;
+  transition: all 280ms ease;
+}
+
+#keyboard-dock.kd-collapsed {
+  display: none;
+}
+
+.kd-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.kd-row:last-child {
+  margin-bottom: 0;
+}
+
+.kd-key {
+  --kd-span: 1;
+  flex: var(--kd-span) 1 0;
+  min-width: 0;
+  height: 44px;
+  border: none;
+  border-radius: 6px;
+  background-color: #2d2d30;
+  color: #e8e6e1;
+  font-family: engramfont-ui-regular, sans-serif;
+  font-size: 15px;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  user-select: none;
+}
+
+.kd-key:hover {
+  background-color: #3a3a3e;
+}
+
+.kd-key:focus-visible {
+  outline: 2px solid #0666ee;
+  outline-offset: 1px;
+}
+
+.kd-key.kd-active {
+  background-color: #e8e6e1;
+  color: #262629;
+}
+
+.kd-key.kd-disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.kd-key.kd-bound::after {
+  content: "•";
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 9px;
+  color: #0666ee;
+}
+
+.kd-key-shift {
+  position: absolute;
+  top: 3px;
+  right: 5px;
+  font-size: 9px;
+  opacity: 0.55;
+  line-height: 1;
+}
+
+.kd-key-main {
+  line-height: 1;
+}
+
+.kd-style-orange {
+  background-color: #ff8741;
+  color: #262629;
+  font-weight: 600;
+}
+
+.kd-style-purple {
+  background-color: #9c6fff;
+}
+
+.kd-style-yellow {
+  background-color: #ead730;
+}
+
+.kd-style-red {
+  background-color: #ff5151;
+}
+
+.kd-style-green {
+  background-color: #00af58;
+}
+
+.kd-style-blue {
+  background-color: #0666ee;
+  font-style: italic;
+}
+
+.kd-style-beige {
+  background-color: #ead7c9;
+}
+
+.kd-style-dark.kd-key {
+  background-color: #3c3c40;
+}
+
+/* sliders (capsule look) */
+.kd-slider {
+  border-radius: 22px;
+}
+
+.kd-slider-thumb {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 34px;
+  border-radius: 7px;
+  background-color: #0006;
+  pointer-events: none;
+}
+
+/* split layout (T3.7): left cluster bottom-left, right cluster bottom-right */
+#keyboard-dock.kd-split {
+  width: 46%;
+  left: 1%;
+  transform: none;
+  background-color: transparent;
+  padding: 0;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+#keyboard-dock.kd-split .kd-rows {
+  background-color: #262629fa;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 4px 18px #0006;
+}
+
+/* collapse button */
+#dock-collapse-button {
+  position: absolute;
+  right: 1em;
+  bottom: 1em;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background-color: #262629fa;
+  color: #e8e6e1;
+  font-size: 22px;
+  cursor: pointer;
+  z-index: 25;
+  box-shadow: 0 4px 18px #0006;
+  display: none;
+}
+
+#dock-collapse-button.kd-collapsed {
+  display: block;
+}
+
+#kd-layout-handle {
+  position: absolute;
+  top: -12px;
+  right: 10px;
+  border: none;
+  border-radius: 1em;
+  background-color: #3c3c40;
+  color: #e8e6e1;
+  font-size: 11px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+/* dark theme adjustments: dock is dark-on-dark already; keep contrast */
+:root.dark-theme #keyboard-dock,
+:root.dark-theme #dock-collapse-button {
+  background-color: #1c1c1ef5;
+}
+
+#kd-collapse-handle {
+  position: absolute;
+  top: -12px;
+  right: 40px;
+  border: none;
+  border-radius: 1em;
+  background-color: #3c3c40;
+  color: #e8e6e1;
+  font-size: 11px;
+  padding: 2px 8px;
+  cursor: pointer;
+}

@@ -36,6 +36,7 @@ import { isSuperset } from "@fontra/core/set-ops.js";
 import { themeController } from "@fontra/core/theme-settings.js";
 import { addCanvasModeListener, isProofMode } from "./canvas-mode.js";
 import { setupProofToolbar } from "./proof-toolbar.js";
+import { KeyboardDock } from "./keyboard-dock.js";
 import { getDecomposedIdentity } from "@fontra/core/transform.js";
 import { labeledCheckbox, labeledTextInput, pickFile } from "@fontra/core/ui-utils.js";
 import {
@@ -246,6 +247,7 @@ export class EditorController extends ViewController {
     this.initContextMenuItems();
     this.initMiniConsole();
     setupProofToolbar(this);
+    this.keyboardDock = new KeyboardDock(this);
 
     // If a stored active panel is not a plug-in, we can restore it before the plug-ins
     // are loaded. Else, it has to wait until after.

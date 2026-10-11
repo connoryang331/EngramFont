@@ -1796,6 +1796,8 @@ const persistentSceneSettings = [
   // Keep this order, may be important
   { key: "align" },
   { key: "lineHeight" },
+  { key: "wordSpacing" },
+  { key: "letterSpacing" },
   { key: "featureSettings" },
   { key: "applyTextShaping" },
   { key: "textDirection" },
@@ -1829,6 +1831,9 @@ function getSceneSettingsDefaults() {
     align: "center",
     textSize: 0, // dynamic: derives from viewBox, sets viewBox
     lineHeight: 1.1,
+    // R3/R5 proof-mode typesetting controls (dock sliders)
+    wordSpacing: 1.0,
+    letterSpacing: 0,
     editLayerName: null,
     characterLines: [],
     fontLocationUser: {},

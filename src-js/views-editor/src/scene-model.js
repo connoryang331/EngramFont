@@ -505,7 +505,11 @@ export class SceneModel {
       (glyphName, layerName) => this.getGlyphInstance(glyphName, layerName),
       this.sceneSettings.align,
       cancelSignal,
-      fallbackCharacterMap
+      fallbackCharacterMap,
+      {
+        letterSpacing: (this.sceneSettings.letterSpacing ?? 0) * fontController.unitsPerEm,
+        wordSpacingFactor: this.sceneSettings.wordSpacing ?? 1,
+      }
     );
 
     const featureEntries = Object.entries(this.sceneSettings.featureSettings ?? {});
@@ -1311,7 +1315,8 @@ class LineSetter {
     getGlyphInstanceFunc,
     align,
     cancelSignal,
-    fallbackCharacterMap
+    fallbackCharacterMap,
+    spacing = { letterSpacing: 0, wordSpacingFactor: 1 }
   ) {
     this.fontController = fontController;
     this.shaper = shaper;
@@ -1320,6 +1325,7 @@ class LineSetter {
     this.cancelSignal = cancelSignal;
     this.glyphInstances = {};
     this.fallbackCharacterMap = fallbackCharacterMap;
+    this.spacing = spacing;
   }
 
   async setLine(
@@ -1442,7 +1448,11 @@ class LineSetter {
         glyphIndexInLine: glyphIndex,
       });
 
-      x += glyphInfo.xAdvance + xAdvanceLayerDifference;
+      let advance = glyphInfo.xAdvance + xAdvanceLayerDifference;
+      if (glyphName === "space") {
+        advance *= this.spacing.wordSpacingFactor;
+      }
+      x += advance + this.spacing.letterSpacing;
       y += glyphInfo.yAdvance + yAdvanceLayerDifference;
     }
 

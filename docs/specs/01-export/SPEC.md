@@ -72,3 +72,54 @@ class EngramFontExportManager:
 ## 7. 性能
 - 编译在 asyncio executor 中执行（`asyncio.to_thread`），不阻塞事件循环
 - 大字体（>5000 字形）首版接受秒级耗时；进度事件留 P2 接口
+
+## 8. ExportManager 实现骨架（Python，新增文件起点）
+```python
+# src/fontra/filesystem/exportmanager.py
+import asyncio, time, uuid
+from pathlib import Path
+from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
+from fontTools.fontBuilder import FontBuilder
+from fontTools.pens.pointPen import PointToSegmentPen
+from fontTools.pens.transformPen import TransformPointPen
+from fontTools.misc.transform import Transform
+
+
+class EngramFontExportManager:
+    def __init__(self, projectManager, exportsDirName=".exports"):
+        self.projectManager = projectManager
+        self.exportsDir = projectManager.rootPath / exportsDirName
+
+    def getSupportedExportFormats(self):
+        return ["ttf", "otf", "woff2"]
+
+    async def exportAs(self, projectIdentifier, options):
+        fmt = options.get("format", "ttf")
+        if fmt not in self.getSupportedExportFormats():
+            raise ValueError(f"unknown format: {fmt}")
+        backend = self.projectManager.getBackend(projectIdentifier)
+        # 编译在 executor 中执行，不阻塞事件循环
+        outPath = await asyncio.to_thread(self._compileSync, backend, projectIdentifier, fmt)
+        return {"downloadPath": f"/exports/{outPath.name}"}  # 路由由 webRoutes 静态挂载
+
+    def _compileSync(self, backend, projectIdentifier, fmt):
+        # 逐字形展平绘制 + FontBuilder + feaLib（详见 demo-liga/compile-bridge.py 已验证实现）
+        ...  # 见 SPEC §3 管线 1-5 步
+```
+- 静态路由挂载：server.py 的 staticContentHandler 惯例（exports 目录加 authorize 校验）
+
+## 9. E2E 骨架（e2e/export.spec.mjs，Playwright）
+```js
+import { test, expect } from "@playwright/test";
+// playwright.config.mjs: testDir "../e2e"（相对 EngramFont 根）, use.baseURL 8800
+// 前置：venv fontra server 于 8800 + MicroTon.ttf 工程（见 VERIFICATION-ENV.md）
+
+test("File menu shows Export As formats", async ({ page }) => {
+  await page.goto("/editor.html?project=MicroTon.ttf");
+  // TODO: 打开 File 菜单 → 断言三项格式
+});
+test("export ttf downloads valid TTF", async ({ page }) => {
+  // TODO: 触发导出 → download 事件 → 文件头断言 00010000
+  // TODO: 进阶——下载后用 harfbuzzjs shape("ton") == 1 字形（连字进产物）
+});
+```

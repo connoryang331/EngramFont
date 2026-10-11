@@ -40,3 +40,47 @@ canvasMode: "edit" ←→ "proof"     （"mesh" 预留）
 - 切换动画：无（即时切换，保持 viewport 不变——参照 engram-editor immersive-mode 的 viewport 保持经验）
 - proof 态下滚轮仍缩放、space 仍平移
 - edit 态恢复：工具选择恢复到进入 proof 前的工具
+
+## 6. 五个预览预设 · 精确字符串（实现即用）
+```js
+// keyboard-dock.js（R3）工具条按钮 → 设置 characterLines
+export const PROOF_PRESETS = {
+  "your-text": null,   // 恢复用户输入：保存进入 proof 前的 characterLines 快照（内存）
+  "kerning": ["AVAT AT AV", "To To Wa Wa", "Yo Yo AVA"],
+  "capitals": ["ABCDEFGHIJKLMNOPQRSTUVWXYZ", "0123456789"],
+  "spacing": ["nnnoonn", "HHooHH", "nHnH oHoH"],
+  "shapes": [
+    "sphinx of black quartz, judge my vow.",
+    "pack my box with five dozen liquor jugs.",
+  ],
+};
+```
+- "your text"：进入 proof 前缓存 `characterLines` 快照（内存变量，不持久化）
+- 点击预设 = `sceneSettings.characterLines = preset.map(line => line.split(""))`
+  （characterLines 结构：行数组 × 字符数组——实现时以 scene-model.js:462 消费端为准核对）
+
+## 7. fontra.lineMetrics 层改造 · 代码级草图
+```js
+// visualization-layer-definitions.js — fontra.lineMetrics 层 draw() 改造点
+draw: ({ context, positionedGlyph, parameters, model, controller }) => {
+  // 现状：glyphWidth = positionedGlyph.glyph.xAdvance（单字形宽）
+  // 改造：proof 态取整行宽（canvas-mode.js 提供 isProof() 与 lineLayoutWidth）
+  const width = isProof()
+    ? model.textLayoutWidth            // scene-model 行布局已有该数据（行内字形 advance 累计）
+    : positionedGlyph.glyph.xAdvance;
+  // pathBox.rect(0, descender, width, ascender-descender) 等全部用 width
+  // 注意：多行时逐行画（scene-model 的 lineHeight 堆叠 y 值迭代——与 scene-model.js:561 同步）
+}
+```
+- 接口新增：scene-model 暴露 `textLayoutWidth`（每行宽度数组）——scene-model.js 内部已有
+  逐行字形 advance 累计（:471 起的布局循环），只需存储并暴露，~5 行
+- 回归保障：edit 态（isProof()=false）走原路径，单字形导线不变
+
+## 8. 工具禁用清单（proof 态）
+| 部件 | proof 态行为 |
+|---|---|
+| 工具簇（pen/knife/rect/ruler） | 隐藏（editor.js 工具注册处按 canvasMode 条件） |
+| 选中控制点/拖拽 | glyphSelector("editing") 层不激活 |
+| 侧栏（text-entry 除外） | 保留可见但输入禁用（avoid 误编辑） |
+| 缩放/平移 | 保留 |
+| Dock | 可见（proof 工具条显示） |

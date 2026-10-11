@@ -22,6 +22,9 @@ R4 ─┘ （复用 R2 的导入管线做模板字体）
 ```
 建议顺序：**R1 → R2 → R5 → R3 → R4**（R1/R2 是独立快赢；R5 先于 R3）。
 
+## E2E 骨架
+- `e2e/*.spec.mjs` 五套骨架 + playwright.config.mjs 已建（用例表在各 TEST.md，断言由实现会话填充）
+
 ## 下一会话执行入口（过夜执行必读）
 1. 先读 [VERIFICATION-ENV.md](./VERIFICATION-ENV.md)——meshfont 参照克隆路径/启动命令/资产清单/端口表/对照流程
 2. 执行顺序：R1 → R2 → R5 → R3 → R4，每个需求的 TASKS.md 即逐任务施工单

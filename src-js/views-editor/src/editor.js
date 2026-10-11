@@ -595,6 +595,17 @@ export class EditorController extends ViewController {
         () => this.addBackgroundImageFromFileSystem(),
         () => this.canPlaceBackgroundImage()
       );
+
+      // R7: contextual "Edit image" (meshfont-style): unlock + select the
+      // background image; the selection-info panel then offers its controls
+      registerAction(
+        "action.glyph.edit-background-image",
+        { topic },
+        () => this.editBackgroundImage(),
+        () =>
+          !!this.sceneModel.getSelectedPositionedGlyph()?.glyph?.instance
+            ?.backgroundImage
+      );
     }
 
     {
@@ -2136,6 +2147,12 @@ export class EditorController extends ViewController {
     }
 
     await this._placeBackgroundImage(await readFileOrBlobAsDataURL(file));
+  }
+
+  async editBackgroundImage() {
+    this.visualizationLayersSettings.model["fontra.background-image"] = true;
+    this.sceneSettings.backgroundImagesAreLocked = false;
+    this.sceneSettings.selection = new Set(["backgroundImage/0"]);
   }
 
   async _pasteReplaceGlyph(varGlyph) {

@@ -19,6 +19,8 @@ import {
   throttleCalls,
 } from "@fontra/core/utils.ts";
 import { showMenu } from "@fontra/web-components/menu-panel.js";
+import { pickFile } from "@fontra/core/ui-utils.js";
+import { readFileOrBlobAsDataURL } from "@fontra/core/utils.ts";
 import { dialog } from "@fontra/web-components/modal-dialog.js";
 import { Form } from "@fontra/web-components/ui-form.js";
 import Panel from "./panel.js";
@@ -327,12 +329,23 @@ export default class SelectionInfoPanel extends Panel {
       formContents.push({
         type: "header",
         label: translate("sidebar.user-settings.glyph.background-image"),
-        auxiliaryElement: html.createDomElement("icon-button", {
-          style: `width: 1.3em;`,
-          src: "/tabler-icons/refresh.svg",
-          onclick: (event) => this._resetTransformationForBackgroundImage(),
-          title: translate("sidebar.selection-info.component.reset-transformation"),
-        }),
+        auxiliaryElement: html.createDomElement("span", {
+          style: "display: inline-flex; gap: 0.3em;",
+        }, [
+          html.createDomElement("icon-button", {
+            style: `width: 1.3em;`,
+            src: "/tabler-icons/photo-up.svg",
+            onclick: (event) =>
+              this._replaceBackgroundImageData(backgroundImage),
+            title: translate("background-image.labels.replace"),
+          }),
+          html.createDomElement("icon-button", {
+            style: `width: 1.3em;`,
+            src: "/tabler-icons/refresh.svg",
+            onclick: (event) => this._resetTransformationForBackgroundImage(),
+            title: translate("sidebar.selection-info.component.reset-transformation"),
+          }),
+        ]),
       });
 
       formContents.push({
@@ -606,6 +619,22 @@ export default class SelectionInfoPanel extends Panel {
       }
       return translate("sidebar.selection-info.component.reset-transformation");
     });
+  }
+
+  async _replaceBackgroundImageData(backgroundImage) {
+    // R7: swap the image bytes, keep transformation/opacity/colorize intact:
+    // those live on the glyph's backgroundImage entry, the pixels are keyed
+    // by backgroundImage.identifier
+    const file = await pickFile([".png", ".jpeg", ".jpg"]);
+    if (!file) {
+      return;
+    }
+    const dataURL = await readFileOrBlobAsDataURL(file);
+    await this.fontController.putBackgroundImageData(
+      backgroundImage.identifier,
+      dataURL
+    );
+    this.sceneController.canvasController.requestUpdate();
   }
 
   async _resetTransformationForBackgroundImage() {

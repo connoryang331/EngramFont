@@ -543,6 +543,8 @@ export const strings = {
   "dock.key.space": "space",
   "dock.layout.toggle": "Toggle split keyboard layout",
   "dock.toggle": "Show or hide the keyboard",
+  "background-image.labels.replace": "Replace image (keeps position and opacity)",
+  "action.glyph.edit-background-image": "Edit image",
   "proof.presets.capitals": "capitals",
   "proof.presets.kerning": "kern",
   "proof.presets.shapes": "shapes",

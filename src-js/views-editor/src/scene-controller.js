@@ -620,6 +620,16 @@ export class SceneController {
       true
     );
 
+    // R7: leaving the background-image selection re-locks automatically
+    // (meshfont-style contextual locking; no global toggle)
+    this.sceneSettingsController.addKeyListener("selection", (event) => {
+      const hadBackgroundImage = !!event.oldValue?.has?.("backgroundImage/0");
+      const hasBackgroundImage = !!event.newValue?.has?.("backgroundImage/0");
+      if (hadBackgroundImage && !hasBackgroundImage) {
+        this.sceneSettings.backgroundImagesAreLocked = true;
+      }
+    });
+
     this.visualizationLayersSettings.addKeyListener(
       "fontra.background-image",
       (event) => {
@@ -700,14 +710,6 @@ export class SceneController {
       () => !!this.contextMenuState?.componentSelection?.length
     );
 
-    registerAction("action.lock-background-images", { topic }, () => {
-      this.sceneSettings.backgroundImagesAreLocked =
-        !this.sceneSettings.backgroundImagesAreLocked;
-      if (!this.sceneSettings.backgroundImagesAreLocked) {
-        // If background images are hidden, show them
-        this.visualizationLayersSettings.model["fontra.background-image"] = true;
-      }
-    });
   }
 
   setAutoViewBox() {
@@ -1071,15 +1073,7 @@ export class SceneController {
         actionIdentifier: "action.decompose-component",
       },
       { actionIdentifier: "action.glyph.add-background-image" },
-      {
-        title: () =>
-          translate(
-            this.sceneSettings.backgroundImagesAreLocked
-              ? "action.unlock-background-images"
-              : "action.lock-background-images"
-          ),
-        actionIdentifier: "action.lock-background-images",
-      },
+      { actionIdentifier: "action.glyph.edit-background-image" },
     ];
     return contextMenuItems;
   }

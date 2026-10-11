@@ -98,3 +98,18 @@ draw: ({ context, positionedGlyph, parameters, model, controller }) => {
 - 实现形式：三个按钮都只是**设置 characterLines**（kern/space=直接设预设串；proof=开下拉菜单），
   复用 R5 §6 的 PROOF_PRESETS 常量表——无独立渲染逻辑
 - your text：进入 proof 前缓存用户 characterLines 快照
+
+## 10. 排版控制 = Dock 滑块的上下文重映射（v5 定案）
+proof 态的排版控制**不新增控件**——复用 Dock 的四个滑块/键（canvasMode 驱动语义重映射）：
+
+| Dock 控件 | proof 态功能 | 作用于 |
+|---|---|---|
+| 紫色 | Metric lines 显隐 | 导线可视化层开关 |
+| 黄滑块 | letter spacing（字母间距） | 文本字距（tracking） |
+| 红滑块 | Word spacing（词间距） | 空格宽度倍率 |
+| 绿滑块 | Line height（行高） | 行距堆叠 |
+| DEL | reset 文本（恢复默认文本） | characterLines 复位 |
+
+- sceneSettings 新增字段：`wordSpacing`（默认 1.0 倍空格宽）、`letterSpacing`（默认 0 额外）、
+  `canvasMode`（R5 已有）——scene-model 布局循环消费这些值（lineHeight 已有 ✓）
+- edit 态下同组滑块回退为字形编辑控制（见 R3 KEYMAP v5 双功能表）

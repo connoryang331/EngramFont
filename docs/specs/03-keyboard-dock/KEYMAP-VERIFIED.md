@@ -179,3 +179,24 @@
 | move（宽） | ⚠️ 推测 | 画布平移模式 | 标签自述 |
 | 红⊞/黄○（小键） | ⚠️ 推测 | 吸附开关（grid/guides） | 标签自述 |
 | 米a（小键） | ✅ 用户决策 | 占位（outline 改双击手势） | 用户指令 |
+
+## v5 · 双功能上下文键位表（2026-10-11 深夜 · 用户定案 · 最终版）
+> **同一组滑块/按键在两种模式下功能不同**——这是 meshfont 键盘设计的核心。
+> 之前所有"单语义"表格作废，以本表为准。
+
+| 键 | **edit 模式**（字形编辑） | **view/proof 模式**（排版打样） |
+|---|---|---|
+| 紫色 | 显示/隐藏锚点 | **Metric lines 显隐**（导线开关）|
+| 黄滑块 | letter thickness（笔画粗细，P2） | **letter spacing（字母间距）** |
+| 红滑块 | 背景网点显示（占位） | **Word spacing（词间距）** |
+| 绿滑块 | 增加锚点 / 减少锚点 | **Line height（行高）** |
+| DEL | meshfont: reset letter → **EngramFont: reset 文本** | meshfont: reset space → **EngramFont: reset 文本** |
+| view/edit（蓝） | 显示 `view` → 进 proof | 显示 `edit` → 回编辑 |
+| move | 平移 | 平移 |
+| 红⊞/黄○ 吸附 | 编辑吸附开关 | proof 态不适用 |
+| 米a outline | 占位（outline 改双击手势） | proof 态不适用 |
+
+- view 态的四个排版控制 = **实时调整 proof 视图**（词间距/字间距/行高/导线显隐）——
+  这就是 R5 proof 模式的排版控制交互（不新增控件，复用 Dock 滑块）
+- 实现：滑块 handler 按 canvasMode 分派到不同后端（edit→字形编辑 API；view→sceneSettings
+  的 wordSpacing/letterSpacing/lineHeight/canvasMode 导线开关）

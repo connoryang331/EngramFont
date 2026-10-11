@@ -18,8 +18,8 @@ const mapMenuItemKeyToFunction = {
   Glyph: getGlyphMenuItems,
 };
 
-export function makeFontraMenuBar(menuItemKeys, viewController) {
-  const menuBarArray = [getFontraMenu()]; // Fontra-Menu at the beginning.
+export function makeEngramFontMenuBar(menuItemKeys, viewController) {
+  const menuBarArray = [getEngramFontMenu()]; // EngramFont menu at the beginning.
 
   for (const itemKey of menuItemKeys) {
     const methodName = `get${itemKey}MenuItems`;
@@ -39,7 +39,7 @@ export function makeFontraMenuBar(menuItemKeys, viewController) {
   return menuBar;
 }
 
-function getFontraMenu() {
+function getEngramFontMenu() {
   return {
     title: "EngramFont",
     bold: true,
@@ -61,7 +61,7 @@ function getFontraMenu() {
           const target = "/applicationsettings.html";
           window.open(
             `${target}#${panelID}-panel`,
-            url.pathname.includes(target) ? "_self" : "fontra.applicationsettings"
+            url.pathname.includes(target) ? "_self" : "engramfont.applicationsettings"
           );
         },
       }));

@@ -79,7 +79,7 @@ export class ViewController {
     const topBar = document.querySelector(".top-bar-container");
 
     topBar?.appendChild(
-      html.div({ id: "fontra-project-name" }, [
+      html.div({ id: "engramfont-project-name" }, [
         this.fontController.readOnly ? new InlineSVG("/tabler-icons/lock.svg") : "",
         projectName,
       ])

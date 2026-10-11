@@ -118,7 +118,7 @@ export class ModalDialog extends SimpleElement {
       padding: 0.35em 2em 0.35em 2em;
 
       border: none;
-      font-family: fontra-ui-regular, sans-serif;
+      font-family: engramfont-ui-regular, sans-serif;
       font-size: 1em;
       text-align: center;
       transition: 100ms;
@@ -137,7 +137,7 @@ export class ModalDialog extends SimpleElement {
     }
 
     dialog .button.default {
-      background-color: var(--fontra-red-color);
+      background-color: var(--engramfont-red-color);
     }
 
     dialog .button.disabled {
@@ -160,7 +160,7 @@ export class ModalDialog extends SimpleElement {
       border: none;
       outline: none;
       padding: 0.2em 0.5em;
-      font-family: fontra-ui-regular, sans-serif;
+      font-family: engramfont-ui-regular, sans-serif;
       font-size: 1.1rem;
       resize: none;
     }

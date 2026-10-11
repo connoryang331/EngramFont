@@ -41,7 +41,7 @@ icon-button {
 }
 
 .glyphset-error-button {
-  color: var(--fontra-light-red-color);
+  color: var(--engramfont-light-red-color);
   opacity: 0;
 }
 
@@ -353,7 +353,7 @@ async function runAddGlyphSetDialog(initialGlyphSets) {
 }
 
 const CHECKBOX_PREFIX = "checkbox-";
-const SELECTED_GLYPHSET_LOCAL_STORAGE_KEY = "fontra-selected-glyphset-collection";
+const SELECTED_GLYPHSET_LOCAL_STORAGE_KEY = "engramfont-selected-glyphset-collection";
 
 class AddPresetGlyphSetDialog {
   static styles = `

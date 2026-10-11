@@ -47,7 +47,7 @@ const debugTranslation = false;
 let localizationData = {};
 
 export const languageController = new ObservableController({ language: "en" });
-languageController.synchronizeWithLocalStorage("fontra-language-");
+languageController.synchronizeWithLocalStorage("engramfont-language-");
 
 let resolveLanguageHasLoaded;
 

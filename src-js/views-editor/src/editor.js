@@ -9,7 +9,7 @@ import { CanvasController } from "@fontra/core/canvas-controller.js";
 import { recordChanges } from "@fontra/core/change-recorder.js";
 import { applyChange } from "@fontra/core/changes.js";
 import { FontController } from "@fontra/core/font-controller.js";
-import { makeFontraMenuBar } from "@fontra/core/fontra-menus.js";
+import { makeEngramFontMenuBar } from "@fontra/core/fontra-menus.js";
 import { staticGlyphToGLIF } from "@fontra/core/glyph-glif.js";
 import { pathToSVG } from "@fontra/core/glyph-svg.js";
 import * as html from "@fontra/core/html-utils.js";
@@ -705,7 +705,7 @@ export class EditorController extends ViewController {
   }
 
   initTopBar() {
-    const myMenuBar = makeFontraMenuBar(
+    const myMenuBar = makeEngramFontMenuBar(
       ["File", "Edit", "View", "Font", "Glyph"],
       this
     );
@@ -1651,14 +1651,14 @@ export class EditorController extends ViewController {
     const glifString = staticGlyphToGLIF(glyphName, layerGlyphs[0].glyph, codePoints);
     const jsonObject = varGlyph
       ? {
-          type: "fontra-variable-glyph",
+          type: "engramfont-variable-glyph",
           data: {
             variableGlyph: varGlyph,
             codePoints: codePoints,
             sourceLocations: this.fontController.getSourceLocations(),
           },
         }
-      : { type: "fontra-layer-glyphs", data: { layerGlyphs, glyphName, codePoints } };
+      : { type: "engramfont-layer-glyphs", data: { layerGlyphs, glyphName, codePoints } };
 
     const buildJSONString = async () => {
       const resolvedImageData = await backgroundImageData;
@@ -1673,7 +1673,7 @@ export class EditorController extends ViewController {
     const mapping = {
       "svg": svgString,
       "glif": glifString,
-      "fontra-json": jsonStringPromise,
+      "engramfont-json": jsonStringPromise,
     };
 
     const plainTextString =
@@ -1681,11 +1681,11 @@ export class EditorController extends ViewController {
 
     if (plainTextString == jsonStringPromise) {
       localStorage.removeItem("clipboardSelection.text-plain");
-      localStorage.removeItem("clipboardSelection.fontra-json");
+      localStorage.removeItem("clipboardSelection.engramfont-json");
     } else {
       localStorage.setItem("clipboardSelection.text-plain", plainTextString);
       jsonStringPromise.then((jsonString) => {
-        localStorage.setItem("clipboardSelection.fontra-json", jsonString);
+        localStorage.setItem("clipboardSelection.engramfont-json", jsonString);
       });
     }
 
@@ -2024,7 +2024,7 @@ export class EditorController extends ViewController {
       !jsonString &&
       clipboardString === localStorage.getItem("clipboardSelection.text-plain")
     ) {
-      jsonString = localStorage.getItem("clipboardSelection.fontra-json");
+      jsonString = localStorage.getItem("clipboardSelection.engramfont-json");
     }
 
     let pasteLayerGlyphs;
@@ -2035,7 +2035,7 @@ export class EditorController extends ViewController {
     if (jsonString) {
       try {
         const clipboardObject = JSON.parse(jsonString);
-        if (clipboardObject.type === "fontra-layer-glyphs") {
+        if (clipboardObject.type === "engramfont-layer-glyphs") {
           pasteLayerGlyphs = clipboardObject.data.layerGlyphs?.map((layer) => {
             return {
               layerName: layer.layerName,
@@ -2044,11 +2044,11 @@ export class EditorController extends ViewController {
             };
           });
           backgroundImageData = clipboardObject.data.backgroundImageData;
-        } else if (clipboardObject.type === "fontra-variable-glyph") {
+        } else if (clipboardObject.type === "engramfont-variable-glyph") {
           pasteVarGlyph = VariableGlyph.fromObject(clipboardObject.data.variableGlyph);
           sourceLocations = clipboardObject.data.sourceLocations;
           backgroundImageData = clipboardObject.data.backgroundImageData;
-        } else if (clipboardObject.type === "fontra-glyph-array") {
+        } else if (clipboardObject.type === "engramfont-glyph-array") {
           pasteVarGlyph = VariableGlyph.fromObject(
             clipboardObject.data.glyphs[0].variableGlyph
           );
@@ -3631,7 +3631,7 @@ function newVisualizationLayersSettings(visualizationLayers) {
     }
   }
   const controller = new ObservableController(settings);
-  controller.synchronizeWithLocalStorage("fontra-editor-visualization-layers.");
+  controller.synchronizeWithLocalStorage("engramfont-editor-visualization-layers.");
   for (const [key, onOff] of Object.entries(controller.model)) {
     visualizationLayers.toggle(key, onOff);
   }
@@ -3640,7 +3640,7 @@ function newVisualizationLayersSettings(visualizationLayers) {
 
 async function runDialogWholeGlyphPaste() {
   const controller = new ObservableController({ behavior: PASTE_BEHAVIOR_REPLACE });
-  controller.synchronizeWithLocalStorage("fontra-glyph-paste.");
+  controller.synchronizeWithLocalStorage("engramfont-glyph-paste.");
   if (
     controller.model.behavior !== PASTE_BEHAVIOR_REPLACE &&
     controller.model.behavior !== PASTE_BEHAVIOR_ADD

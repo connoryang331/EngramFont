@@ -11,7 +11,7 @@ import {
 import { Backend } from "@fontra/core/backend-api.js";
 import { recordChanges } from "@fontra/core/change-recorder.js";
 import { reverseUndoRecord, UndoStack } from "@fontra/core/font-controller.js";
-import { makeFontraMenuBar } from "@fontra/core/fontra-menus.js";
+import { makeEngramFontMenuBar } from "@fontra/core/fontra-menus.js";
 import { staticGlyphToGLIF } from "@fontra/core/glyph-glif.js";
 import { GlyphOrganizer } from "@fontra/core/glyph-organizer.js";
 import { pathToSVG } from "@fontra/core/glyph-svg.js";
@@ -111,7 +111,7 @@ export class FontOverviewController extends ViewController {
 
     this.initActions();
 
-    const myMenuBar = makeFontraMenuBar(["File", "Edit", "View", "Font"], this);
+    const myMenuBar = makeEngramFontMenuBar(["File", "Edit", "View", "Font"], this);
     document.querySelector(".top-bar-container").appendChild(myMenuBar);
 
     this.updateGlyphSelection = consolidateCalls(() => this._updateGlyphSelection());
@@ -528,7 +528,7 @@ export class FontOverviewController extends ViewController {
     const mapping = {
       "svg": svgStringPromise,
       "glif": glifStringPromise,
-      "fontra-json": jsonStringPromise,
+      "engramfont-json": jsonStringPromise,
     };
 
     const plainTextStringPromise =
@@ -536,13 +536,13 @@ export class FontOverviewController extends ViewController {
 
     if (plainTextStringPromise == jsonStringPromise) {
       localStorage.removeItem("clipboardSelection.text-plain");
-      localStorage.removeItem("clipboardSelection.fontra-json");
+      localStorage.removeItem("clipboardSelection.engramfont-json");
     } else {
       plainTextStringPromise.then((plainTextString) => {
         localStorage.setItem("clipboardSelection.text-plain", plainTextString);
       });
       jsonStringPromise.then((jsonString) => {
-        localStorage.setItem("clipboardSelection.fontra-json", jsonString);
+        localStorage.setItem("clipboardSelection.engramfont-json", jsonString);
       });
     }
 
@@ -585,7 +585,7 @@ export class FontOverviewController extends ViewController {
     );
 
     const clipboardData = {
-      type: "fontra-glyph-array",
+      type: "engramfont-glyph-array",
       data: {
         glyphs: clipboardGlyphs,
         sourceLocations,
@@ -666,7 +666,7 @@ export class FontOverviewController extends ViewController {
       !jsonString &&
       clipboardString === localStorage.getItem("clipboardSelection.text-plain")
     ) {
-      jsonString = localStorage.getItem("clipboardSelection.fontra-json");
+      jsonString = localStorage.getItem("clipboardSelection.engramfont-json");
     }
 
     let clipboardData;
@@ -819,11 +819,11 @@ export class FontOverviewController extends ViewController {
 
     let clipboardGlyphs;
 
-    if (clipboardData.type == "fontra-glyph-array") {
+    if (clipboardData.type == "engramfont-glyph-array") {
       clipboardGlyphs = clipboardData.data.glyphs;
-    } else if (clipboardData.type == "fontra-variable-glyph") {
+    } else if (clipboardData.type == "engramfont-variable-glyph") {
       clipboardGlyphs = [clipboardData.data];
-    } else if (clipboardData.type == "fontra-layer-glyphs") {
+    } else if (clipboardData.type == "engramfont-layer-glyphs") {
       const glyphName = clipboardData.data.glyphName;
       const codePoints = clipboardData.data.codePoints || [];
       assert(glyphName);
@@ -997,7 +997,7 @@ async function runDialogReplaceGlyphs(glyphNames, glyphMap) {
     suffix: ".alt",
   });
 
-  controller.synchronizeWithLocalStorage("fontra-paste-replace-glyphs.");
+  controller.synchronizeWithLocalStorage("engramfont-paste-replace-glyphs.");
 
   if (
     controller.model.behavior !== PASTE_REPLACE &&

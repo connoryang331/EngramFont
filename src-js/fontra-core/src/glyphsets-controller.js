@@ -282,7 +282,7 @@ export function readProjectGlyphSets(fontController) {
 }
 
 const myGlyphSetsController = new ObservableController({ settings: {} });
-myGlyphSetsController.synchronizeWithLocalStorage("fontra-my-glyph-sets-");
+myGlyphSetsController.synchronizeWithLocalStorage("engramfont-my-glyph-sets-");
 
 function getMyGlyphSetsController() {
   return myGlyphSetsController;

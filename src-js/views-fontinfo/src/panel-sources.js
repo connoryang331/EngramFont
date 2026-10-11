@@ -66,7 +66,7 @@ addStyleSheet(`
   height: 100%;
 }
 
-.fontra-ui-font-info-sources-panel-source-name-box {
+.engramfont-ui-font-info-sources-panel-source-name-box {
   background-color: var(--ui-element-background-color);
   border-radius: 0.5em;
   padding: 1em;
@@ -76,11 +76,11 @@ addStyleSheet(`
   grid-column-gap: 1em;
 }
 
-.fontra-ui-font-info-sources-panel-source-name-box.default {
+.engramfont-ui-font-info-sources-panel-source-name-box.default {
   font-weight: bold;
 }
 
-.fontra-ui-font-info-sources-panel-source-name-box.selected {
+.engramfont-ui-font-info-sources-panel-source-name-box.selected {
   background-color: var(--horizontal-rule-color);
 }
 `);
@@ -171,7 +171,7 @@ export class SourcesPanel extends BaseInfoPanel {
     containerSourcesNames.innerHTML = "";
 
     for (const sourceIdentifier of this.sortedSourceIdentifiers) {
-      const classes = ["fontra-ui-font-info-sources-panel-source-name-box"];
+      const classes = ["engramfont-ui-font-info-sources-panel-source-name-box"];
       if (sourceIdentifier === this.fontController.defaultSourceIdentifier) {
         classes.push("default");
       }
@@ -202,7 +202,7 @@ export class SourcesPanel extends BaseInfoPanel {
     }
 
     for (const nameElement of document.querySelectorAll(
-      ".fontra-ui-font-info-sources-panel-source-name-box"
+      ".engramfont-ui-font-info-sources-panel-source-name-box"
     )) {
       const selected = nameElement.dataset.sourceIdentifier == sourceIdentifier;
       nameElement.classList.toggle("selected", selected);
@@ -555,7 +555,7 @@ function makeUntitledSourceName(sources) {
 }
 
 addStyleSheet(`
-.fontra-ui-font-info-sources-panel-source-box {
+.engramfont-ui-font-info-sources-panel-source-box {
   background-color: var(--ui-element-background-color);
   border-radius: 0.5em;
   padding: 1em;
@@ -575,7 +575,7 @@ class SourceBox extends HTMLElement {
   ) {
     super();
     this.sourcesPanel = sourcesPanel;
-    this.classList.add("fontra-ui-font-info-sources-panel-source-box");
+    this.classList.add("engramfont-ui-font-info-sources-panel-source-box");
     this.fontAxesSourceSpace = fontAxesSourceSpace;
     this.sources = sources;
     this.sourceIdentifier = sourceIdentifier;
@@ -780,7 +780,7 @@ class SourceBox extends HTMLElement {
 
     const accordion = new Accordion();
     accordion.appendStyle(`
-.fontra-ui-font-info-sources-panel-column {
+.engramfont-ui-font-info-sources-panel-column {
   display: grid;
   grid-template-columns: minmax(4.5em, max-content) minmax(max-content, 25em);
   gap: 0.5em;
@@ -789,11 +789,11 @@ class SourceBox extends HTMLElement {
   padding-bottom: 1em;
 }
 
-.fontra-ui-font-info-sources-panel-line-metrics-hor {
+.engramfont-ui-font-info-sources-panel-line-metrics-hor {
   grid-template-columns: minmax(4.5em, max-content) 4em 4em;
 }
 
-.fontra-ui-font-info-sources-panel-list-element {
+.engramfont-ui-font-info-sources-panel-list-element {
   min-width: max-content;
   max-width: 29.5em; // 4.5 + 25
   max-height: 12em;
@@ -806,7 +806,7 @@ input {
   border: none;
   outline: none;
   padding: 0.1em 0.3em;
-  font-family: "fontra-ui-regular";
+  font-family: "engramfont-ui-regular";
   font-size: 100%;
 }
 
@@ -913,7 +913,7 @@ function buildElement(controller, sourceIsDefault) {
   }
 
   return html.div(
-    { class: "fontra-ui-font-info-sources-panel-column" },
+    { class: "engramfont-ui-font-info-sources-panel-column" },
     items
       .map(([labelName, keyName, value]) => {
         if (typeof value === "boolean") {
@@ -949,7 +949,7 @@ function buildElementLineMetricsHor(controller) {
   return html.div(
     {
       class:
-        "fontra-ui-font-info-sources-panel-column fontra-ui-font-info-sources-panel-line-metrics-hor",
+        "engramfont-ui-font-info-sources-panel-column engramfont-ui-font-info-sources-panel-line-metrics-hor",
     },
     items
       .map(([labelName, keyName]) => {
@@ -983,7 +983,7 @@ function buildFontGuidelineList(controller, readOnly) {
   const items = Object.values(model)?.map(makeItem) || [];
 
   const labelList = new UIList();
-  labelList.classList.add("fontra-ui-font-info-sources-panel-list-element");
+  labelList.classList.add("engramfont-ui-font-info-sources-panel-list-element");
   labelList.style = `min-width: 12em;`;
   labelList.columnDescriptions = [
     {
@@ -1090,7 +1090,7 @@ function buildFontGuidelineList(controller, readOnly) {
 function buildElementLocations(controller, fontAxes) {
   const locationElement = html.createDomElement("designspace-location", {
     continuous: false,
-    class: `fontra-ui-font-info-sources-panel-column`,
+    class: `engramfont-ui-font-info-sources-panel-column`,
   });
   locationElement.axes = fontAxes;
   locationElement.controller = controller;

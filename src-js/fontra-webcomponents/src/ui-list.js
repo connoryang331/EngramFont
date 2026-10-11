@@ -151,7 +151,7 @@ export class UIList extends UnlitElement {
     }
 
     input {
-      font-family: fontra-ui-regular, -apple-system, sans-serif;
+      font-family: engramfont-ui-regular, -apple-system, sans-serif;
       font-size: 100%;
       border: none;
       color: var(--row-foreground-color);

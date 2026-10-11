@@ -3,7 +3,7 @@ import { addStyleSheet } from "@fontra/core/html-utils.js";
 import { MultiPanelBasePanel } from "@fontra/core/multi-panel.js";
 
 addStyleSheet(`
-  .fontra-ui-plugins-manager-panel-card {
+  .engramfont-ui-plugins-manager-panel-card {
     background-color: var(--ui-element-background-color);
     border-radius: 0.5em;
     padding: 1em;
@@ -19,7 +19,7 @@ export class PluginsManagerPanel extends MultiPanelBasePanel {
     const container = html.createDomElement("plugin-manager", {
       id: "plugin-manager",
     });
-    container.className = "fontra-ui-plugins-manager-panel-card";
+    container.className = "engramfont-ui-plugins-manager-panel-card";
     this.panelElement.appendChild(container);
   }
 }

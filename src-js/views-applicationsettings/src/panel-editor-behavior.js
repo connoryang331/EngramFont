@@ -7,7 +7,7 @@ import { UnsignedIntegerFormatter } from "@fontra/core/formatters.js";
 import { translate } from "@fontra/core/localization.js";
 
 addStyleSheet(`
-  .fontra-ui-editor-behavior-panel-card {
+  .engramfont-ui-editor-behavior-panel-card {
     background-color: var(--ui-element-background-color);
     border-radius: 0.5em;
     padding: 1em;
@@ -37,7 +37,7 @@ export class EditorBehaviorPanel extends MultiPanelBasePanel {
   async setupUI() {
     this.panelElement.innerHTML = "";
     const container = html.createDomElement("div", {
-      class: "fontra-ui-editor-behavior-panel-card",
+      class: "engramfont-ui-editor-behavior-panel-card",
     });
 
     container.append(

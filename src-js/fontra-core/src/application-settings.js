@@ -15,5 +15,5 @@ export const applicationSettingsController = new ObservableController({
 });
 
 applicationSettingsController.synchronizeWithLocalStorage(
-  "fontra-application-settings-"
+  "engramfont-application-settings-"
 );

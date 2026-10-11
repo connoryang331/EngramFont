@@ -34,7 +34,7 @@ export const strings = {
   "action.edit-anchor": "I-edit ang Anchor",
   "action.edit-guideline": "I-edit ang Gabay",
   "action.export-as.designspace": "Designspace + UFO (*.designspace)",
-  "action.export-as.fontra": "Fontra (*.fontra)",
+  "action.export-as.fontra": "EngramFont (*.fontra)",
   "action.export-as.glyphs": "Glyphs (*.glyphs)",
   "action.export-as.otf": "OpenType (*.otf)",
   "action.export-as.rcjk": "RCJK (*.rcjk)",
@@ -341,7 +341,7 @@ export const strings = {
   "plugin-manager.add-plugin-dialog.label.path": "Landas ng plugin:",
   "plugin-manager.add-plugin-dialog.title": "Magdagdag ng plugin",
   "plugin-manager.add-plugin-dialog.warning.title": "Mali",
-  "plugin-manager.title": "Mga plugin ng Fontra:",
+  "plugin-manager.title": "Mga plugin ng EngramFont:",
   "plugin-manager.warning.fetching-error":
     "Nagkaroon ng error noong kinukuha ang plugin.",
   "plugin-manager.warning.not-found": "Hindi natagpuan ang plugin.",

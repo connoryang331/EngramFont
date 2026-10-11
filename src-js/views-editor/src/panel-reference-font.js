@@ -216,7 +216,7 @@ export default class ReferenceFontPanel extends Panel {
       background-color: var(--text-input-background-color);
       color: var(--text-input-foreground-color);
       padding: 0.4em;
-      font-family: fontra-ui-regular;
+      font-family: engramfont-ui-regular;
       font-feature-settings: "tnum" 1;
     }
 

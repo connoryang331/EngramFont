@@ -62,12 +62,12 @@ a {
   font-size: 1.5em;
 }
 
-#fontra-icon-header {
+#engramfont-icon-header {
   display: flex;
   gap: 2em;
 }
 
-#fontra-icon-header a {
+#engramfont-icon-header a {
   font-size: 0.8em;
 }
 
@@ -83,7 +83,7 @@ a {
 }
 
 .login-input {
-  font-family: fontra-ui-regular, sans-serif;
+  font-family: engramfont-ui-regular, sans-serif;
   font-size: 1em;
   width: 20em;
   padding: 0.25em;
@@ -100,7 +100,7 @@ a {
   margin-top: 0.5em;
   margin-bottom: 0.5em;
   border: none;
-  font-family: fontra-ui-semibold, sans-serif;
+  font-family: engramfont-ui-semibold, sans-serif;
   font-size: 1em;
   transition: all 0.1s ease-in;
 }
@@ -124,7 +124,7 @@ a {
   margin-top: 0.5em;
   margin-bottom: 0.5em;
   border: none;
-  font-family: fontra-ui-semibold, sans-serif;
+  font-family: engramfont-ui-semibold, sans-serif;
   font-size: 0.8em;
   transition: all 0.1s ease-in;
 }
@@ -140,7 +140,7 @@ a {
 }
 
 #login-failure-message {
-  font-family: fontra-ui-semibold, sans-serif;
+  font-family: engramfont-ui-semibold, sans-serif;
   color: red;
 }
 

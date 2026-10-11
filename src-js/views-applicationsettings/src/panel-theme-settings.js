@@ -5,7 +5,7 @@ import { MultiPanelBasePanel } from "@fontra/core/multi-panel.js";
 import { themeController } from "@fontra/core/theme-settings.js";
 
 addStyleSheet(`
-  .fontra-ui-theme-settings-panel-card {
+  .engramfont-ui-theme-settings-panel-card {
     background-color: var(--ui-element-background-color);
     border-radius: 0.5em;
     padding: 1em;
@@ -22,7 +22,7 @@ export class ThemeSettingsPanel extends MultiPanelBasePanel {
 
     for (const cardContent of this.cards()) {
       const container = html.createDomElement("grouped-settings", {
-        class: "fontra-ui-theme-settings-panel-card",
+        class: "engramfont-ui-theme-settings-panel-card",
       });
       container.items = [cardContent];
       this.panelElement.appendChild(container);

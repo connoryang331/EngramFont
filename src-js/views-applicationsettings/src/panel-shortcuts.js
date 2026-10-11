@@ -41,15 +41,15 @@ function getShortCutsGrouped() {
 }
 
 addStyleSheet(`
-.fontra-ui-shortcuts-panel {
+.engramfont-ui-shortcuts-panel {
   background-color: var(--ui-element-background-color);
   border-radius: 0.5em;
   padding: 1em;
 }
-.fontra-ui-shortcuts-panel-header {
+.engramfont-ui-shortcuts-panel-header {
   font-weight: bold;
 }
-.fontra-ui-shortcuts-panel-buttons {
+.engramfont-ui-shortcuts-panel-buttons {
   display: grid;
   grid-template-columns: max-content max-content max-content;
   gap: 1em;
@@ -66,13 +66,13 @@ export class ShortCutsPanel extends MultiPanelBasePanel {
     this.panelElement.style = "gap: 1em;";
 
     const containerButtons = html.div(
-      { class: "fontra-ui-shortcuts-panel-buttons" },
+      { class: "engramfont-ui-shortcuts-panel-buttons" },
       []
     );
     containerButtons.appendChild(
       html.input({
         type: "button",
-        class: "fontra-button",
+        class: "engramfont-button",
         style: `justify-self: start;`,
         value: translate("shortcuts.reset-all"),
         onclick: (event) => this.resetToDefault(),
@@ -82,7 +82,7 @@ export class ShortCutsPanel extends MultiPanelBasePanel {
     containerButtons.appendChild(
       html.input({
         type: "button",
-        class: "fontra-button",
+        class: "engramfont-button",
         style: `justify-self: start;`,
         value: translate("shortcuts.export"),
         onclick: (event) => this.exportShortCuts(),
@@ -92,7 +92,7 @@ export class ShortCutsPanel extends MultiPanelBasePanel {
     containerButtons.appendChild(
       html.input({
         type: "button",
-        class: "fontra-button",
+        class: "engramfont-button",
         style: `justify-self: start;`,
         value: translate("shortcuts.import"),
         onclick: (event) => this.importShortCuts(),
@@ -102,10 +102,10 @@ export class ShortCutsPanel extends MultiPanelBasePanel {
     this.panelElement.appendChild(containerButtons);
     const shortCutsGrouped = getShortCutsGrouped();
     for (const topic of Object.keys(shortCutsGrouped).sort()) {
-      const container = html.div({ class: "fontra-ui-shortcuts-panel" }, []);
+      const container = html.div({ class: "engramfont-ui-shortcuts-panel" }, []);
       container.appendChild(
         html.createDomElement("div", {
-          class: "fontra-ui-shortcuts-panel-header",
+          class: "engramfont-ui-shortcuts-panel-header",
           innerHTML: translate(topic.slice(5)),
         })
       );
@@ -151,7 +151,7 @@ export class ShortCutsPanel extends MultiPanelBasePanel {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "fontra-shortcuts.json";
+    a.download = "engramfont-shortcuts.json";
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -222,7 +222,7 @@ function validateShortCutDefinition(key, definition) {
 
 const shortcutsPanelInputWidth = isMac ? "8em" : "12em"; // longer on windows because no icons are shown.
 addStyleSheet(`
-  .fontra-ui-shortcuts-panel-element {
+  .engramfont-ui-shortcuts-panel-element {
     background-color: var(--ui-element-background-color);
     border-radius: 0.5em;
     padding: 0.35rem 0 0 0;
@@ -232,13 +232,13 @@ addStyleSheet(`
     grid-column-gap: 1em;
   }
 
-  .fontra-ui-shortcuts-panel-icon-wrapper {
+  .engramfont-ui-shortcuts-panel-icon-wrapper {
     display: grid;
     grid-template-columns: max-content max-content;
     grid-column-gap: 0.2em;
   }
 
-  .fontra-ui-shortcuts-panel-input {
+  .engramfont-ui-shortcuts-panel-input {
     min-width: ${shortcutsPanelInputWidth};
     text-align: center;
     background-color: var(--text-input-background-color);
@@ -247,35 +247,35 @@ addStyleSheet(`
     border: none;
     outline: none;
     padding: 0.1em 0.3em;
-    font-family: "fontra-ui-regular";
+    font-family: "engramfont-ui-regular";
     font-size: 100%;
     min-height: 18px;
     align-self: center;
   }
 
-  .fontra-ui-shortcuts-panel-input:focus {
+  .engramfont-ui-shortcuts-panel-input:focus {
     box-shadow: inset 0px 0px 0px 1px var(--background-color-dark);
     outline: unset;
     color: #999;
   }
 
-  .fontra-ui-shortcuts-panel-label {
+  .engramfont-ui-shortcuts-panel-label {
     width: 18em;
     text-align: right;
   }
 
-  .fontra-ui-shortcuts-panel-icon {
+  .engramfont-ui-shortcuts-panel-icon {
     cursor: pointer;
     opacity: 0;
     pointer-events: none;
   }
 
-  .fontra-ui-shortcuts-panel-input:focus + .fontra-ui-shortcuts-panel-icon-wrapper .fontra-ui-shortcuts-panel-icon {
+  .engramfont-ui-shortcuts-panel-input:focus + .engramfont-ui-shortcuts-panel-icon-wrapper .engramfont-ui-shortcuts-panel-icon {
     pointer-events: unset;
     opacity: unset;
   }
 
-  .fontra-ui-shortcuts-panel-icon:active {
+  .engramfont-ui-shortcuts-panel-icon:active {
     pointer-events: unset;
     opacity: unset;
   }
@@ -285,7 +285,7 @@ addStyleSheet(`
 class ShortCutElement extends HTMLElement {
   constructor(actionIdentifier) {
     super();
-    this.classList.add("fontra-ui-shortcuts-panel-element");
+    this.classList.add("engramfont-ui-shortcuts-panel-element");
     this.actionIdentifier = actionIdentifier;
     this.shortCutDefinition = getShortCut(this.actionIdentifier);
     this.shortCutLabel = getActionTitle(this.actionIdentifier);
@@ -410,7 +410,7 @@ class ShortCutElement extends HTMLElement {
     this.append(
       html.label(
         {
-          class: "fontra-ui-shortcuts-panel-label",
+          class: "engramfont-ui-shortcuts-panel-label",
         },
         [this.shortCutLabel]
       )
@@ -421,7 +421,7 @@ class ShortCutElement extends HTMLElement {
       html.div({
         id: id,
         tabindex: "0", // required for focus
-        class: "fontra-ui-shortcuts-panel-input",
+        class: "engramfont-ui-shortcuts-panel-input",
         innerHTML: getShortCutRepresentation(this.shortCutDefinition),
         onkeydown: (event) => this.recordShortCut(id, event),
         onkeyup: (event) => this.recordShortCutKeyUp(id, event),
@@ -431,12 +431,12 @@ class ShortCutElement extends HTMLElement {
     );
 
     const iconWrapper = html.div({
-      class: "fontra-ui-shortcuts-panel-icon-wrapper",
+      class: "engramfont-ui-shortcuts-panel-icon-wrapper",
     });
 
     iconWrapper.append(
       html.createDomElement("icon-button", {
-        class: "fontra-ui-shortcuts-panel-icon",
+        class: "engramfont-ui-shortcuts-panel-icon",
         src: "/tabler-icons/refresh.svg",
         onclick: (event) => this.resetShortCut(id),
         title: translate("shortcuts.tooltip.reset-to-default"),
@@ -445,7 +445,7 @@ class ShortCutElement extends HTMLElement {
 
     iconWrapper.append(
       html.createDomElement("icon-button", {
-        class: "fontra-ui-shortcuts-panel-icon",
+        class: "engramfont-ui-shortcuts-panel-icon",
         src: "/tabler-icons/x.svg",
         onclick: (event) => this.deleteShortCut(id),
         title: translate("shortcuts.tooltip.clear"),

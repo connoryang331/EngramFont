@@ -4,7 +4,7 @@ import { languageController, languages, translate } from "@fontra/core/localizat
 import { MultiPanelBasePanel } from "@fontra/core/multi-panel.js";
 
 addStyleSheet(`
-  .fontra-ui-display-language-panel-card {
+  .engramfont-ui-display-language-panel-card {
     background-color: var(--ui-element-background-color);
     border-radius: 0.5em;
     padding: 1em;
@@ -29,7 +29,7 @@ export class DisplayLanguagePanel extends MultiPanelBasePanel {
 
     for (const cardContent of this.cards()) {
       const container = html.createDomElement("grouped-settings", {
-        class: "fontra-ui-display-language-panel-card",
+        class: "engramfont-ui-display-language-panel-card",
       });
       container.items = [cardContent];
       this.panelElement.appendChild(container);

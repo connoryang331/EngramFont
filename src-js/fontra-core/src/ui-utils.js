@@ -3,8 +3,8 @@ import { DefaultFormatter } from "./formatters.js";
 import * as html from "./html-utils.js";
 import { uniqueID, zip } from "./utils.ts";
 
-const containerClassNamePrefix = "fontra-ui-sortable-list-container-";
-const draggingClassName = "fontra-ui-sortable-list-dragging";
+const containerClassNamePrefix = "engramfont-ui-sortable-list-container-";
+const draggingClassName = "engramfont-ui-sortable-list-dragging";
 
 html.addStyleSheet(`
 .${draggingClassName} {

@@ -72,7 +72,7 @@ export class Form extends SimpleElement {
       border: none;
       outline: none;
       padding: 0.1em 0.3em;
-      font-family: "fontra-ui-regular";
+      font-family: "engramfont-ui-regular";
       font-size: 100%;
     }
 

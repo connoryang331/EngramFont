@@ -170,7 +170,7 @@ export class RangeRangeSlider extends html.UnlitElement {
       margin: 0;
 
       text-align: center;
-      font-family: fontra-ui-regular;
+      font-family: engramfont-ui-regular;
       font-feature-settings: "tnum" 1;
       font-size: 0.9em;
       vertical-align: middle;

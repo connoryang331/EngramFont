@@ -38,7 +38,7 @@ const defaultStatusFieldDefinitions = {
 };
 
 addStyleSheet(`
-.fontra-ui-font-info-statusDefs-panel {
+.engramfont-ui-font-info-statusDefs-panel {
   background-color: var(--ui-element-background-color);
   border-radius: 0.5em;
   padding: 1em;
@@ -74,7 +74,7 @@ export class DevelopmentStatusDefinitionsPanel extends BaseInfoPanel {
     this.panelElement.appendChild(
       html.input({
         type: "button",
-        class: "fontra-button",
+        class: "engramfont-button",
         style: "justify-self: start;",
         value: translate("development-status-definitions.button.new"),
         onclick: (event) => this.newStatusDefinition(),
@@ -142,7 +142,7 @@ function getStatusFieldDefinitions(fontController) {
 }
 
 addStyleSheet(`
-.fontra-ui-font-info-status-definitions-panel-status-def-box {
+.engramfont-ui-font-info-status-definitions-panel-status-def-box {
   background-color: var(--ui-element-background-color);
   border-radius: 0.5em;
   padding: 1em;
@@ -153,16 +153,16 @@ addStyleSheet(`
   grid-column-gap: 1em;
 }
 
-.fontra-ui-font-info-status-definitions-panel-status-def-box-value {
+.engramfont-ui-font-info-status-definitions-panel-status-def-box-value {
   width: 2.5em;
   text-align: center;
 }
 
-.fontra-ui-font-info-status-definitions-panel-status-def-box-delete {
+.engramfont-ui-font-info-status-definitions-panel-status-def-box-delete {
   justify-self: end;
 }
 
-.fontra-ui-font-info-status-definitions-panel-status-def-box-color-input {
+.engramfont-ui-font-info-status-definitions-panel-status-def-box-color-input {
   width: 8em;
   /*height: 1.6em; without height: best compromise for all browsers*/
   margin: 0;
@@ -177,7 +177,7 @@ addStyleSheet(`
 class StatusDefinitionBox extends HTMLElement {
   constructor(fontController, statusIndex, postChange, setupUI) {
     super();
-    this.classList.add("fontra-ui-font-info-status-definitions-panel-status-def-box");
+    this.classList.add("engramfont-ui-font-info-status-definitions-panel-status-def-box");
     this.fontController = fontController;
     this.statusIndex = statusIndex;
     this.postChange = postChange;
@@ -336,7 +336,7 @@ class StatusDefinitionBox extends HTMLElement {
     this.append(
       html.input({
         type: "text",
-        class: "fontra-ui-font-info-status-definitions-panel-status-def-box-value",
+        class: "engramfont-ui-font-info-status-definitions-panel-status-def-box-value",
         value: statusDef.value,
         onchange: (event) => {
           const statusDefValue = Number(event.target.value);
@@ -353,7 +353,7 @@ class StatusDefinitionBox extends HTMLElement {
       html.input({
         type: "color",
         class:
-          "fontra-ui-font-info-status-definitions-panel-status-def-box-color-input",
+          "engramfont-ui-font-info-status-definitions-panel-status-def-box-color-input",
         value: rgbaToHex(statusDef.color.slice(0, 3).concat([1])),
         onchange: (event) => {
           const updatedStatusDef = {
@@ -408,7 +408,7 @@ class StatusDefinitionBox extends HTMLElement {
 
     this.append(
       html.createDomElement("icon-button", {
-        class: "fontra-ui-font-info-status-definitions-panel-status-def-box-delete",
+        class: "engramfont-ui-font-info-status-definitions-panel-status-def-box-delete",
         src: "/tabler-icons/trash.svg",
         onclick: (event) => this.deleteStatusDef(this.statusIndex),
         title: translate("development-status-definitions.tooltip.delete"),

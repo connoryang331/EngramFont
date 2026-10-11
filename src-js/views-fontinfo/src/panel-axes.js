@@ -113,7 +113,7 @@ export class AxesPanel extends BaseInfoPanel {
     this.panelElement.appendChild(
       html.input({
         type: "button",
-        class: "fontra-button",
+        class: "engramfont-button",
         style: `justify-self: start;`,
         value: translate("axes.new"),
         onclick: (event) => this.newAxis(),
@@ -262,10 +262,10 @@ export class AxesPanel extends BaseInfoPanel {
 
 addStyleSheet(`
 :root {
-  --fontra-ui-font-info-axes-panel-max-list-height: 12em;
+  --engramfont-ui-font-info-axes-panel-max-list-height: 12em;
 }
 
-.fontra-ui-font-info-axes-panel-axis-box {
+.engramfont-ui-font-info-axes-panel-axis-box {
   background-color: var(--ui-element-background-color);
   border-radius: 0.5em;
   padding: 1em;
@@ -277,8 +277,8 @@ addStyleSheet(`
   grid-column-gap: 1em;
 }
 
-.fontra-ui-font-info-axes-panel-axis-box-values,
-.fontra-ui-font-info-axes-panel-axis-box-names {
+.engramfont-ui-font-info-axes-panel-axis-box-values,
+.engramfont-ui-font-info-axes-panel-axis-box-names {
   display: grid;
   grid-template-columns: minmax(4.5em, max-content) max-content;
   gap: 0.5em;
@@ -286,30 +286,30 @@ addStyleSheet(`
   align-content: start;
 }
 
-.fontra-ui-font-info-axes-panel-axis-box-mapping-list {
+.engramfont-ui-font-info-axes-panel-axis-box-mapping-list {
   width: 10em;
-  max-height: var(--fontra-ui-font-info-axes-panel-max-list-height);
+  max-height: var(--engramfont-ui-font-info-axes-panel-max-list-height);
 }
 
-.fontra-ui-font-info-axes-panel-axis-box-label-list {
+.engramfont-ui-font-info-axes-panel-axis-box-label-list {
   width: max-content;
-  max-height: var(--fontra-ui-font-info-axes-panel-max-list-height);
+  max-height: var(--engramfont-ui-font-info-axes-panel-max-list-height);
 }
 
-.fontra-ui-font-info-axes-panel-axis-box-delete {
+.engramfont-ui-font-info-axes-panel-axis-box-delete {
   justify-self: end;
   align-self: start;
 }
 
 select {
-  font-family: "fontra-ui-regular", sans-serif;
+  font-family: "engramfont-ui-regular", sans-serif;
 }
 
-.fontra-ui-font-info-axes-panel-axis-box-header {
+.engramfont-ui-font-info-axes-panel-axis-box-header {
   font-weight: bold;
 }
 
-.fontra-ui-font-info-axes-panel-hidden-checkbox {
+.engramfont-ui-font-info-axes-panel-hidden-checkbox {
   grid-column-start: span 2;
 }
 `);
@@ -317,7 +317,7 @@ select {
 class AxisBox extends HTMLElement {
   constructor(axes, axisIndex, postChange, deleteAxis, readOnly) {
     super();
-    this.classList.add("fontra-ui-font-info-axes-panel-axis-box");
+    this.classList.add("engramfont-ui-font-info-axes-panel-axis-box");
     this.draggable = !readOnly;
     this.axes = axes;
     this.axisIndex = axisIndex;
@@ -401,7 +401,7 @@ class AxisBox extends HTMLElement {
 
     const axisTypeSelect = html.select(
       {
-        id: `fontra-ui-font-info-axes-panel-axis-box-axis-type-${this.axisIndex}`,
+        id: `engramfont-ui-font-info-axes-panel-axis-box-axis-type-${this.axisIndex}`,
         onchange: (event) => {
           this.convertAxis(event.target.value);
         },
@@ -429,30 +429,30 @@ class AxisBox extends HTMLElement {
     this.innerHTML = "";
 
     this.append(
-      html.div({ class: "fontra-ui-font-info-axes-panel-axis-box-header" }, [
+      html.div({ class: "engramfont-ui-font-info-axes-panel-axis-box-header" }, [
         translate("axes.names"),
       ]),
-      html.div({ class: "fontra-ui-font-info-axes-panel-axis-box-header" }, [
+      html.div({ class: "engramfont-ui-font-info-axes-panel-axis-box-header" }, [
         translate("axes.range"),
       ]),
-      html.div({ class: "fontra-ui-font-info-axes-panel-axis-box-header" }, [
+      html.div({ class: "engramfont-ui-font-info-axes-panel-axis-box-header" }, [
         translate("axes.mapping-graph"),
       ]),
-      html.div({ class: "fontra-ui-font-info-axes-panel-axis-box-header" }, [
+      html.div({ class: "engramfont-ui-font-info-axes-panel-axis-box-header" }, [
         translate("axes.mapping-list"),
       ]),
-      html.div({ class: "fontra-ui-font-info-axes-panel-axis-box-header" }, [
+      html.div({ class: "engramfont-ui-font-info-axes-panel-axis-box-header" }, [
         translate("axes.axis-values"),
       ]),
       html.createDomElement("icon-button", {
-        class: "fontra-ui-font-info-axes-panel-axis-box-delete",
+        class: "engramfont-ui-font-info-axes-panel-axis-box-delete",
         src: "/tabler-icons/trash.svg",
         onclick: (event) => this.deleteAxis(this.axisIndex),
         title: translate("axes.delete-axis"),
       }),
 
       html.div(
-        { class: "fontra-ui-font-info-axes-panel-axis-box-names" },
+        { class: "engramfont-ui-font-info-axes-panel-axis-box-names" },
         [
           [translate("axes.names.name"), "name"],
           [translate("axes.names.ot-tag"), "tag"],
@@ -465,7 +465,7 @@ class AxisBox extends HTMLElement {
           )
           .flat()
       ),
-      html.div({ class: "fontra-ui-font-info-axes-panel-axis-box-values" }, [
+      html.div({ class: "engramfont-ui-font-info-axes-panel-axis-box-values" }, [
         html.label(
           {
             for: axisTypeSelect.id,
@@ -487,7 +487,7 @@ class AxisBox extends HTMLElement {
           translate("axes.properties.hidden"),
           this.axisController,
           "hidden",
-          { class: "fontra-ui-font-info-axes-panel-hidden-checkbox" }
+          { class: "engramfont-ui-font-info-axes-panel-hidden-checkbox" }
         ),
       ]),
       this.mappingGraph,
@@ -765,7 +765,7 @@ function buildMappingList(axisController) {
   const items = axis.mapping?.map(([user, source]) => makeItem(user, source)) || [];
 
   const mappingList = new UIList();
-  mappingList.classList.add("fontra-ui-font-info-axes-panel-axis-box-mapping-list");
+  mappingList.classList.add("engramfont-ui-font-info-axes-panel-axis-box-mapping-list");
   mappingList.columnDescriptions = [
     {
       key: "user",
@@ -850,7 +850,7 @@ function buildValueLabelList(axisController) {
   const items = axis.valueLabels?.map(makeItem) || [];
 
   const labelList = new UIList();
-  labelList.classList.add("fontra-ui-font-info-axes-panel-axis-box-label-list");
+  labelList.classList.add("engramfont-ui-font-info-axes-panel-axis-box-label-list");
   labelList.columnDescriptions = [
     {
       key: "name",

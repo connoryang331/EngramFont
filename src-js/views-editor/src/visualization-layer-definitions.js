@@ -157,7 +157,7 @@ registerVisualizationLayerDefinition({
     context.scale(1, -1);
 
     if (positionedGlyph.isUndefined) {
-      context.font = `${glyphNameFontSize}px fontra-ui-regular, sans-serif`;
+      context.font = `${glyphNameFontSize}px engramfont-ui-regular, sans-serif`;
       context.fillText(
         positionedGlyph.glyphName,
         positionedGlyph.glyph.xAdvance / 2,
@@ -181,7 +181,7 @@ registerVisualizationLayerDefinition({
       positionedGlyph.glyphName
     );
     if (glyphString) {
-      context.font = `${placeholderFontSize}px fontra-ui-regular, sans-serif`;
+      context.font = `${placeholderFontSize}px engramfont-ui-regular, sans-serif`;
       context.direction = direction || context.direction;
       context.fillText(
         glyphString,
@@ -425,7 +425,7 @@ registerVisualizationLayerDefinition({
     const margin = 0.25 * fontSize;
     const boxHeight = 1.2 * fontSize;
 
-    context.font = `${fontSize}px fontra-ui-regular, sans-serif`;
+    context.font = `${fontSize}px engramfont-ui-regular, sans-serif`;
     context.textAlign = "center";
     context.scale(1, -1);
 
@@ -580,7 +580,7 @@ registerVisualizationLayerDefinition({
       parseSelection(model.hoverSelection).guideline ?? [];
     const selectedGuidelineIndices = parseSelection(model.selection).guideline ?? [];
 
-    context.font = `${parameters.fontSize}px fontra-ui-regular, sans-serif`;
+    context.font = `${parameters.fontSize}px engramfont-ui-regular, sans-serif`;
     context.textAlign = "center";
     const { xMin, yMin, xMax, yMax } = controller.getViewBox();
     parameters.strokeLength = Math.max(
@@ -1121,7 +1121,7 @@ registerVisualizationLayerDefinition({
     const boxHeight = 1.68 * fontSize;
     const bottomY = 0.75 * fontSize * -1 - boxHeight + margin / 2;
 
-    context.font = `${fontSize}px fontra-ui-regular, sans-serif`;
+    context.font = `${fontSize}px engramfont-ui-regular, sans-serif`;
     context.textAlign = "center";
     context.scale(1, -1);
 
@@ -1169,7 +1169,7 @@ registerVisualizationLayerDefinition({
     const lineHeight = fontSize;
     const bottomY = -boxHeight / 2;
 
-    context.font = `${fontSize}px fontra-ui-regular, sans-serif`;
+    context.font = `${fontSize}px engramfont-ui-regular, sans-serif`;
     context.textAlign = "center";
     context.scale(1, -1);
 
@@ -1368,7 +1368,7 @@ registerVisualizationLayerDefinition({
     const lineHeight = fontSize;
     const bottomY = 0.75 * fontSize;
 
-    context.font = `${fontSize}px fontra-ui-regular, sans-serif`;
+    context.font = `${fontSize}px engramfont-ui-regular, sans-serif`;
     context.textAlign = "center";
     context.scale(1, -1);
 
@@ -1423,7 +1423,7 @@ registerVisualizationLayerDefinition({
     const boxHeight = (1.68 * fontSize) / 2;
     const bottomY = -0.75 * fontSize * 2;
 
-    context.font = `${fontSize}px fontra-ui-regular, sans-serif`;
+    context.font = `${fontSize}px engramfont-ui-regular, sans-serif`;
     context.textAlign = "center";
     context.scale(1, -1);
 

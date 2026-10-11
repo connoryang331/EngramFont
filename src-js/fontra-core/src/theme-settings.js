@@ -11,7 +11,7 @@ function setupThemeOverride(value) {
 
 export const themeController = new ObservableController({ theme: "automatic" });
 
-themeController.synchronizeWithLocalStorage("fontra-");
+themeController.synchronizeWithLocalStorage("engramfont-");
 
 themeController.addKeyListener("theme", (event) => {
   setupThemeOverride(themeController.model.theme);

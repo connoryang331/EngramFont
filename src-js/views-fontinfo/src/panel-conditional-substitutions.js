@@ -18,7 +18,7 @@ import { mapAxesFromUserSpaceToSourceSpace } from "@fontra/core/var-model.js";
 import { showDialogCannotEditReadOnly, BaseInfoPanel } from "./panel-base.js";
 
 const glyphNamesOptionsId =
-  "fontra-ui-font-info-conditional-substitutions-glyph-names-options";
+  "engramfont-ui-font-info-conditional-substitutions-glyph-names-options";
 
 const cardsInfos = {};
 
@@ -127,11 +127,11 @@ export class ConditionalSubstitutionsPanel extends BaseInfoPanel {
 
     this.panelElement.appendChild(
       html.div(
-        { class: "fontra-ui-font-info-conditional-substitutions-panel-header" },
+        { class: "engramfont-ui-font-info-conditional-substitutions-panel-header" },
         [
           html.input({
             type: "button",
-            class: "fontra-button",
+            class: "engramfont-button",
             style: `justify-self: start;`,
             value: translate("conditional-substitutions.rule.new"),
             onclick: (event) => this.newRule(),
@@ -298,7 +298,7 @@ const colors = {
 addStyleSheet(`
 ${themeColorCSS(colors, ":root")}
 
-.fontra-ui-font-info-conditional-substitutions-panel-conditional-substitutions-rule-box {
+.engramfont-ui-font-info-conditional-substitutions-panel-conditional-substitutions-rule-box {
   background-color: var(--ui-element-background-color);
   border-radius: 0.5em;
   padding: 1em;
@@ -309,7 +309,7 @@ ${themeColorCSS(colors, ":root")}
   gap: 1em;
 }
 
-.fontra-ui-font-info-conditional-substitutions-panel-header {
+.engramfont-ui-font-info-conditional-substitutions-panel-header {
   display: grid;
   grid-template-columns: auto auto;
   justify-content: start;
@@ -317,18 +317,18 @@ ${themeColorCSS(colors, ":root")}
   gap: 1em;
 }
 
-.fontra-ui-font-info-conditional-substitutions-rule-name-input {
+.engramfont-ui-font-info-conditional-substitutions-rule-name-input {
   width: 20em;
 }
 
-.fontra-ui-font-info-conditional-substitutions-rule-content {
+.engramfont-ui-font-info-conditional-substitutions-rule-content {
   display: grid;
   grid-template-columns: max-content max-content;
   gap: 0.5em 1.5em;
   // grid-column: 2 / 3;
 }
 
-.fontra-ui-font-info-conditional-substitutions-conditionsets {
+.engramfont-ui-font-info-conditional-substitutions-conditionsets {
   display: grid;
   align-content: start;
   grid-template-columns: auto;
@@ -341,14 +341,14 @@ ${themeColorCSS(colors, ":root")}
   grid-template-columns: auto;
 }
 
-.fontra-ui-font-info-conditional-substitutions-conditionset {
+.engramfont-ui-font-info-conditional-substitutions-conditionset {
   display: grid;
   gap: 0.5em;
   align-items: start;
   grid-template-columns: auto min-content;
 }
 
-.fontra-ui-font-info-conditional-substitutions-conditionset-box {
+.engramfont-ui-font-info-conditional-substitutions-conditionset-box {
   display: grid;
   grid-template-columns: max-content max-content;
   align-items: center;
@@ -379,7 +379,7 @@ input::placeholder {
   min-width: 6em;
 }
 
-.fontra-ui-font-info-conditional-substitutions-substitutions {
+.engramfont-ui-font-info-conditional-substitutions-substitutions {
   display: grid;
   align-content: start;
   grid-template-columns: auto auto auto auto;
@@ -391,8 +391,8 @@ input::placeholder {
   font-weight: bold;
 }
 
-.fontra-ui-font-info-conditional-substitutions-conditionset:hover > .auto-show-delete-button,
-.fontra-ui-font-info-conditional-substitutions-conditionset-box:hover + .auto-show-delete-button,
+.engramfont-ui-font-info-conditional-substitutions-conditionset:hover > .auto-show-delete-button,
+.engramfont-ui-font-info-conditional-substitutions-conditionset-box:hover + .auto-show-delete-button,
 .auto-show-delete-button:hover,
 input:hover + .auto-show-delete-button,
 span:hover + input + .auto-show-delete-button,
@@ -405,13 +405,13 @@ input:hover + span + input + .auto-show-delete-button {
   transition: 120ms;
 }
 
-.fontra-ui-font-info-conditional-substitutions-panel-icon.open-close-icon {
+.engramfont-ui-font-info-conditional-substitutions-panel-icon.open-close-icon {
   height: 1.5em;
   width: 1.5em;
   transition: 120ms;
 }
 
-.fontra-ui-font-info-conditional-substitutions-panel-icon.open-close-icon.item-closed {
+.engramfont-ui-font-info-conditional-substitutions-panel-icon.open-close-icon.item-closed {
   transform: rotate(180deg);
 }
 
@@ -437,7 +437,7 @@ input:hover + span + input + .auto-show-delete-button {
 }
 
 input.glyph-name-input.error {
-  color: var(--fontra-red-color);
+  color: var(--engramfont-red-color);
 }
 
 `);
@@ -454,7 +454,7 @@ class RuleBox extends HTMLElement {
     super();
 
     this.classList.add(
-      "fontra-ui-font-info-conditional-substitutions-panel-conditional-substitutions-rule-box"
+      "engramfont-ui-font-info-conditional-substitutions-panel-conditional-substitutions-rule-box"
     );
 
     this.draggable = !fontController.readOnly;
@@ -511,7 +511,7 @@ class RuleBox extends HTMLElement {
     const cardElements = !toggleAll
       ? [this]
       : document.querySelectorAll(
-          ".fontra-ui-font-info-conditional-substitutions-panel-conditional-substitutions-rule-box"
+          ".engramfont-ui-font-info-conditional-substitutions-panel-conditional-substitutions-rule-box"
         );
 
     const thisIconElement = this.querySelector("#open-close-icon");
@@ -540,7 +540,7 @@ class RuleBox extends HTMLElement {
     // this.append(
     //   html.createDomElement("icon-button", {
     //     class:
-    //       "fontra-ui-font-info-conditional-substitutions-panel-icon open-close-icon",
+    //       "engramfont-ui-font-info-conditional-substitutions-panel-icon open-close-icon",
     //     // +
     //     //   this.isClosed || true
     //     //   ? " item-closed"
@@ -560,7 +560,7 @@ class RuleBox extends HTMLElement {
           ruleController,
           "name",
           {
-            class: "fontra-ui-font-info-conditional-substitutions-rule-name-input",
+            class: "engramfont-ui-font-info-conditional-substitutions-rule-name-input",
             continuous: false,
           }
         )
@@ -569,7 +569,7 @@ class RuleBox extends HTMLElement {
 
     this.append(
       html.createDomElement("icon-button", {
-        class: "fontra-ui-font-info-conditional-substitutions-panel-icon",
+        class: "engramfont-ui-font-info-conditional-substitutions-panel-icon",
         src: "/tabler-icons/trash.svg",
         onclick: (event) => this.deleteRule(),
         title: translate("conditional-substitutions.rule.remove"),
@@ -599,7 +599,7 @@ class RuleBox extends HTMLElement {
       conditionSetElement.addEventListener("reordered", (event) => {
         const originalIndices = [];
         for (const el of this.querySelectorAll(
-          ".conditionsets-container > .fontra-ui-font-info-conditional-substitutions-conditionset"
+          ".conditionsets-container > .engramfont-ui-font-info-conditional-substitutions-conditionset"
         )) {
           originalIndices.push(parseInt(el.dataset.originalIndex));
         }
@@ -618,7 +618,7 @@ class RuleBox extends HTMLElement {
 
     this.append(
       html.div(
-        { class: "fontra-ui-font-info-conditional-substitutions-rule-content" },
+        { class: "engramfont-ui-font-info-conditional-substitutions-rule-content" },
         [
           html.span({ class: "section-header" }, [
             translate("conditional-substitutions.condition-sets.title"),
@@ -679,20 +679,20 @@ class RuleBox extends HTMLElement {
 
     return html.div(
       {
-        "class": "fontra-ui-font-info-conditional-substitutions-conditionset",
+        "class": "engramfont-ui-font-info-conditional-substitutions-conditionset",
         "draggable": conditionSets.length > 1,
         "data-originalIndex": index,
       },
       [
         html.div(
           {
-            class: "fontra-ui-font-info-conditional-substitutions-conditionset-box",
+            class: "engramfont-ui-font-info-conditional-substitutions-conditionset-box",
           },
           elements
         ),
         html.createDomElement("icon-button", {
           class:
-            "fontra-ui-font-info-conditional-substitutions-panel-icon auto-show-delete-button",
+            "engramfont-ui-font-info-conditional-substitutions-panel-icon auto-show-delete-button",
           src: "/tabler-icons/trash.svg",
           onclick: (event) => {
             this.editRule((rule) => {
@@ -828,7 +828,7 @@ class RuleBox extends HTMLElement {
           outputTextInput,
           html.createDomElement("icon-button", {
             class:
-              "fontra-ui-font-info-conditional-substitutions-panel-icon auto-show-delete-button",
+              "engramfont-ui-font-info-conditional-substitutions-panel-icon auto-show-delete-button",
             src: "/tabler-icons/trash.svg",
             onclick: (event) => editSubstitution(input, null, null),
             title: translate("conditional-substitutions.substitutions.remove"),
@@ -862,7 +862,7 @@ class RuleBox extends HTMLElement {
     }
 
     return html.div(
-      { class: "fontra-ui-font-info-conditional-substitutions-substitutions" },
+      { class: "engramfont-ui-font-info-conditional-substitutions-substitutions" },
       elements
     );
   }

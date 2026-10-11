@@ -34,7 +34,7 @@ export const strings = {
   "action.edit-anchor": "Anker bearbeiten",
   "action.edit-guideline": "Hilfslinie bearbeiten",
   "action.export-as.designspace": "Designspace + UFO (*.designspace)",
-  "action.export-as.fontra": "Fontra (*.fontra)",
+  "action.export-as.fontra": "EngramFont (*.fontra)",
   "action.export-as.glyphs": "Glyphs (*.glyphs)",
   "action.export-as.otf": "OpenType (*.otf)",
   "action.export-as.rcjk": "RCJK (*.rcjk)",
@@ -337,7 +337,7 @@ export const strings = {
   "plugin-manager.add-plugin-dialog.label.path": "Plugin Pfad:",
   "plugin-manager.add-plugin-dialog.title": "Plugin hinzufügen",
   "plugin-manager.add-plugin-dialog.warning.title": "Fehlermeldung",
-  "plugin-manager.title": "Fontra Plugins:",
+  "plugin-manager.title": "EngramFont Plugins:",
   "plugin-manager.warning.fetching-error":
     "Ein Fehler trat auf beim laden des Plugins.",
   "plugin-manager.warning.not-found": "Plugin nicht gefunden.",

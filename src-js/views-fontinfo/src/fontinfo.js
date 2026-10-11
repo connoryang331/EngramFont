@@ -1,5 +1,5 @@
 import { registerActionCallbacks } from "@fontra/core/actions.js";
-import { makeFontraMenuBar } from "@fontra/core/fontra-menus.js";
+import { makeEngramFontMenuBar } from "@fontra/core/fontra-menus.js";
 import * as html from "@fontra/core/html-utils.js";
 import { translate } from "@fontra/core/localization.js";
 import { MultiPanelController } from "@fontra/core/multi-panel.js";
@@ -32,7 +32,7 @@ export class FontInfoController extends ViewController {
 
     this.initActions();
 
-    const myMenuBar = makeFontraMenuBar(["File", "Edit", "View", "Font"], this);
+    const myMenuBar = makeEngramFontMenuBar(["File", "Edit", "View", "Font"], this);
     document.querySelector(".top-bar-container").appendChild(myMenuBar);
 
     this.multiPanelController = new MultiPanelController(

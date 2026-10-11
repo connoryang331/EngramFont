@@ -231,7 +231,7 @@ const openTypeFeatureLanguage = new LanguageSupport(openTypeFeatureCodeStreamLan
 const themeConfig = new Compartment();
 const OT_CODE_EDITOR_FONT_SCALE_BASE = 1.05;
 const OT_CODE_EDITOR_FONT_SCALE_MINIMUM = -6;
-const OT_CODE_EDITOR_FONT_SCALE_KEY = "fontra-opentype-code-editor-font-scale";
+const OT_CODE_EDITOR_FONT_SCALE_KEY = "engramfont-opentype-code-editor-font-scale";
 
 function getCustomFontScale() {
   return parseFloat(localStorage.getItem(OT_CODE_EDITOR_FONT_SCALE_KEY) ?? 0);
@@ -245,7 +245,7 @@ function getCustomThemeData() {
       fontSize: `${fontScale}%`,
     },
     ".cm-cursor": {
-      borderLeft: "2px solid var(--fontra-red-color)",
+      borderLeft: "2px solid var(--engramfont-red-color)",
     },
     ".cm-gutters": {
       fontSize: `${fontScale}%`,
@@ -280,7 +280,7 @@ function getCustomThemeData() {
     },
     ".cm-tooltip-autocomplete": {
       "& > ul > li[aria-selected]": {
-        backgroundColor: "var(--fontra-red-color)",
+        backgroundColor: "var(--engramfont-red-color)",
       },
     },
     ".cm-tooltip.cm-completionInfo": {

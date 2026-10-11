@@ -46,7 +46,7 @@ export class MenuPanel extends SimpleElement {
   static colors = {
     "background-color": ["#f0f0f0", "#333"],
     "foreground-color": ["black", "white"],
-    "background-active-color": ["var(--fontra-red-color)", "var(--fontra-red-color)"],
+    "background-active-color": ["var(--engramfont-red-color)", "var(--engramfont-red-color)"],
     "foreground-active-color": ["white", "white"],
     "background-color-with-open-submenu": ["#dedede", "#555"],
   };

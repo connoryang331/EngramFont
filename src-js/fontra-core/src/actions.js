@@ -23,7 +23,7 @@ let actionsByBaseKey = undefined;
 
 const actionInfoController = new ObservableController({});
 const actionCallbacks = {};
-actionInfoController.synchronizeWithLocalStorage("fontra-actions-", true);
+actionInfoController.synchronizeWithLocalStorage("engramfont-actions-", true);
 actionInfoController.addListener((event) => {
   actionsByBaseKey = undefined;
 });

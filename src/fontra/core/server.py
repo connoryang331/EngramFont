@@ -224,7 +224,7 @@ class FontraServer:
             pythonVersion += info.releaselevel
 
         serverInfo = {
-            "Fontra version": fontraVersion,
+            "EngramFont version": fontraVersion,
             "Python version": pythonVersion,
             "Startup time": self.startupTime.isoformat(),
             "View plugins": ", ".join(

@@ -110,7 +110,7 @@ export class PowerRulerTool extends BaseTool {
       );
     }
 
-    context.font = `bold ${parameters.fontSize}px fontra-ui-regular, sans-serif`;
+    context.font = `bold ${parameters.fontSize}px engramfont-ui-regular, sans-serif`;
     context.textAlign = "center";
 
     context.scale(1, -1);

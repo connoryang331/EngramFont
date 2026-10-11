@@ -127,7 +127,7 @@ export default class TextEntryPanel extends Panel {
       border: 0.5px solid lightgray;
       outline: none;
       padding: 0.2em 0.5em;
-      font-family: fontra-ui-regular, sans-serif;
+      font-family: engramfont-ui-regular, sans-serif;
       font-size: 1.1rem;
       resize: none;
       overflow-x: auto;
@@ -428,7 +428,7 @@ export default class TextEntryPanel extends Panel {
         border: none;
         outline: none;
         padding: 0.1em 0.3em;
-        font-family: fontra-ui-regular, sans-serif;
+        font-family: engramfont-ui-regular, sans-serif;
         font-size: 100%;
       }
 

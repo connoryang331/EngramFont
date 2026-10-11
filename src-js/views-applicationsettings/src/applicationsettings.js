@@ -1,4 +1,4 @@
-import { makeFontraMenuBar } from "@fontra/core/fontra-menus.js";
+import { makeEngramFontMenuBar } from "@fontra/core/fontra-menus.js";
 import * as html from "@fontra/core/html-utils.js";
 import { ensureLanguageHasLoaded, translate } from "@fontra/core/localization.js";
 import { MultiPanelController } from "@fontra/core/multi-panel.js";
@@ -27,7 +27,7 @@ export class ApplicationSettingsController {
   async start() {
     await ensureLanguageHasLoaded;
 
-    const myMenuBar = makeFontraMenuBar(["File"], this);
+    const myMenuBar = makeEngramFontMenuBar(["File"], this);
     document.querySelector(".top-bar-container").appendChild(myMenuBar);
 
     this.multiPanelController = new MultiPanelController(

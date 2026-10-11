@@ -31,7 +31,7 @@ function updateRemoveButton(list, buttons) {
 export class CustomDataList extends SimpleElement {
   static styles = `
 
-  .fontra-ui-font-info-sources-panel-list-element {
+  .engramfont-ui-font-info-sources-panel-list-element {
     min-width: max-content;
     max-width: 29.5em; // 4.5 + 25
     max-height: 12em;
@@ -90,7 +90,7 @@ export class CustomDataList extends SimpleElement {
     );
 
     const labelList = new UIList();
-    labelList.classList.add("fontra-ui-font-info-sources-panel-list-element");
+    labelList.classList.add("engramfont-ui-font-info-sources-panel-list-element");
     labelList.style = `min-width: 12em;`;
     labelList.columnDescriptions = [
       {

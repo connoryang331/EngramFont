@@ -84,7 +84,7 @@ export class CrossAxisMappingPanel extends BaseInfoPanel {
     this.panelElement.appendChild(
       html.input({
         type: "button",
-        class: "fontra-button",
+        class: "engramfont-button",
         style: `justify-self: start;`,
         value: translate("cross-axis-mapping.new"),
         onclick: (event) => this.newCrossAxisMapping(),
@@ -136,7 +136,7 @@ export class CrossAxisMappingPanel extends BaseInfoPanel {
 }
 
 addStyleSheet(`
-.fontra-ui-font-info-cross-axis-mapping-panel-cross-axis-mapping-box {
+.engramfont-ui-font-info-cross-axis-mapping-panel-cross-axis-mapping-box {
   background-color: var(--ui-element-background-color);
   border-radius: 0.5em;
   padding: 1em;
@@ -148,7 +148,7 @@ addStyleSheet(`
   grid-column-gap: 1em;
 }
 
-.fontra-ui-font-info-cross-axis-mapping-panel-group {
+.engramfont-ui-font-info-cross-axis-mapping-panel-group {
   display: grid;
   grid-template-columns: min-content auto;
   gap: 0.5em;
@@ -157,7 +157,7 @@ addStyleSheet(`
   align-items: center;
 }
 
-.fontra-ui-font-info-cross-axis-mapping-panel-description {
+.engramfont-ui-font-info-cross-axis-mapping-panel-description {
   display: grid;
   grid-template-columns: min-content auto;
   gap: 0.5em;
@@ -166,54 +166,54 @@ addStyleSheet(`
   align-items: center;
 }
 
-.fontra-ui-font-info-cross-axis-mapping-panel-inactive-delete-cell {
+.engramfont-ui-font-info-cross-axis-mapping-panel-inactive-delete-cell {
   display: grid;
   grid-template-columns: auto auto;
   gap: 1em;
   width: 100%;
 }
 
-.fontra-ui-font-info-cross-axis-mapping-panel-header {
+.engramfont-ui-font-info-cross-axis-mapping-panel-header {
   font-weight: bold;
   padding-top: 0.5em;
   padding-bottom: 0.5em;
 }
 
-.fontra-ui-font-info-cross-axis-mapping-panel-location{
+.engramfont-ui-font-info-cross-axis-mapping-panel-location{
   margin-right: -0.5em;
 }
 
-.fontra-ui-font-info-cross-axis-mapping-panel-location-label {
+.engramfont-ui-font-info-cross-axis-mapping-panel-location-label {
   text-align: right;
 }
 
-.fontra-ui-font-info-cross-axis-mapping-panel-empty.min-height,
-.fontra-ui-font-info-cross-axis-mapping-panel-location.min-height,
-.fontra-ui-font-info-cross-axis-mapping-panel-checkboxes.min-height,
-.fontra-ui-font-info-cross-axis-mapping-panel-header.min-height,
-.fontra-ui-font-info-cross-axis-mapping-panel-location-label.min-height {
+.engramfont-ui-font-info-cross-axis-mapping-panel-empty.min-height,
+.engramfont-ui-font-info-cross-axis-mapping-panel-location.min-height,
+.engramfont-ui-font-info-cross-axis-mapping-panel-checkboxes.min-height,
+.engramfont-ui-font-info-cross-axis-mapping-panel-header.min-height,
+.engramfont-ui-font-info-cross-axis-mapping-panel-location-label.min-height {
   overflow: hidden;
   height: 0;
   padding-top: 0;
   padding-bottom: 0;
 }
 
-.fontra-ui-font-info-cross-axis-mapping-panel-icon {
+.engramfont-ui-font-info-cross-axis-mapping-panel-icon {
   justify-self: end;
   align-self: start;
 }
 
-.fontra-ui-font-info-cross-axis-mapping-panel-icon.open-close-icon {
+.engramfont-ui-font-info-cross-axis-mapping-panel-icon.open-close-icon {
   height: 1.5em;
   width: 1.5em;
   transition: 120ms;
 }
 
-.fontra-ui-font-info-cross-axis-mapping-panel-icon.open-close-icon.item-closed {
+.engramfont-ui-font-info-cross-axis-mapping-panel-icon.open-close-icon.item-closed {
   transform: rotate(180deg);
 }
 
-.fontra-ui-font-info-cross-axis-mapping-panel-cross-axis-mapping-box.item-closed {
+.engramfont-ui-font-info-cross-axis-mapping-panel-cross-axis-mapping-box.item-closed {
   grid-row-gap: 0em;
 }
 
@@ -230,7 +230,7 @@ class CrossAxisMappingBox extends HTMLElement {
   ) {
     super();
     this.classList.add(
-      "fontra-ui-font-info-cross-axis-mapping-panel-cross-axis-mapping-box"
+      "engramfont-ui-font-info-cross-axis-mapping-panel-cross-axis-mapping-box"
     );
     this.draggable = !fontController.readOnly;
     this.fontController = fontController;
@@ -311,7 +311,7 @@ class CrossAxisMappingBox extends HTMLElement {
     const cardElements = !altKey
       ? [this]
       : document.querySelectorAll(
-          ".fontra-ui-font-info-cross-axis-mapping-panel-cross-axis-mapping-box"
+          ".engramfont-ui-font-info-cross-axis-mapping-panel-cross-axis-mapping-box"
         );
 
     const thisIconElement = this.querySelector("#open-close-icon");
@@ -401,7 +401,7 @@ class CrossAxisMappingBox extends HTMLElement {
     // Row 1 Icons and Descriptions
     this.append(
       html.createDomElement("icon-button", {
-        class: "fontra-ui-font-info-cross-axis-mapping-panel-icon open-close-icon",
+        class: "engramfont-ui-font-info-cross-axis-mapping-panel-icon open-close-icon",
         id: "open-close-icon",
         src: "/tabler-icons/chevron-up.svg",
         open: false,
@@ -411,7 +411,7 @@ class CrossAxisMappingBox extends HTMLElement {
     this.append(html.div()); // empty cell for grid
     this.append(
       html.div(
-        { class: "fontra-ui-font-info-cross-axis-mapping-panel-group" },
+        { class: "engramfont-ui-font-info-cross-axis-mapping-panel-group" },
         labeledTextInput(
           translate("cross-axis-mapping.groupDescription"),
           this.controllers.groupDescription,
@@ -422,7 +422,7 @@ class CrossAxisMappingBox extends HTMLElement {
     );
     this.append(
       html.div(
-        { class: "fontra-ui-font-info-cross-axis-mapping-panel-description" },
+        { class: "engramfont-ui-font-info-cross-axis-mapping-panel-description" },
         labeledTextInput(
           translate("cross-axis-mapping.description"),
           this.controllers.description,
@@ -434,7 +434,7 @@ class CrossAxisMappingBox extends HTMLElement {
 
     this.append(
       html.div(
-        { class: "fontra-ui-font-info-cross-axis-mapping-panel-inactive-delete-cell" },
+        { class: "engramfont-ui-font-info-cross-axis-mapping-panel-inactive-delete-cell" },
         [
           labeledCheckbox(
             translate("cross-axis-mapping.inactive"),
@@ -442,7 +442,7 @@ class CrossAxisMappingBox extends HTMLElement {
             "inactive"
           ),
           html.createDomElement("icon-button", {
-            class: "fontra-ui-font-info-cross-axis-mapping-panel-icon",
+            class: "engramfont-ui-font-info-cross-axis-mapping-panel-icon",
             src: "/tabler-icons/trash.svg",
             onclick: (event) => this.deleteCrossAxisMapping(),
             title: translate("cross-axis-mapping.delete"),
@@ -453,41 +453,41 @@ class CrossAxisMappingBox extends HTMLElement {
 
     const inputHeaderElement = html.div(
       {
-        class: "fontra-ui-font-info-cross-axis-mapping-panel-header",
+        class: "engramfont-ui-font-info-cross-axis-mapping-panel-header",
       },
       [translate("cross-axis-mapping.header.inputLocation")]
     );
 
     const outputHeaderElement = html.div(
       {
-        class: "fontra-ui-font-info-cross-axis-mapping-panel-header",
+        class: "engramfont-ui-font-info-cross-axis-mapping-panel-header",
       },
       [translate("cross-axis-mapping.header.outputLocation")]
     );
 
     // Row 2 Locations headlines
     this.append(
-      html.div({ class: "fontra-ui-font-info-cross-axis-mapping-panel-empty" })
+      html.div({ class: "engramfont-ui-font-info-cross-axis-mapping-panel-empty" })
     );
     this.append(
-      html.div({ class: "fontra-ui-font-info-cross-axis-mapping-panel-empty" })
+      html.div({ class: "engramfont-ui-font-info-cross-axis-mapping-panel-empty" })
     );
     this.append(inputHeaderElement);
     this.append(
-      html.div({ class: "fontra-ui-font-info-cross-axis-mapping-panel-empty" })
+      html.div({ class: "engramfont-ui-font-info-cross-axis-mapping-panel-empty" })
     );
     this.append(outputHeaderElement);
     this.append(
-      html.div({ class: "fontra-ui-font-info-cross-axis-mapping-panel-empty" })
+      html.div({ class: "engramfont-ui-font-info-cross-axis-mapping-panel-empty" })
     );
     this.append(
-      html.div({ class: "fontra-ui-font-info-cross-axis-mapping-panel-empty" })
+      html.div({ class: "engramfont-ui-font-info-cross-axis-mapping-panel-empty" })
     );
 
     // Other rows: axis for input and output
     for (const axis of this.fontAxesSourceSpace) {
       this.append(
-        html.div({ class: "fontra-ui-font-info-cross-axis-mapping-panel-empty" })
+        html.div({ class: "engramfont-ui-font-info-cross-axis-mapping-panel-empty" })
       );
       this.append(buildElementLocationsLabel(axis));
       this.append(
@@ -519,7 +519,7 @@ class CrossAxisMappingBox extends HTMLElement {
         )
       );
       this.append(
-        html.div({ class: "fontra-ui-font-info-cross-axis-mapping-panel-empty" })
+        html.div({ class: "engramfont-ui-font-info-cross-axis-mapping-panel-empty" })
       );
     }
 
@@ -555,21 +555,21 @@ function _createSlider(controller, axis, modelValue, continuous = false) {
 
 function buildElementLocations(axis, controller, sliderId) {
   const slider = _createSlider(controller, axis, controller.model[axis.name]);
-  slider.className = "fontra-ui-font-info-cross-axis-mapping-panel-location";
+  slider.className = "engramfont-ui-font-info-cross-axis-mapping-panel-location";
   slider.id = sliderId;
   return slider;
 }
 
 function buildElementLocationsLabel(axis) {
   return html.label(
-    { class: "fontra-ui-font-info-cross-axis-mapping-panel-location-label" },
+    { class: "engramfont-ui-font-info-cross-axis-mapping-panel-location-label" },
     [axis.name]
   );
 }
 
 function buildElementLocationsCheckboxes(axis, controller, checkboxId) {
   const element = labeledCheckbox(null, controller, axis.name);
-  element.className = "fontra-ui-font-info-cross-axis-mapping-panel-checkboxes";
+  element.className = "engramfont-ui-font-info-cross-axis-mapping-panel-checkboxes";
   element.title = translate("cross-axis-mapping.axis-participates");
   element.firstChild.id = checkboxId;
   return element;

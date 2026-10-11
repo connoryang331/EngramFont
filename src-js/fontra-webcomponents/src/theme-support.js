@@ -6,7 +6,7 @@ export function themeColorCSS(colors, element = ":host") {
   const lightMode = [];
   const darkMode = [];
   for (const [colorName, [lightColor, darkColor]] of Object.entries(colors)) {
-    definitions.push(`--${colorName}-light: var(--fontra-theme-marker) ${lightColor};`);
+    definitions.push(`--${colorName}-light: var(--engramfont-theme-marker) ${lightColor};`);
     definitions.push(`--${colorName}-dark: ${darkColor};`);
     definitions.push(
       `--${colorName}: var(--${colorName}-light, var(--${colorName}-dark));`

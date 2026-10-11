@@ -15,7 +15,7 @@ export class GlyphSearchField extends SimpleElement {
     input {
       color: var(--search-input-foreground-color);
       background-color: var(--search-input-background-color);
-      font-family: fontra-ui-regular, sans-serif;
+      font-family: engramfont-ui-regular, sans-serif;
       font-size: 1.1rem;
       border-radius: 2em;
       border: none;

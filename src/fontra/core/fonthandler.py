@@ -542,7 +542,7 @@ class FontHandler:
             await connection.proxy.messageFromServer(
                 "The data could not be saved.",
                 "The edit has been reverted.\n\n"  # no trailing comma
-                "The Fontra server got itself into trouble, please contact an admin.",
+                "The EngramFont server got itself into trouble, please contact an admin.",
             )
             return
         shouldSignal = not self._dataScheduledForWriting

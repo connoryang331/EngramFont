@@ -34,7 +34,7 @@ export const strings = {
   "action.edit-anchor": "Modifier l'ancrage",
   "action.edit-guideline": "Modifier le repère",
   "action.export-as.designspace": "Designspace + UFO (*.designspace)",
-  "action.export-as.fontra": "Fontra (*.fontra)",
+  "action.export-as.fontra": "EngramFont (*.fontra)",
   "action.export-as.glyphs": "Glyphs (*.glyphs)",
   "action.export-as.otf": "OpenType (*.otf)",
   "action.export-as.rcjk": "RCJK (*.rcjk)",
@@ -345,7 +345,7 @@ export const strings = {
   "plugin-manager.add-plugin-dialog.label.path": "Chemin de l'extension (plugin):",
   "plugin-manager.add-plugin-dialog.title": "Ajouter une extension (plugin)",
   "plugin-manager.add-plugin-dialog.warning.title": "Erreur",
-  "plugin-manager.title": "Extensions (plugins) Fontra :",
+  "plugin-manager.title": "Extensions (plugins) EngramFont :",
   "plugin-manager.warning.fetching-error":
     "Une erreur est survenue lors de la récupération de l'extension (plugin).",
   "plugin-manager.warning.not-found": "Extension (plugin) introuvable.",

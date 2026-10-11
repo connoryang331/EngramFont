@@ -137,7 +137,7 @@ export default class DesignspaceNavigationPanel extends Panel {
         display: inline-block;
         height: 1.35em;
         width: 1.35em;
-        color: var(--fontra-light-red-color);
+        color: var(--engramfont-light-red-color);
         transform: translate(0, 0.3em);
         margin-right: 0.25em;
       }
@@ -2075,7 +2075,7 @@ function interpolationErrorCell(item, colDesc) {
         src: value.isModelError
           ? "/tabler-icons/alert-circle.svg"
           : "/tabler-icons/bug.svg",
-        style: "width: 1.2em; height: 1.2em; color: var(--fontra-light-red-color);",
+        style: "width: 1.2em; height: 1.2em; color: var(--engramfont-light-red-color);",
         onclick: (event) => {
           event.stopImmediatePropagation();
           message(

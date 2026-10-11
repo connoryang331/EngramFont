@@ -201,3 +201,67 @@ a {
   font-size: 0.65em;
   max-width: 30em;
 }
+
+
+#engramfont-newfont-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+}
+
+#engramfont-newfont-button {
+  border-radius: 2em;
+  background-color: #999;
+  width: max-content;
+  color: white;
+  padding: 0.5em 1.1em 0.5em 1em;
+  border: none;
+  font-family: engramfont-ui-semibold, sans-serif;
+  font-size: 0.9em;
+  transition: all 0.1s ease-in;
+}
+
+#engramfont-newfont-button:hover {
+  background-color: #777;
+  cursor: pointer;
+}
+
+#engramfont-newfont-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+  padding: 0.8em;
+  border: 1px solid #9994;
+  border-radius: 0.6em;
+  max-width: 22em;
+}
+
+#engramfont-newfont-card.hidden {
+  display: none;
+}
+
+#engramfont-newfont-card input,
+#engramfont-newfont-card select {
+  font-family: engramfont-ui-regular, sans-serif;
+  font-size: 0.8em;
+  padding: 0.3em;
+}
+
+#engramfont-newfont-create {
+  border-radius: 1.5em;
+  background-color: #46f;
+  color: white;
+  border: none;
+  padding: 0.4em;
+  font-family: engramfont-ui-semibold, sans-serif;
+  cursor: pointer;
+}
+
+#engramfont-newfont-error {
+  color: #c33;
+  font-size: 0.65em;
+}
+
+#engramfont-newfont-error.hidden {
+  display: none;
+}

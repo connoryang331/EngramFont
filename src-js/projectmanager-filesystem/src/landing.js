@@ -21,6 +21,55 @@ export async function startupLandingPage(authenticateFunc) {
   }
 
   setupImportFont();
+  setupNewFont();
+}
+
+function setupNewFont() {
+  const newFontButton = document.querySelector("#engramfont-newfont-button");
+  const card = document.querySelector("#engramfont-newfont-card");
+  const nameInput = document.querySelector("#engramfont-newfont-name");
+  const templateSelect = document.querySelector("#engramfont-newfont-template");
+  const createButton = document.querySelector("#engramfont-newfont-create");
+  const errorBox = document.querySelector("#engramfont-newfont-error");
+
+  newFontButton.addEventListener("click", () => {
+    card.classList.toggle("hidden");
+    if (!card.classList.contains("hidden")) {
+      nameInput.focus();
+    }
+  });
+
+  const submit = async () => {
+    const name = nameInput.value.trim();
+    errorBox.classList.add("hidden");
+    createButton.disabled = true;
+    try {
+      const response = await fetch("/api/new-font", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, template: templateSelect.value }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        errorBox.textContent = result.error;
+        errorBox.classList.remove("hidden");
+        return;
+      }
+      window.location.href = "/editor.html?project=" + result.project;
+    } catch (error) {
+      errorBox.textContent = String(error);
+      errorBox.classList.remove("hidden");
+    } finally {
+      createButton.disabled = false;
+    }
+  };
+
+  createButton.addEventListener("click", submit);
+  nameInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      submit();
+    }
+  });
 }
 
 function setupImportFont() {

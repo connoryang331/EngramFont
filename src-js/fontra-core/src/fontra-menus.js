@@ -127,6 +127,7 @@ function getFileMenuItems(viewController) {
     [];
   if (exportFormats.length > 0) {
     return [
+      { actionIdentifier: "action.new-font" },
       {
         title: translate("menubar.file.export-as"),
         getItems: () =>

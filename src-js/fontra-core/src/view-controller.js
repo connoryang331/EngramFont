@@ -1,5 +1,5 @@
 import * as html from "@fontra/core/html-utils.js";
-import { ensureLanguageHasLoaded } from "@fontra/core/localization.js";
+import { ensureLanguageHasLoaded, translate } from "@fontra/core/localization.js";
 import { InlineSVG } from "@fontra/web-components/inline-svg.js";
 import { dialog, dialogSetup, message } from "@fontra/web-components/modal-dialog.js";
 import { registerAction } from "./actions.js";
@@ -85,6 +85,9 @@ export class ViewController {
       ])
     );
 
+    registerAction("action.new-font", { topic: "0035-action-topics.export-as" },
+      () => this.showDialogNewFont());
+
     for (const format of this.fontController.backendInfo.projectManagerFeatures[
       "export-as"
     ] || []) {
@@ -107,6 +110,62 @@ export class ViewController {
         }
       );
     }
+  }
+
+  async showDialogNewFont() {
+    const theDialog = await dialogSetup(
+      translate("dialog.new-font.title"),
+      null,
+      [
+        { title: translate("dialog.cancel"), isCancelButton: true },
+        {
+          title: translate("dialog.new-font.create"),
+          isDefaultButton: true,
+          resultValue: "create",
+        },
+      ]
+    );
+
+    const content = html.div({ class: "new-font-dialog" }, [
+      html.input({
+        id: "new-font-name-input",
+        type: "text",
+        placeholder: translate("dialog.new-font.name-placeholder"),
+        maxlength: 64,
+      }),
+      html.select(
+        { id: "new-font-template-select" },
+        [
+          ["latin-kernel", translate("dialog.new-font.template.latin-kernel")],
+          ["empty", translate("dialog.new-font.template.empty")],
+        ].map(([value, label]) =>
+          html.option({ value }, [label])
+        )
+      ),
+    ]);
+    theDialog.setContent(content);
+    setTimeout(() => content.querySelector("#new-font-name-input")?.focus(), 0);
+
+    if ((await theDialog.run()) !== "create") {
+      return;
+    }
+    const name = content.querySelector("#new-font-name-input").value.trim();
+    const template = content.querySelector("#new-font-template-select").value;
+    const response = await fetch("/api/new-font", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, template }),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      await message(
+        translate("dialog.new-font.title"),
+        result.error
+      );
+      return;
+    }
+    // open in a new tab: keeps this editor's context (R4 T4.4)
+    window.open(`/editor.html?project=${result.project}`, "_blank");
   }
 
   /**

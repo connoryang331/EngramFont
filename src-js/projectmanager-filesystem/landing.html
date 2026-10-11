@@ -18,6 +18,24 @@
 
       <div class="landing-item" id="project-list" tabindex="3"></div>
 
+      <div class="landing-item" id="engramfont-newfont-area">
+        <button id="engramfont-newfont-button" tabindex="5">New font…</button>
+        <div id="engramfont-newfont-card" class="hidden">
+          <input
+            type="text"
+            id="engramfont-newfont-name"
+            placeholder="Font name (letters, digits, - _)"
+            maxlength="64"
+          />
+          <select id="engramfont-newfont-template">
+            <option value="latin-kernel">Latin kernel (A-Z a-z 0-9)</option>
+            <option value="empty">Empty font</option>
+          </select>
+          <button id="engramfont-newfont-create">Create</button>
+          <div id="engramfont-newfont-error" class="hidden"></div>
+        </div>
+      </div>
+
       <div class="landing-item" id="engramfont-import-area">
         <input
           type="file"

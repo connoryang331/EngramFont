@@ -162,6 +162,7 @@ class FileSystemProjectManager:
             self.exportManager.setupWebRoutes(server)
         # registered before the server's /api/{function:.*} route -> wins
         server.httpApp.router.add_post("/api/import-font", self.importFontHandler)
+        server.httpApp.router.add_post("/api/new-font", self.newFontHandler)
 
     async def importFontHandler(self, request: web.Request) -> web.Response:
         from .importfont import (
@@ -214,6 +215,28 @@ class FileSystemProjectManager:
             # clean up in the background so the 400 isn't delayed
             asyncio.get_running_loop().create_task(_unlinkWithRetry(sourcePath))
             return web.json_response({"error": message}, status=status)
+        return web.json_response({"project": projectIdentifier})
+
+    async def newFontHandler(self, request: web.Request) -> web.Response:
+        from .newfont import NewFontError, createNewFont
+
+        if self.rootPath is None:
+            return web.json_response(
+                {"error": "new font requires a project folder"}, status=400
+            )
+        if not await self.authorize(request):
+            raise web.HTTPUnauthorized()
+        try:
+            body = await request.json()
+        except Exception:
+            return web.json_response({"error": "bad request"}, status=400)
+
+        try:
+            projectIdentifier = await createNewFont(
+                self.rootPath, body.get("name"), body.get("template", "empty")
+            )
+        except NewFontError as error:
+            return web.json_response({"error": str(error)}, status=error.status)
         return web.json_response({"project": projectIdentifier})
 
     async def getMetaInfo(

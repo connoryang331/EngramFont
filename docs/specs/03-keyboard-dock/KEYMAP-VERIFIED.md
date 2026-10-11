@@ -90,3 +90,18 @@
 |---|---|
 | letter thickness 滑块（黄胶囊） | 依赖笔画系统（轮廓加粗引擎）——Fontra 无，engram 首版禁用占位 |
 | 蓝 #（bezier ⇄ mesh） | mesh 模式已决策不做 → v1 移除该键位 |
+
+## 实现决策（2026-10-11 用户定案）
+
+| 键 | 决策 | 说明 |
+|---|---|---|
+| letter thickness（黄胶囊） | **要做** | 依赖说明：meshfont 便宜是因为其字形为笔画骨架生成（thickness=生成参数）；EngramFont 轮廓字形的 thickness=**轮廓偏移**（需路径偏移引擎，如 skia-pathops wasm，含自交处理）→ 放 P2/第二批，选型另议 |
+| 蓝 #（bezier⇄mesh） | **占位按键** | 渲染禁用占位，不实现 |
+| snap to grid（红⊞） | **不做（占位）** | Fontra 源码无任何吸附机制（grep snap/magnet 零命中），用户判定不需要 |
+| snap to guides（黄○） | **Fontra 没有吸附机制**；首版占位 | 如需：拖拽点对 guideline 坐标吸附 ≈0.5d 新增 |
+| outline view（米a） | **做：渲染模式开关** | Fontra 字形=Path2D 填充渲染（glyph-controller.js:710 flattenedPath2d）；outline view=绘制点切 fill→stroke（带 strokeWidth）；canvas 当前无双击手势（meshfont 用键切，EngramFont 跟随用键；"双击笔画/空白"手势可作备选交互） |
+
+### Dock 键位定案（v1 实现范围）
+**实做 12 键**：字母/数字/标点导航、DEL、space、move、100%、网格显隐、outline view、view/edit 模式键、ctrl/alt
+**占位 4 键**：蓝#（mesh）、snap to grid、snap to guides、letter thickness（P2）
+**移除 1 键**：无（红/绿滑块保留=sidebearing 接线）

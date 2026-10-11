@@ -24,6 +24,8 @@ R5 Proof/Edit（T5.1→T5.4）gate: E2E 模式切换 + 导线宽度断言
   ↓ commit "R5: ..."
 R3 键盘 Dock（T3.1→T3.6）gate: E2E 键盘导航 + 模式键
   ↓ commit "R3: ..."
+R7 背景图增强（T7.1→T7.4）   gate: E2E Edit image 激活 + Replace 换图
+  ↓ commit "R7: ..."
 R4 模板流（T4.1→T4.4）   gate: E2E 新建→模板→编辑
   ↓ commit "R4: ..."
 最终：push origin engramfont-main + 更新 ENGRAM-CHANGES.md 贴片台账

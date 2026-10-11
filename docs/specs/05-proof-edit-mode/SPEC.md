@@ -113,3 +113,12 @@ proof 态的排版控制**不新增控件**——复用 Dock 的四个滑块/键
 - sceneSettings 新增字段：`wordSpacing`（默认 1.0 倍空格宽）、`letterSpacing`（默认 0 额外）、
   `canvasMode`（R5 已有）——scene-model 布局循环消费这些值（lineHeight 已有 ✓）
 - edit 态下同组滑块回退为字形编辑控制（见 R3 KEYMAP v5 双功能表）
+
+## 11. reset 文本 · 确切行为定案（2026-10-12 用户确认 + 源码查证）
+| 项 | 定案 |
+|---|---|
+| DEL 行为 | **恢复默认预览文本**（非清空、非删除）|
+| 默认预览文本（EngramFont） | **动态生成**：工程 glyphMap 顺序取有 codePoint 的字形拼串，前 40 字符一行 —— 永远全部字形存在（不 notdef），任何工程 reset 后都有意义 |
+| 对照 | Fontra 默认 `text: ""`（scene-controller.js:1824）；meshfont 固定 pangram 依赖模板字体有全 Latin——EngramFont 工程字形动态，固定串会 notdef，故用动态默认 |
+| 文本进 URL | 沿用 Fontra 机制（editor.js:3410 writeObjectToURLFragment）——reset 后 URL fragment 同步更新 |
+| 实现点 | scene-settings 默认值改造：`text: ""` → getter 动态取 glyphMap 前 40 个有 codePoint 的字形（工程加载后可得）；DEL = characterLines 复位为该默认 |

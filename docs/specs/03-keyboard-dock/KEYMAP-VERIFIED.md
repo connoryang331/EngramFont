@@ -105,3 +105,23 @@
 **实做 12 键**：字母/数字/标点导航、DEL、space、move、100%、网格显隐、outline view、view/edit 模式键、ctrl/alt
 **占位 4 键**：蓝#（mesh）、snap to grid、snap to guides、letter thickness（P2）
 **移除 1 键**：无（红/绿滑块保留=sidebearing 接线）
+
+## 实现决策修订（2026-10-11 晚 · v2）
+
+| 键 | 修订 | 说明 |
+|---|---|---|
+| snap to guides（黄○） | **升级为实做** | Fontra 无吸附机制（已查证）→ 新增：拖拽点对 guideline 坐标吸附计算 + 开关，≈0.5d |
+| outline view（米a） | **改双击手势，键占位** | 交互定义：双击笔画 → 实心（filled/edit 态）；双击空白处 → outline 视图（线框）。实现=canvas 新增 dblclick 处理器（当前无）+ 渲染模式标记（fill⇄stroke 切换）。双击画布空白的命中判定=未命中字形轮廓的区域 |
+| snap to grid（红⊞） | 占位（不做） | 用户判定不需要 |
+| 蓝 #（bezier⇄mesh） | 占位（不做） | 维持前案 |
+
+### Dock v1 范围（修订后）
+**实做 14 键**：字母/数字/标点导航、DEL、space、move、100%、网格显隐（紫）、**snap to guides（新）**、view/edit 模式键、shift-l/r 滑块（sidebearing 接线）、ctrl/alt
+**占位 4 键**：蓝#（mesh）、snap to grid、**outline view（改双击手势）**、letter thickness（P2，轮廓偏移选型）
+
+### outline view 双击手势 · 实现要点
+- canvas 现无 dblclick 处理器（已查证）→ 新增 dblclick 监听
+- 命中判定：dblclick 位置落在当前字形轮廓内（flattenedPath2d isPointInPath）→ 切实心；
+  落在轮廓外（空白）→ 切 outline 线框
+- 渲染分支：绘制点 fill⇄stroke（strokeWidth 按屏幕像素）
+- 状态：内存（不持久化），编辑工具照常可用

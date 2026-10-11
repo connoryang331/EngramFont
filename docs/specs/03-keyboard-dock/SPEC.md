@@ -55,6 +55,10 @@ canvasMode: edit ←→ proof（R5 拥有该状态，Dock 只读订阅 + 派发�
 - 每键：role=button + aria-label（"切换到字形 g"）；焦点环可见；Tab 顺序按行
 
 ## 7. 完整键位布局常量表（实现即用）
+
+> **实测修正**：以下占位猜测已全部实证，权威键位表见 [KEYMAP-VERIFIED.md](./KEYMAP-VERIFIED.md)——
+> 紫键=网格显隐、黄键=笔画粗细滑块、红/绿键=左右边距滑块、alt=移除锚点、
+> 右下四小键=网格吸附/参考线吸附/bezier-mesh 切换/轮廓视图。下表保留供对照，实现以 KEYMAP-VERIFIED.md 为准。
 ```js
 // keyboard-dock.js 顶部常量——全部 28 键的唯一定义处
 export const DOCK_ROWS = [

@@ -10,8 +10,9 @@
 | R3 | 虚拟键盘 Dock | [03-keyboard-dock](./03-keyboard-dock/) | 文档就绪 | ≈4d |
 | R4 | 新建字体/模板流 | [04-new-font-templates](./04-new-font-templates/) | 文档就绪 | ≈3d |
 | R5 | Proof/Edit 双模式画布 | [05-proof-edit-mode](./05-proof-edit-mode/) | 文档就绪 | ≈2.5d |
+| R6 | 路径操作工具集（straighten/soften/circle/锚点密度） | [06-path-ops](./06-path-ops/) | 文档就绪 | ≈4-5d |
 
-合计 ≈ 15.5d
+合计 ≈ 20d
 
 ## 依赖与执行顺序
 ```
@@ -20,7 +21,7 @@ R2 ─┤（互不依赖，可并行——两个快赢）
 R5 ─┼─→ R3（Dock 的模式键依赖 R5 的状态机）
 R4 ─┘ （复用 R2 的导入管线做模板字体）
 ```
-建议顺序：**R1 → R2 → R5 → R3 → R4**（R1/R2 是独立快赢；R5 先于 R3）。
+建议顺序：**R1 → R2 → R5 → R3 → R6 → R4**（R1/R2 独立快赢；R5 先于 R3；R6 的锚点密度是 R3 绿滑块的底层，可并行）。
 
 ## E2E 骨架
 - `e2e/*.spec.mjs` 五套骨架 + playwright.config.mjs 已建（用例表在各 TEST.md，断言由实现会话填充）

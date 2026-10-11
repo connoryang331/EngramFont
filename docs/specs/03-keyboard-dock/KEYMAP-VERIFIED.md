@@ -147,3 +147,21 @@
 |---|---|
 | 红圈（row4 左） | **背景网点显示滑块**（调节画布背景网点/点阵密度的拖拽滑块）——**占位**（v1 不实现） |
 | stroke width | **Fontra 没有**：Fontra 是轮廓字形（filled outlines），无描边宽度概念。meshfont 的 thickness 滑块能工作是因为其字形由笔画骨架生成（width=生成参数）。EngramFont 做 thickness 的两条路线：① 字形保留笔画骨架数据（customData），thickness=按骨架重生成轮廓（推荐——若引入 engram-generator 遗产的骨架表示）；② 轮廓偏移引擎（stroke-to-outline：skia-python getFillPath 或 wasm 方案，含自交处理，中等偏上难度）。→ 维持 P2 选型 |
+
+## 功能名映射表（meshfont ↔ Fontra · 同功能不同名）
+> 过夜会话照此对表，不要把"名字不同"误判为"功能缺失"。
+
+| meshfont 名称 | Fontra 名称 | 状态 |
+|---|---|---|
+| upload image / Trace a photo | **Add Background Image...**（action.glyph.add-background-image） | ✓ 已有 |
+| （背景图移动/编辑解锁） | **Unlock Background Images**（action.unlock-background-images）/ Lock（对偶） | ✓ 已有 |
+| proof 预览（排版打样） | text-entry 多行画布 + lineMetrics 导线层（R5 补齐预设/全宽） | R5 |
+| edit 模式 | 编辑态（现状） | ✓ |
+| soften curves | （无）→ R6 | 待实现 |
+| straighten | （无）→ R6 | 待实现 |
+| make circle | （无）→ R6 | 待实现 |
+| 锚点增减绿滑块 | （无）→ R6 锚点密度 | 待实现 |
+| letter thickness 滑块 | （无，轮廓字形无描边概念） | 占位/P2 |
+| 蓝 #（bezier⇄mesh） | （无 mesh） | 占位 |
+| 导出字体 | Export As（缺 ExportManager 实现） | R1 |
+| 导入字体→可编辑 | OTFBackend 只读（缺转换） | R2 |

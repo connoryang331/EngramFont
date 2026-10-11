@@ -28,3 +28,16 @@ R3 键盘 Dock 的绿滑块（锚点增减）也是同族能力。Fontra 只有�
 ## 验收标准（概览）
 - 四操作在选中态可用、可撤销、暗色正常
 - soften/straighten 往返不丢点序；密度滑块极端值不崩
+
+## 相邻能力盘点：shape 绘制工具族（查证 2026-10-11）
+meshfont 工具栏 shapes 菜单：Rectangle/Ellipse/Polygon/Star/Line。
+Fontra 的 `edit-tools-shape.js` 已有 **ShapeToolRect（rect/square）+ ShapeToolEllipse（ellipse/circle）**——
+框架（拖拽/预览/提交）现成，扩展=实现 `getUnpackedContours(x,y,w,h)` 几何函数：
+
+| 形状 | 缺口 | 公式要点 | 估时 |
+|---|---|---|---|
+| Polygon（N 边，默认 6） | ✗ | 正多边形顶点：angle=2πi/N，外接圆半径=min(w,h)/2 | 0.25d |
+| Star（N 角，内外比可调） | ✗ | 交替半径 R/r 的 2N 顶点星形 | 0.25d |
+| Line（开放线段） | ✗ | 两点线段，isClosed=false | 0.25d |
+
+→ 合并进本需求的形状扩展批次（与 path-ops 同批实施，≈0.75d），注册进同一工具下拉。

@@ -1,19 +1,30 @@
 # R7 · 背景图控制增强 · 需求文档（PRD）
 
 ## 背景
-Fontra 已有背景图全套能力（查证）：Add Background Image（Glyph 菜单）、选中后
-selection-info 面板有 **Opacity 0-1 滑块 + Colorize 取色 + transformation**（panel-selection-info.js:340-370）、
-可视化层 fontra.background-image 自动显示。
+Fontra 已有背景图全套底层能力（Add Background Image / putBackgroundImage /
+selection backgroundImage/0 / selection-info 的 Opacity+Colorize+Transformation 滑块 /
+fontra.background-image 可视化层）。
 
-**真实差距只有两个**：
-1. **replace（替换图片）缺失**——meshfont 有 replace 按钮（换图但保留位置/缩放/透明度），Fontra 只能 remove+重新 add（变换全丢）
-2. **可发现性**——opacity 滑块藏在 selection-info（需先选中背景图），meshfont 是图片上的常驻弹窗
+**但交互模型与 meshfont 不同**：
+- Fontra：全局 Unlock/Lock Background Images 菜单动作（手动解锁→选中→改→手动锁回）
+- meshfont：工具栏 **Edit image 按钮**（字形有背景图时出现）→ 点击激活图片（弹控制菜单：
+  透明度滑块/replace/remove）→ **不点就自动锁定**（无全局开关，上下文自动）
 
-remove 不需要做（Fontra 已有）。
+## 目标（学习 meshfont 行为）
+1. **Edit image 上下文按钮**：当前字形有背景图时出现，点击 = 激活图片编辑上下文
+   （解锁 + 选中 backgroundImage/0 + selection-info 出现 Opacity/Colorize/Transformation + Replace 按钮）
+2. **自动锁定**：选中离开背景图（点击画布其它处/切换工具）→ 自动 re-lock
+3. **Replace 按钮**：换图保留 transformation/opacity/colorize（R7 原需求保留）
+4. 移除全局 Unlock/Lock Background Images 菜单项（被上下文行为取代）
 
-## 目标
-- replace 按钮：替换背景图文件，**保留 transformation/opacity/colorize**
-- 背景图选中体验对齐 meshfont（点击即选中，控制面板常驻可发现）
+## 用户故事
+- 我给字形加了背景图 → 工具栏出现 Edit image → 点击 → 图片激活（控制菜单弹出）→
+  调透明度/换图/移动 → 点画布其它处 → 自动锁定回到编辑
 
 ## 非目标
-- 自动描图（auto-trace）——meshfont 的 "Trace a photo" 也是手动描（背景图 + pen），非自动矢量化
+- 自动描图（Trace 是手动描）；多张背景图管理
+
+## 验收标准（概览）
+- Edit image 按钮上下文出现/消失
+- 激活→滑块+Replace 可用；失焦→自动锁定
+- 全局 Unlock/Lock 菜单项移除，行为由上下文接管

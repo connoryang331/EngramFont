@@ -17,10 +17,46 @@
 | `src-js/views-applicationsettings/applicationsettings.html` | 同上 |
 | `src-js/fontra-core/assets/images/fontra-icon.svg` | 内容替换为 EngramFont "E" 标（蓝底 #0666ee 白 E，文件名不变 = 零引用改动） |
 
+### R1-T1.5 · 浏览器内导出（2026-10-12 过夜执行）
+- 新文件：`src/fontra/filesystem/exportmanager.py`（cubic 源 → Cu2QuPen 出 TTF / 直接 T2CharStringPen 出 OTF（cffLib 装配）/ woff2 flavor；FEA→GSUB 含 *ance backtrack 类自动再生；家族导出按 source 逐层实例化 + usWeightClass）
+- 接线：`projectmanager.py` 工厂注入 + setupWebRoutes 委托（2 处单行）；`/exports/` 下载路由（穿越防护 + attachment）
+- 前端：`view-controller.js` anchor-click 下载（弹窗拦截免疫）
+- 产物目录：`<工程根>/.exports/<ts>/`
+
+### R2-T2.4 · 字体导入 → 可编辑工程（2026-10-12）
+- 新文件：`src/fontra/filesystem/importfont.py`（glyphs+cmap/sources+metrics/upem/features/kerning 迁移；Windows 句柄锁 → from None + 后台 unlink 重试）
+- 端点：`POST /api/import-font`（multipart，50MB 上限，400/409 矩阵）
+- landing：Import font 按钮 + 错误框
+- `_iterFolder` 跳过点目录（.exports/.git 不再混入工程列表）
+
+### R5-T5.4 · Proof/Edit 双模式画布（2026-10-12）
+- 新文件：`src-js/views-editor/src/canvas-mode.js`（edit⇄proof，localStorage `engramfont-canvas-mode`）
+- 新文件：`src-js/views-editor/src/proof-toolbar.js`（5 预设按钮 + 过渡期模式切换 pill）
+- scene-model：selectedGlyph getter proof 掩码（isEditing→false）；字形条目带 lineIndex/glyphIndexInLine
+- lineMetrics 层：proof 态全行导线（每行首字形画整行 band）；edit 态原样
+- 编辑闸门：`_editGlyphOrInstance` proof 早退；`#edit-tools` 隐藏
+
+### R3-T3.8 · 虚拟键盘 Dock（2026-10-12）
+- 新文件：`src-js/views-editor/src/keyboard-dock.js`（KEYMAP-VERIFIED v5 键位：导航/DEL=reset 动态默认文本/space/move/view-edit 模式键/紫键锚点⇄导线/alt 移除锚点）
+- 双功能滑块：proof=letter-spacing/word-spacing/line-height（sceneSettings 新增 wordSpacing/letterSpacing，LineSetter 消费）；edit=占位（thickness/锚点密度待 R6/P2）
+- T3.7 拆分/合并布局（`engramfont-dock-layout`）；T3.8 右键改绑（`engramfont-key-bindings`，DEL/space 锁定）
+- 已知缺口：字形键帽预览未做；100% 缩放为可绑定 action（无专属键）
+
+### R7-T7.4 · 背景图上下文编辑（2026-10-12）
+- Edit image 上下文 action（选中字形有背景图时启用）→ 解锁 + 选中 backgroundImage/0
+- 离开选中自动重锁（selection 监听）；全局 Unlock/Lock 菜单项已移除
+- selection-info 面板 Replace 按钮（photo-up 图标）：换图保变换/透明度
+
+### R4-T4.4 · 新建字体/模板流（2026-10-12）
+- 新文件：`src/fontra/filesystem/newfont.py` + `assets/templates/latin-kernel.json`（62 块状字形，scripts/make-template.py 生成）
+- 端点：`POST /api/new-font`（409/400 矩阵）；landing New font 卡；File 菜单 New Font…（新标签页打开，不丢上下文）
+
 ### 待办贴片（按优先级）
 - P2 · UI 界面字体替换（`fontra-core/assets/` 里的 Inria Sans woff2 → engram 品牌字体）
 - P3 · 暗色主题色板微调（core.css 的 dark 变量区，只改变量值）
 - P4 · About/Server Info 面板品牌文案（views-applicationsettings）
+- P5 · R3 编辑态滑块语义（thickness=轮廓偏移选型；锚点密度=R6）
+- P6 · 测试资产隔离：Inter-Regular.ttf 为 CDN 重建替身（原 2937 字形版丢失，现为 latin 子集 518 字形）
 
 ## 日常
 - 启动：`start-fontra.bat`（bundle-watch + server，端口 8000）

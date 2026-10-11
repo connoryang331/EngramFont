@@ -123,3 +123,42 @@ test("export ttf downloads valid TTF", async ({ page }) => {
   // TODO: 进阶——下载后用 harfbuzzjs shape("ton") == 1 字形（连字进产物）
 });
 ```
+
+## 10. 导出对话框 UI 规范（1:1 复刻 meshfont，结构已从行为探针捕获）
+```
+┌ Export your font ────────────────────────────────┐
+│ Choose a name and file format.                   │
+│ Font name                                        │
+│ [e.g. Wobble Grotesk____________]                │
+│ Choose a fresh name for your font.               │
+│ File format            [ TTF · install anywhere▾]│
+│   · TTF · install anywhere                       │
+│   · OTF · design apps                            │
+│   · WOFF2 · websites                             │
+│ [✓] Light, Regular and Bold                      │
+│     Thickness variants of these outlines         │
+│ [✓] Rebalance letter spacing                     │
+│     Adjust side spacing around the sculpted      │
+│     shapes.                                      │
+│ License & credits                                │
+│ Released under the SIL Open Font License...      │
+│           [Download proof] [Download font]       │
+└──────────────────────────────────────────────────┘
+```
+- 字段/文案/顺序按 meshfont 行为探针记录 1:1（test-export-formats 会话）
+- 前端未捕获项：Download proof 的产物内容（proof sheet）——实现前需行为捕获
+
+## 11. A/B 对比验收（"一模一样"的工程化定义）
+```
+同一工程（MicroTon：ton/dance/vance/lovely 连字）
+  ├─ meshfont (8124) 导出 → reference.ttf/.otf/.woff2
+  └─ EngramFont 导出   → candidate.ttf/.otf/.woff2
+对比（ttx -t glyf -t name -t GSUB -t kern 语义 diff）：
+  ├─ glyphOrder 完全一致
+  ├─ 每字形轮廓坐标一致（浮点容差 ≤1 单位；meshfont 与 EngramFont
+  │   编译器不同 → 允许曲线表示差异，渲染像素级对比兜底）
+  ├─ name 表（family/style/uniqueID）/OS2 权重一致
+  ├─ GSUB：liga 规则（ton/dance/vance/lovely）shaping 结果一致
+  └─ 安装测试：系统安装后任意软件打 "ton/advanced" 连字生效
+```
+- 二进制逐字节相同**不承诺**（编译器不同，含时间戳）；以 ttx 语义等价 + 渲染像素对比为准

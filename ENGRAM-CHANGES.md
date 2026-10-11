@@ -26,3 +26,7 @@
 - 启动：`start-fontra.bat`（bundle-watch + server，端口 8000）
 - 测试字体目录：`E:\engram-dev\fontra-test-fonts`
 - 跟上游同步：`git remote` 仍指向 fontra/fontra；定期 `git fetch origin && git rebase origin/main`（贴片越收敛冲突越小）
+
+### P1.5 · 启动器（commit b1842ec + 修复）
+- `start-EngramFont.bat`：一键直达编辑器（确保 Untitled.fontra 存在 → 起服务于 8800 → 打开 editor.html?project=Untitled.fontra）
+- **教训**：bat 文件必须纯 ASCII——中文注释在 GBK 系统上会被 cmd 按 ANSI 解析，UTF-8 多字节序列吞掉换行导致整个文件解析崩坏；等待用 `ping -n 2` 而非 `timeout`（Git Bash PATH 会劫持 timeout）

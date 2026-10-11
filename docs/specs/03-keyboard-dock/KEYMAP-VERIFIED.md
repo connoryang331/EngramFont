@@ -153,7 +153,7 @@
 
 | meshfont 名称 | Fontra 名称 | 状态 |
 |---|---|---|
-| upload image / Trace a photo | **Add Background Image...**（action.glyph.add-background-image） | ✓ 已有 |
+| upload image / Trace a photo | **Add Background Image...**（action.glyph.add-background-image） | ✓ 已有（opacity 滑块在 selection-info 面板；replace 缺 → R7；remove 已有）|
 | （背景图移动/编辑解锁） | **Unlock Background Images**（action.unlock-background-images）/ Lock（对偶） | ✓ 已有 |
 | proof 预览（排版打样） | text-entry 多行画布 + lineMetrics 导线层（R5 补齐预设/全宽） | R5 |
 | edit 模式 | 编辑态（现状） | ✓ |

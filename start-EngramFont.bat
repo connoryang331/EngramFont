@@ -7,18 +7,23 @@ rem ============================================================
 cd /d "%~dp0"
 set FONTDIR=E:\engram-dev\fontra-test-fonts
 set PORT=8800
+set FONTRA_EXE=%~dp0venv\Scripts\fontra.exe
 set CURL=curl
 if exist "%SystemRoot%\System32\curl.exe" set CURL=%SystemRoot%\System32\curl.exe
 
 rem First run: create a new editable font project (Fontra native format)
 if not exist "%FONTDIR%\Untitled.fontra" (
   echo Creating new font project: Untitled.fontra
-  venv\Scripts\fontra.exe new "%FONTDIR%\Untitled.fontra"
+  "%FONTRA_EXE%" new "%FONTDIR%\Untitled.fontra"
 )
 
-rem Start the server (minimized window; run "npm run bundle-watch" in a
-rem second terminal only when editing frontend sources)
-start "EngramFont-server" /min cmd /c "venv\Scripts\fontra.exe --http-port %PORT% filesystem %FONTDIR%"
+rem Start the server - prefer Windows Terminal, fall back to a minimized cmd
+where wt >nul 2>nul
+if not errorlevel 1 (
+  start "" wt --title "EngramFont server" "%FONTRA_EXE%" --http-port %PORT% filesystem %FONTDIR%
+) else (
+  start "EngramFont-server" /min "%FONTRA_EXE%" --http-port %PORT% filesystem %FONTDIR%
+)
 
 rem Wait for the server to come up
 set /a tries=0

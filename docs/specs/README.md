@@ -11,8 +11,9 @@
 | R4 | 新建字体/模板流 | [04-new-font-templates](./04-new-font-templates/) | 文档就绪 | ≈3d |
 | R5 | Proof/Edit 双模式画布 | [05-proof-edit-mode](./05-proof-edit-mode/) | 文档就绪 | ≈2.5d |
 | R6 | 路径操作工具集（straighten/soften/circle/锚点密度） | [06-path-ops](./06-path-ops/) | 文档就绪 | ≈4-5d |
+| R7 | 背景图控制增强（replace 按钮/选中体验） | [07-background-image](./07-background-image/) | 文档就绪 | ≈1d |
 
-合计 ≈ 20d
+合计 ≈ 21d
 
 ## 依赖与执行顺序
 ```

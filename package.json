@@ -7,6 +7,7 @@
   },
   "type": "module",
   "devDependencies": {
+    "@playwright/test": "^1.64.0",
     "@types/chai": "^5.2.3",
     "@types/emscripten": "^1.41.6",
     "@types/mocha": "^10.0.10",

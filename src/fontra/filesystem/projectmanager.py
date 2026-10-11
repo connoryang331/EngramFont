@@ -12,6 +12,7 @@ from aiohttp import web
 from ..backends import getFileSystemBackend
 from ..core.fonthandler import FontHandler
 from ..core.protocols import ExportManager, ProjectManager, ProjectOpenListener
+from .exportmanager import EngramFontExportManager
 
 logger = logging.getLogger(__name__)
 
@@ -37,11 +38,13 @@ class FileSystemProjectManagerFactory:
 
     @staticmethod
     def getProjectManager(arguments: SimpleNamespace) -> ProjectManager:
-        return FileSystemProjectManager(
+        projectManager = FileSystemProjectManager(
             rootPath=arguments.path,
             maxFolderDepth=arguments.max_folder_depth,
             readOnly=arguments.read_only,
         )
+        projectManager.exportManager = EngramFontExportManager(projectManager)
+        return projectManager
 
 
 def existingFolderOrFontFile(path):
@@ -152,7 +155,10 @@ class FileSystemProjectManager:
         return projectPaths
 
     def setupWebRoutes(self, server):
-        pass
+        if self.exportManager is not None and hasattr(
+            self.exportManager, "setupWebRoutes"
+        ):
+            self.exportManager.setupWebRoutes(server)
 
     async def getMetaInfo(
         self, projectIdentifier: str, authorizationToken: str

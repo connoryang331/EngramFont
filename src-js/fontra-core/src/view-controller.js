@@ -93,7 +93,18 @@ export class ViewController {
         {
           topic: "0035-action-topics.export-as",
         },
-        (event) => this.fontController.exportAs({ format })
+        async (event) => {
+          const result = await this.fontController.exportAs({ format });
+          // anchor-click instead of window.open: survives popup blockers and
+          // doesn't depend on transient user activation (compile may take a while)
+          const anchor = document.createElement("a");
+          anchor.href = result.downloadPath;
+          anchor.download = "";
+          anchor.rel = "noopener";
+          document.body.appendChild(anchor);
+          anchor.click();
+          anchor.remove();
+        }
       );
     }
   }

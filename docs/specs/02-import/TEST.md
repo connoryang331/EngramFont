@@ -24,3 +24,22 @@
 
 ## 对照基准
 meshfont 行为基准与本地克隆启动见 [../VERIFICATION-ENV.md](../VERIFICATION-ENV.md)（端口 8124；连字/proof 行为逐项对照）。
+
+## 测试字体资产矩阵（全部已就位）
+| 字体 | 路径 | 用途 |
+|---|---|---|
+| Inter-Regular.ttf（2937 字形，GSUB+kern/GPOS） | fontra-test-fonts/ | 真实字体压测：规模/性能/轮廓保真 |
+| MicroTon.ttf（25 字形，含 liga GSUB） | fontra-test-fonts/ | 特性迁移边界测试（GSUB→FEA 不反编译的验证） |
+| clone-family-font-Light/Regular/Bold.ttf（144 字形家族） | meshfont-clone/downloads/ | **meshfont 自家导出的往返测试**：导入 meshfont 导出的字体→对比 |
+| clone-test-ttf.ttf / origin-test-font.ttf | meshfont-clone/downloads/ | 历史导出对照 |
+| Playfair.woff / NotoJP.woff / clone-woff2-test.woff2 | 各处 | 格式覆盖（woff/woff2 读取） |
+
+## 可行性预验证结果（2026-10-11 spike，spike-import-roundtrip.py）
+- OTFBackend 读 Inter-Regular.ttf（2937 字形，0.22s）
+- 逐字形 writeGlyph → .fontra：**2937 字形 3.1s**（性能充裕）
+- 读回：glyphMap 2937 全等 ✓、抽样 20 字形 advance 零偏差 ✓
+- **保真边界（两家同类）**：features.text=0、kerning=0——二进制 GSUB/kern 不反编译为 FEA
+  （meshfont 的导入同样只保轮廓/度量/映射）；EngramFont 优势：.fontra 的 features.text
+  可后续手动/FEA 编辑补特性
+- **工程注意**：Fontra 后端写盘是延迟调度——写完必须 aclose/flush 再读；改工程文件前停服务
+- 产物：`demo-liga/Inter-Import-Test.fontra`（2937 字形的导入工程，留作 R2 e2e fixture）

@@ -167,3 +167,37 @@ a {
 .hidden {
   display: none;
 }
+
+#engramfont-import-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+}
+
+#engramfont-import-button {
+  border-radius: 2em;
+  background-color: #46f;
+  width: max-content;
+  color: white;
+  padding: 0.5em 1.1em 0.5em 1em;
+  border: none;
+  font-family: engramfont-ui-semibold, sans-serif;
+  font-size: 0.9em;
+  transition: all 0.1s ease-in;
+}
+
+#engramfont-import-button:hover {
+  background-color: #24d;
+  cursor: pointer;
+}
+
+#engramfont-import-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+#engramfont-import-error {
+  color: #c33;
+  font-size: 0.65em;
+  max-width: 30em;
+}

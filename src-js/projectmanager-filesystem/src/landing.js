@@ -19,4 +19,55 @@ export async function startupLandingPage(authenticateFunc) {
     projectElement.append(project);
     projectListContainer.appendChild(projectElement);
   }
+
+  setupImportFont();
+}
+
+function setupImportFont() {
+  const fileInput = document.querySelector("#engramfont-import-file-input");
+  const importButton = document.querySelector("#engramfont-import-button");
+  const errorBox = document.querySelector("#engramfont-import-error");
+
+  importButton.addEventListener("click", () => fileInput.click());
+
+  fileInput.addEventListener("change", async () => {
+    const file = fileInput.files[0];
+    fileInput.value = "";
+    if (!file) {
+      return;
+    }
+    errorBox.classList.add("hidden");
+    importButton.disabled = true;
+    try {
+      const response = await fetch("/api/import-font", {
+        method: "POST",
+        body: makeImportFormData(file),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        showError(errorBox, response.status, result);
+        return;
+      }
+      window.location.href = "/editor.html?project=" + result.project;
+    } catch (error) {
+      showError(errorBox, 0, { error: String(error) });
+    } finally {
+      importButton.disabled = false;
+    }
+  });
+}
+
+function makeImportFormData(file) {
+  const formData = new FormData();
+  formData.append("file", file, file.name);
+  return formData;
+}
+
+function showError(errorBox, status, result) {
+  const messages = {
+    400: `Can't import this file (${result.error}).`,
+    409: `A project with this name already exists — try "${result.suggestion}".`,
+  };
+  errorBox.textContent = messages[status] || `Import failed: ${result.error}`;
+  errorBox.classList.remove("hidden");
 }

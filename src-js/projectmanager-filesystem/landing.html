@@ -17,6 +17,17 @@
       </div>
 
       <div class="landing-item" id="project-list" tabindex="3"></div>
+
+      <div class="landing-item" id="engramfont-import-area">
+        <input
+          type="file"
+          id="engramfont-import-file-input"
+          accept=".ttf,.otf,.woff,.woff2"
+          hidden
+        />
+        <button id="engramfont-import-button" tabindex="4">Import font…</button>
+        <div id="engramfont-import-error" class="hidden"></div>
+      </div>
     </div>
   </body>
   <script type="module" src="@fontra/projectmanager-filesystem/start.js"></script>

@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import logging
 import pathlib
 from importlib import resources
@@ -159,6 +160,61 @@ class FileSystemProjectManager:
             self.exportManager, "setupWebRoutes"
         ):
             self.exportManager.setupWebRoutes(server)
+        # registered before the server's /api/{function:.*} route -> wins
+        server.httpApp.router.add_post("/api/import-font", self.importFontHandler)
+
+    async def importFontHandler(self, request: web.Request) -> web.Response:
+        from .importfont import (
+            FontImportError,
+            importFontToProject,
+            maxImportFileSize,
+            sanitizeImportName,
+        )
+
+        if self.rootPath is None:
+            return web.json_response(
+                {"error": "import requires a project folder"}, status=400
+            )
+        if not await self.authorize(request):
+            raise web.HTTPUnauthorized()
+        try:
+            post = await request.post()
+        except FontImportError as error:
+            return web.json_response({"error": str(error)}, status=error.status)
+
+        upload = post.get("file")
+        if upload is None or not upload.filename:
+            return web.json_response({"error": "no file"}, status=400)
+        data = upload.file.read()
+        if len(data) > maxImportFileSize:
+            return web.json_response({"error": "file too large"}, status=400)
+
+        sourceExt = pathlib.Path(upload.filename).suffix.lower()
+        if sourceExt not in fileExtensions - {".fontra"}:
+            return web.json_response({"error": "unsupported"}, status=400)
+
+        baseName = sanitizeImportName(post.get("name") or upload.filename)
+        stem = pathlib.Path(baseName).stem
+        projectIdentifier = f"{stem}.fontra"
+        projectPath = self.rootPath / projectIdentifier
+        if projectPath.exists():
+            return web.json_response(
+                {"error": "name exists", "suggestion": f"{stem}-imported.fontra"},
+                status=409,
+            )
+
+        sourcePath = self.rootPath / f"{stem}{sourceExt}"
+        sourcePath.write_bytes(data)
+        try:
+            await importFontToProject(sourcePath, projectPath)
+        except FontImportError as error:
+            message, status = str(error), error.status
+            error = None
+            # the failing font's file handle can outlive the request briefly;
+            # clean up in the background so the 400 isn't delayed
+            asyncio.get_running_loop().create_task(_unlinkWithRetry(sourcePath))
+            return web.json_response({"error": message}, status=status)
+        return web.json_response({"project": projectIdentifier})
 
     async def getMetaInfo(
         self, projectIdentifier: str, authorizationToken: str
@@ -174,11 +230,28 @@ class FileSystemProjectManager:
         pass
 
 
+async def _unlinkWithRetry(path, attempts=20, delay=0.25):
+    # fresh files can be transiently locked (font handles, AV scan) on Windows;
+    # cleanup is best-effort — the import error response is what matters
+    for attempt in range(attempts):
+        try:
+            path.unlink(missing_ok=True)
+            return
+        except PermissionError:
+            if attempt == attempts - 1:
+                logger.warning(f"could not remove {path} after import failure")
+            else:
+                await asyncio.sleep(delay)
+
+
 def _iterFolder(folderPath, extensions, maxDepth=3):
     if maxDepth is not None and maxDepth <= 0:
         return
     try:
         for childPath in folderPath.iterdir():
+            if childPath.name.startswith("."):
+                # hidden folders (.exports, .git, ...) are not projects
+                continue
             if childPath.suffix.lower() in extensions:
                 yield childPath
             elif childPath.is_dir():

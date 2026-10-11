@@ -84,3 +84,17 @@ draw: ({ context, positionedGlyph, parameters, model, controller }) => {
 | 侧栏（text-entry 除外） | 保留可见但输入禁用（avoid 误编辑） |
 | 缩放/平移 | 保留 |
 | Dock | 可见（proof 工具条显示） |
+
+## 9. proof 工具条三按钮 · 语义规范（kern / space / proof）
+> 位置：proof 态下键盘上方工具条。行为依据：meshfont 截图弹窗（5 预设）+ 标签推断；
+> **精确文本串留待执行会话对照验证**（对照工具：demo-liga/probe-proof-keys.mjs 已备好，执行时先跑它采集基准）。
+
+| 按钮 | 行为规范 | 预设文本（推测初值，执行时对照） |
+|---|---|---|
+| **kern** | 一键把画布文本切换为**字距对预览** | `AVAT AT AV` `To To Wa Wa` `Yo Yo AVA` |
+| **space** | 一键切换为**间距节奏预览** | `nnnoonn` `HHooHH` `nHnH oHoH` |
+| **proof（带▾下拉）** | 打开 5 预设菜单（your text / kerning / capitals / spacing / shapes）+ 应用当前选择 | 菜单即 R5 §6 的 PROOF_PRESETS |
+
+- 实现形式：三个按钮都只是**设置 characterLines**（kern/space=直接设预设串；proof=开下拉菜单），
+  复用 R5 §6 的 PROOF_PRESETS 常量表——无独立渲染逻辑
+- your text：进入 proof 前缓存用户 characterLines 快照

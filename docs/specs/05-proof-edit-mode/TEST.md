@@ -26,3 +26,8 @@
 
 ## 对照基准
 meshfont 行为基准与本地克隆启动见 [../VERIFICATION-ENV.md](../VERIFICATION-ENV.md)（端口 8124；连字/proof 行为逐项对照）。
+
+## 对照工具（执行会话用）
+- `demo-liga/probe-proof-keys.mjs`：proof 工具条三按钮 + 下拉菜单的**行为采集脚本**（已写好）——
+  执行 R5 时先跑它，采集 meshfont 的 kern/space/proof 实际文本与菜单结构，再核对实现。
+  （文档阶段按用户指令未运行。）

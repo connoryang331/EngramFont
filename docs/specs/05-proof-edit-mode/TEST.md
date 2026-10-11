@@ -1,13 +1,28 @@
 # R5 · 测试验收与回归
 
-## E2E
-- E2E-1 edit→proof：画布切换、全宽导线出现（宽度==整行宽断言）、工具禁用
-- E2E-2 proof→edit：回到编辑、pen 工具可用
-- E2E-3 预设 5 连点：文本/画布同步变化
-- E2E-4 模式持久化（reload）
-- E2E-5 暗色主题两模式截图
+## 单元测试
+| ID | 用例 | 期望 |
+|---|---|---|
+| UT5.1 | canvasMode 读写/持久化 | localStorage 同步 |
+| UT5.2 | 预设常量表完整性 | 5 预设非空且含断言行 |
 
-## 回归
-- R1：edit 态逐项回归（字形编辑/选择/缩放/连字 shaping——MicroTon "ton"=1 字形）
-- R2：多行排版（换行符/行高调整）
-- R3：text-entry 面板控件（size/line-height/align/features 开关）正常
+## E2E（e2e/proof-edit-mode.spec.mjs）
+| ID | 步骤 | 期望 |
+|---|---|---|
+| E2E-1 | proof 键 | 导线层宽度==整行（canvas 像素采样或 SVG 快照） |
+| E2E-2 | edit 键 | 工具恢复、选择可用 |
+| E2E-3 | 预设点击 | 文本内容断言 |
+| E2E-4 | reload | 模式保持 |
+| E2E-5 | 暗色主题 | 两模式截图对照 |
+
+## 回归矩阵（重点：edit 态零回归）
+| 项 | 断言 |
+|---|---|
+| 字形编辑 | pen 拖点/选字形/删点 全部正常 |
+| 连字 shaping | MicroTon "ton"==1 字形、"advanced"==3 字形 |
+| 多行排版 | 换行 + 行高调整渲染不变 |
+| 缩放/平移 | 两模式下均可用 |
+| 性能 | 模式切换 <100ms；无内存泄漏（反复切换 20 次） |
+
+## 对照基准
+meshfont 行为基准与本地克隆启动见 [../VERIFICATION-ENV.md](../VERIFICATION-ENV.md)（端口 8124；连字/proof 行为逐项对照）。

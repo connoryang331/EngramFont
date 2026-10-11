@@ -22,6 +22,11 @@ R4 ─┘ （复用 R2 的导入管线做模板字体）
 ```
 建议顺序：**R1 → R2 → R5 → R3 → R4**（R1/R2 是独立快赢；R5 先于 R3）。
 
+## 下一会话执行入口（过夜执行必读）
+1. 先读 [VERIFICATION-ENV.md](./VERIFICATION-ENV.md)——meshfont 参照克隆路径/启动命令/资产清单/端口表/对照流程
+2. 执行顺序：R1 → R2 → R5 → R3 → R4，每个需求的 TASKS.md 即逐任务施工单
+3. 改 Untitled.fontra 前先停 EngramFont 服务（8800）——双写互踩
+
 ## 跨需求共享资产
 - compile-bridge 编译逻辑（R1 产品化；demo-liga 已验证）
 - ink-gap 间距算法（fix-liga-spacing，R3 键帽/R4 模板字形共用）

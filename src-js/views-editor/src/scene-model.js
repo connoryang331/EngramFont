@@ -36,6 +36,7 @@ import {
 } from "@fontra/core/utils.ts";
 import { normalizeLocation, unnormalizeLocation } from "@fontra/core/var-model.js";
 import * as vector from "@fontra/core/vector.js";
+import { isProofMode } from "./canvas-mode.js";
 
 export class SceneModel {
   constructor(
@@ -130,7 +131,15 @@ export class SceneModel {
   }
 
   get selectedGlyph() {
-    return this.sceneSettings.selectedGlyph;
+    const selectedGlyph = this.sceneSettings.selectedGlyph;
+    if (selectedGlyph === undefined) {
+      return undefined;
+    }
+    if (isProofMode()) {
+      // proof mode: selection stays visible but never enters editing
+      return { ...selectedGlyph, isEditing: false };
+    }
+    return selectedGlyph;
   }
 
   get positionedLines() {
@@ -546,6 +555,7 @@ export class SceneModel {
         await lineSetter.setLine(
           { x: 0, y },
           characterLine,
+          lineIndex,
           lineIndex == selectedLineIndex ? selectedGlyphIndex : undefined,
           selectedGlyphIsEditing,
           editLayerName,
@@ -1315,6 +1325,7 @@ class LineSetter {
   async setLine(
     origin,
     characterLine,
+    lineIndex,
     selectedGlyphIndex,
     selectedGlyphIsEditing,
     editLayerName,
@@ -1427,6 +1438,8 @@ class LineSetter {
         isEditing: !!(isSelectedGlyph && selectedGlyphIsEditing),
         isEmpty: !glyphInstance.controlBounds,
         glyphInfo,
+        lineIndex,
+        glyphIndexInLine: glyphIndex,
       });
 
       x += glyphInfo.xAdvance + xAdvanceLayerDifference;

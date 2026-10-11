@@ -15,6 +15,7 @@ import {
   withSavedState,
 } from "@fontra/core/utils.ts";
 import { subVectors } from "@fontra/core/vector.js";
+import { isProofMode } from "./canvas-mode.js";
 
 export const visualizationLayerDefinitions = [];
 
@@ -209,10 +210,21 @@ registerVisualizationLayerDefinition({
   },
 });
 
+// proof mode: draw the metrics band once per line, spanning the full line;
+// edit mode: per selected/editing glyph (original behavior)
+function lineMetricsSelectionFunc(visContext, layer) {
+  if (isProofMode()) {
+    return (visContext.glyphsBySelectionMode["all"] || []).filter(
+      (glyph) => glyph.glyphIndexInLine === 0
+    );
+  }
+  return glyphSelector("editing")(visContext, layer);
+}
+
 registerVisualizationLayerDefinition({
   identifier: "fontra.lineMetrics",
   name: "sidebar.user-settings.line-metrics",
-  selectionFunc: glyphSelector("editing"),
+  selectionFunc: lineMetricsSelectionFunc,
   userSwitchable: true,
   defaultOn: true,
   zIndex: 100,
@@ -234,9 +246,22 @@ registerVisualizationLayerDefinition({
       return;
     }
     const lineMetrics = model.fontSourceInstance.lineMetricsHorizontalLayout;
+
+    if (isProofMode()) {
+      // full-line metrics band: from this (first) glyph's origin across the
+      // whole line advance
+      const line = model.positionedLines[positionedGlyph.lineIndex];
+      if (!line) {
+        return;
+      }
+      drawMetricsBand(context, lineMetrics, parameters, line.endPoint.x);
+      return;
+    }
+
     const glyphWidth = positionedGlyph.glyph.xAdvance
       ? positionedGlyph.glyph.xAdvance
       : 0;
+    drawMetricsBand(context, lineMetrics, parameters, glyphWidth);
 
     // glyph box
     const pathBox = new Path2D();
@@ -281,6 +306,52 @@ registerVisualizationLayerDefinition({
     context.stroke(pathBox);
   },
 });
+
+function drawMetricsBand(context, lineMetrics, parameters, width) {
+    context.lineWidth = parameters.strokeWidth;
+
+    // glyph box
+    const pathBox = new Path2D();
+    if (lineMetrics.ascender && lineMetrics.descender) {
+      pathBox.rect(
+        0,
+        lineMetrics.descender.value,
+        width,
+        lineMetrics.ascender.value - lineMetrics.descender.value
+      );
+    }
+
+    // collect paths: vertical metrics and alignment zones
+    const zoneFillPaths = [];
+    const zoneEndStrokes = new Path2D();
+    for (const [key, metric] of Object.entries(lineMetrics)) {
+      if (metric.zone) {
+        const pathZone = new Path2D();
+        pathZone.rect(0, metric.value, width, metric.zone);
+        zoneFillPaths.push(pathZone);
+        const zoneY = metric.value + metric.zone;
+        zoneEndStrokes.moveTo(0, zoneY);
+        zoneEndStrokes.lineTo(width, zoneY);
+      }
+
+      const pathMetric = new Path2D();
+      pathMetric.moveTo(0, metric.value);
+      pathMetric.lineTo(width, metric.value);
+      pathBox.addPath(pathMetric);
+    }
+
+    // draw zones (with filled path)
+    context.fillStyle = parameters.zoneColor;
+    zoneFillPaths.forEach((zonePath) => context.fill(zonePath));
+
+    // draw zone top/bottom terminating stroke
+    context.strokeStyle = parameters.zoneStrokeColor;
+    context.stroke(zoneEndStrokes);
+
+    // draw glyph box + vertical metrics (with stroke path)
+    context.strokeStyle = parameters.strokeColor;
+    context.stroke(pathBox);
+}
 
 // the following icon SVG path code is from https://tabler.io/icons/icon/lock
 const lockIconPath2D = new Path2D(

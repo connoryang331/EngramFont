@@ -595,3 +595,55 @@ kerning-handle.positive {
 kerning-handle.negative {
   --kern-bg-color: var(--negative-metrics-handle-color);
 }
+
+/* R5 · proof toolbar */
+#proof-toolbar {
+  position: absolute;
+  top: 0.75em;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.4em;
+  z-index: 30;
+  background-color: var(--engramfont-ui-background-color, #fff8);
+  backdrop-filter: blur(6px);
+  border-radius: 1.2em;
+  padding: 0.3em 0.5em;
+  box-shadow: 0 1px 6px #0002;
+}
+
+#proof-toolbar.hidden {
+  display: none;
+}
+
+.proof-toolbar-button {
+  border: none;
+  background: transparent;
+  border-radius: 1em;
+  padding: 0.25em 0.8em;
+  font-family: engramfont-ui-regular, sans-serif;
+  font-size: 0.85em;
+  cursor: pointer;
+  color: var(--engramfont-ui-foreground-color, #111);
+}
+
+.proof-toolbar-button:hover {
+  background-color: #46f2;
+}
+
+#canvas-mode-button {
+  position: absolute;
+  top: 0.75em;
+  right: 0.75em;
+  z-index: 30;
+  background-color: var(--engramfont-ui-background-color, #fff8);
+  backdrop-filter: blur(6px);
+  border-radius: 1.2em;
+  box-shadow: 0 1px 6px #0002;
+  border: none;
+  padding: 0.3em 1em;
+  font-family: engramfont-ui-semibold, sans-serif;
+  font-size: 0.85em;
+  cursor: pointer;
+  color: #24d;
+}

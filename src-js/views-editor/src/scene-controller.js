@@ -27,6 +27,7 @@ import {
 import { translate, translatePlural } from "@fontra/core/localization.js";
 import { MouseTracker } from "@fontra/core/mouse-tracker.js";
 import { ObservableController } from "@fontra/core/observable-object.ts";
+import { isProofMode } from "./canvas-mode.js";
 import {
   connectContours,
   scalePoint,
@@ -1305,6 +1306,9 @@ export class SceneController {
     requireSelectedLayer,
     ignoreGlyphLock = false
   ) {
+    if (isProofMode()) {
+      return; // proof mode: no glyph edits
+    }
     if (this._glyphEditingDonePromise) {
       try {
         // A previous call to _editGlyphOrInstance is still ongoing.

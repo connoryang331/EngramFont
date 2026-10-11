@@ -34,6 +34,8 @@ import {
 import { SceneView } from "@fontra/core/scene-view.js";
 import { isSuperset } from "@fontra/core/set-ops.js";
 import { themeController } from "@fontra/core/theme-settings.js";
+import { addCanvasModeListener, isProofMode } from "./canvas-mode.js";
+import { setupProofToolbar } from "./proof-toolbar.js";
 import { getDecomposedIdentity } from "@fontra/core/transform.js";
 import { labeledCheckbox, labeledTextInput, pickFile } from "@fontra/core/ui-utils.js";
 import {
@@ -243,6 +245,7 @@ export class EditorController extends ViewController {
     this.initTopBar();
     this.initContextMenuItems();
     this.initMiniConsole();
+    setupProofToolbar(this);
 
     // If a stored active panel is not a plug-in, we can restore it before the plug-ins
     // are loaded. Else, it has to wait until after.
@@ -270,6 +273,11 @@ export class EditorController extends ViewController {
     themeController.addListener((event) => {
       this.themeChanged();
     });
+
+    // R5: proof/edit canvas mode — hide the tool cluster in proof mode and
+    // let the visualization layers (which read isProofMode()) redraw
+    this.applyCanvasMode();
+    addCanvasModeListener(() => this.applyCanvasMode());
 
     this.canvasController.canvas.addEventListener("contextmenu", (event) =>
       this.contextMenuHandler(event)
@@ -702,6 +710,15 @@ export class EditorController extends ViewController {
           )
       );
     }
+  }
+
+  applyCanvasMode() {
+    // proof mode hides the editing tool cluster; zoom/pan stay available
+    const editTools = document.querySelector("#edit-tools");
+    if (editTools) {
+      editTools.style.display = isProofMode() ? "none" : "";
+    }
+    this.canvasController?.requestUpdate();
   }
 
   initTopBar() {

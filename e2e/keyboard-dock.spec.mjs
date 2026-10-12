@@ -298,10 +298,10 @@ test("E2E-9 pointer-tools key mirrors the native multi-tool", async ({ page }) =
   // native interaction — quick click (re)selects the face sub-tool, long
   // press / right click reveals the sub-tool options
   await openEditor(page, "HHHH");
-  const key = page.locator(".kd-fn-key");
+  const key = page.locator('.kd-fn-key[data-fn*="pointer-tool"]');
   await expect(key).toHaveCount(1);
-  // key "7" is a plain character key again
-  await expect(page.locator('.kd-fn-key[data-fn="pointer-tool-scale"]')).toHaveCount(0);
+  // key "7" is the pen tools multi-tool (covered by E2E-12)
+  await expect(page.locator('.kd-fn-key[data-fn*="pen-tool"]')).toHaveCount(1);
 
   const multiTool = page.locator('#edit-tools .multi-tool[data-tool="pointer-tools"]');
   const frontSubTool = multiTool.locator(".subtool-button").first();
@@ -575,4 +575,42 @@ test("E2E-11 keyboard settings dialog", async ({ page }) => {
   // done closes the dialog (dialog buttons are input.button elements)
   await dialogBox.locator("input.button").last().click();
   await expect(dialogBox).not.toBeVisible();
+});
+
+test("E2E-12 pen tools key mirrors the native multi-tool", async ({ page }) => {
+  // key "7" is the pen tools multi-tool: cubic + quadratic sub-tools, same
+  // interaction as the pointer tools key
+  await openEditor(page, "HHHH");
+  const key = page.locator('.kd-fn-key[data-fn*="pen-tool"]');
+  await expect(key).toHaveCount(1);
+  // startup face is the cubic pen (not the active tool group -> not active)
+  await expect(key.locator(".kd-fn-icon")).toHaveAttribute(
+    "src",
+    "/images/pointeradd.svg"
+  );
+  await expect(key).not.toHaveClass(/kd-active/);
+
+  const multiTool = page.locator('#edit-tools .multi-tool[data-tool="pen-tool"]');
+  const frontSubTool = multiTool.locator(".subtool-button").first();
+
+  // right click reveals the pen sub-tools; picking quadratic promotes it
+  await key.click({ button: "right" });
+  const quadOption = page.locator('.kd-fn-option[data-tool="pen-tool-quad"]');
+  await expect(quadOption).toBeVisible();
+  await expect(page.locator('.kd-fn-option[data-tool="pen-tool-cubic"]')).toBeVisible();
+  await quadOption.click();
+  await expect(frontSubTool).toHaveAttribute("data-tool", "pen-tool-quad");
+  await expect(key.locator(".kd-fn-icon")).toHaveAttribute(
+    "src",
+    "/images/pointeraddquad.svg"
+  );
+  await expect(key).toHaveClass(/kd-active/);
+  await expect(page.locator(".kd-fn-options")).toHaveCount(0);
+
+  // quick click re-selects the face tool after switching away natively
+  await page.locator('#edit-tools > .tool-button[data-tool="hand-tool"]').click();
+  await expect(key).not.toHaveClass(/kd-active/);
+  await key.click();
+  await expect(frontSubTool).toHaveAttribute("data-tool", "pen-tool-quad");
+  await expect(key).toHaveClass(/kd-active/);
 });

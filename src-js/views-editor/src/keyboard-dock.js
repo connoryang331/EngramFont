@@ -173,6 +173,23 @@ const DOCK_FN_KEYS = {
       },
     ],
   },
+  // key "7" mirrors the native pen tools multi-tool (cubic / quadratic)
+  7: {
+    titleKey: "editor.pen-tool",
+    tools: [
+      {
+        tool: "pen-tool-cubic",
+        icon: "/images/pointeradd.svg",
+        titleKey: "editor.pen-tool-cubic",
+      },
+      {
+        tool: "pen-tool-quad",
+        icon: "/images/pointeraddquad.svg",
+        titleKey: "editor.pen-tool-quad",
+        isSubtool: true,
+      },
+    ],
+  },
 };
 
 function clamp01(value) {

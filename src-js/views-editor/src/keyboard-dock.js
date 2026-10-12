@@ -254,6 +254,11 @@ export class KeyboardDock {
         : Number.isFinite(parsedSquircle) && parsedSquircle > 0
           ? Math.min(8, parsedSquircle)
           : 0;
+    // key corner radius, its own slider in the settings dialog
+    const storedRadius = parseFloat(localStorage.getItem("engramfont-dock-radius"));
+    this.radius = Number.isFinite(storedRadius)
+      ? Math.min(22, Math.max(0, storedRadius))
+      : 6;
     // split layouts: distance between the keyboards and the browser edges
     const storedGap = parseFloat(localStorage.getItem("engramfont-dock-split-gap"));
     this.splitGap = Number.isFinite(storedGap)
@@ -276,6 +281,7 @@ export class KeyboardDock {
     this.applyTheme();
     this.applyScale();
     this.applySquircle();
+    this.applyRadius();
     this.applyFontSize();
     this.applySplitGap();
     this.applyCollapsed();
@@ -877,6 +883,18 @@ export class KeyboardDock {
     this.applySquircle();
   }
 
+  // ---- key corner radius (EngramFont original) ----
+
+  applyRadius() {
+    this.dockElement.style.setProperty("--kd-corner-radius", `${this.radius}px`);
+  }
+
+  setRadius(value) {
+    this.radius = value;
+    localStorage.setItem("engramfont-dock-radius", String(value));
+    this.applyRadius();
+  }
+
   // ---- split gap + key font size (EngramFont original) ----
 
   applyFontSize() {
@@ -1046,6 +1064,32 @@ export class KeyboardDock {
         html.div({ class: "kd-settings-option kd-settings-scale-row" }, [
           squircleInput,
           squircleValue,
+        ]),
+      ])
+    );
+
+    // corner radius (works in every engine, squircle or not)
+    const radiusValue = html.span({ class: "kd-settings-scale-value" }, [
+      `${this.radius}px`,
+    ]);
+    const radiusInput = html.input({
+      type: "range",
+      min: "0",
+      max: "22",
+      step: "1",
+    });
+    radiusInput.value = String(this.radius);
+    radiusInput.addEventListener("input", () => {
+      const value = parseFloat(radiusInput.value);
+      radiusValue.textContent = `${value}px`;
+      this.setRadius(value);
+    });
+    content.appendChild(
+      html.div({ class: "kd-settings-section" }, [
+        html.div({ class: "kd-settings-section-title" }, ["Radius"]),
+        html.div({ class: "kd-settings-option kd-settings-scale-row" }, [
+          radiusInput,
+          radiusValue,
         ]),
       ])
     );

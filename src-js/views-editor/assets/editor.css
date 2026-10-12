@@ -737,7 +737,7 @@ kerning-handle.negative {
   width: calc(52px * var(--kd-span) + (var(--kd-span) - 1) * var(--kd-gap));
   height: 44px;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--kd-corner-radius, 6px);
   background-color: transparent;
   color: var(--kd-keycap-fg);
   font-family: engramfont-ui-regular, sans-serif;
@@ -860,7 +860,7 @@ kerning-handle.negative {
   width: 44px;
   height: 44px;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--kd-corner-radius, 6px);
   background-color: var(--kd-keycap-bg);
   color: var(--kd-keycap-fg);
   cursor: pointer;

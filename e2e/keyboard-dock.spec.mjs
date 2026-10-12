@@ -483,6 +483,26 @@ test("E2E-11 keyboard settings dialog", async ({ page }) => {
     )
   ).toBe("round");
 
+  // corner radius slider (its own setting, works with or without squircle)
+  const radiusInput = page.locator(
+    '.kd-settings-section:has-text("Radius") input[type="range"]'
+  );
+  await radiusInput.evaluate((el) => {
+    el.value = "16";
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await expect(
+    page.locator('.kd-settings-section:has-text("Radius") .kd-settings-scale-value')
+  ).toHaveText("16px");
+  expect(
+    await page
+      .locator('[data-key="q"]')
+      .evaluate((el) => getComputedStyle(el).borderRadius)
+  ).toBe("16px");
+  expect(
+    await page.evaluate(() => localStorage.getItem("engramfont-dock-radius"))
+  ).toBe("16");
+
   // split gap slider: inline insets on the straight dock + persistence
   const gapInput = page.locator(
     '.kd-settings-section:has-text("Split gap") input[type="range"]'

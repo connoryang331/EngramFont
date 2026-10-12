@@ -130,6 +130,12 @@
   --kd-corner-shape = superellipse(n)，对所有按键和菜单选项生效；旧 "true" 存值迁移为 2
 - E2E-11 扩充：squircle 滑杆（var 断言）、分离距离（inline inset + 持久化）、字号（computed + 持久化）
 
+### R3-T3.21 · 独立圆角半径设置（2026-10-12）
+- 新增 Radius 滑杆（0–22px，默认 6）：--kd-corner-radius 应用到所有按键/菜单选项，
+  与 Squircle 指数解耦——squircle 之前"没效果"的根因是 6px 小圆角上 superellipse 肉眼不可辨，
+  半径调大后形状变化立现（squircle 8 + radius 16 已验证）
+- E2E-11 补 Radius 断言（computed border-radius + 持久化）
+
 ### R7-T7.4 · 背景图上下文编辑（2026-10-12）
 - Edit image 上下文 action（选中字形有背景图时启用）→ 解锁 + 选中 backgroundImage/0
 - 离开选中自动重锁（selection 监听）；全局 Unlock/Lock 菜单项已移除

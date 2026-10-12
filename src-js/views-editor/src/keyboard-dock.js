@@ -655,12 +655,12 @@ export class KeyboardDock {
     this.clusterRight.classList.add("kd-hidden");
   }
 
-  buildSpaceArcButton(outerY, angularSpan, radius, frameX, mirror) {
+  buildSpaceArcButton(outerY, thetaStart, angularSpan, radius, frameX, mirror) {
     // K860-style spacebar: ONE continuously curved keycap drawn as an SVG
     // annular sector (outer arc + inner arc; rounded joins via a same-color
     // round stroke under the fill — MDN Paths recipe). The sector spans
-    // `angularSpan` radians on the centerline `radius`, starting at the
-    // row's outer end (screen x = frameX, y = outerY).
+    // [thetaStart, thetaStart + angularSpan] on the centerline `radius`
+    // (thetaStart = the key's position along the row's arc).
     const keyHeight = 44;
     const strokeW = 8;
     const bandHalf = keyHeight / 2 - strokeW / 2; // path band; stroke pads it
@@ -673,10 +673,10 @@ export class KeyboardDock {
       const y = cy - r * Math.cos(t);
       return [x, y];
     };
-    const [ax, ay] = corner(ro, 0);
-    const [bx, by] = corner(ro, angularSpan);
-    const [cxx, cyy] = corner(ri, angularSpan);
-    const [dx, dy] = corner(ri, 0);
+    const [ax, ay] = corner(ro, thetaStart);
+    const [bx, by] = corner(ro, thetaStart + angularSpan);
+    const [cxx, cyy] = corner(ri, thetaStart + angularSpan);
+    const [dx, dy] = corner(ri, thetaStart);
     const pathD = `M ${ax.toFixed(1)} ${ay.toFixed(1)} A ${ro} ${ro} 0 0 1 ${bx.toFixed(1)} ${by.toFixed(1)} L ${cxx.toFixed(1)} ${cyy.toFixed(1)} A ${ri} ${ri} 0 0 0 ${dx.toFixed(1)} ${dy.toFixed(1)} Z`;
 
     const minX = Math.min(ax, bx, cxx, dx) - strokeW / 2;
@@ -769,6 +769,7 @@ export class KeyboardDock {
           const angularSpan = keyWidthPx(SPACE_SPAN_LEFT) / radius;
           const { button, bbox } = this.buildSpaceArcButton(
             outerY,
+            cursor,
             angularSpan,
             radius,
             leftFrameX,
@@ -807,6 +808,7 @@ export class KeyboardDock {
           const angularSpan = keyWidthPx(SPACE_SPAN_RIGHT) / radius;
           const { button, bbox } = this.buildSpaceArcButton(
             outerY,
+            cursor,
             angularSpan,
             radius,
             rightFrameX,

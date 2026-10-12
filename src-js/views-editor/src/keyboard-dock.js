@@ -243,6 +243,8 @@ export class KeyboardDock {
     // whole-keyboard scale (0.6–1.6), set in the settings dialog
     const storedScale = parseFloat(localStorage.getItem("engramfont-dock-scale"));
     this.scale = Math.min(1.6, Math.max(0.6, storedScale || 1));
+    // squircle (continuous) key corners, set in the settings dialog
+    this.squircle = localStorage.getItem("engramfont-dock-squircle") === "true";
     this.altActive = false;
     this.ctrlActive = false;
     // function-key elements -> their DOCK_FN_KEYS definition
@@ -252,6 +254,7 @@ export class KeyboardDock {
     this.applyLayout();
     this.applyTheme();
     this.applyScale();
+    this.applySquircle();
     this.applyCollapsed();
     addCanvasModeListener(() => this.updateModeUI());
     this.updateModeUI();
@@ -834,6 +837,20 @@ export class KeyboardDock {
     this.applyScale();
   }
 
+  // ---- squircle (continuous) key corners (EngramFont original) ----
+
+  applySquircle() {
+    // needs a Chromium that supports corner-shape; older engines just keep
+    // the normal rounded corners (graceful degradation)
+    this.dockElement.classList.toggle("kd-squircle", this.squircle);
+  }
+
+  setSquircle(value) {
+    this.squircle = value;
+    localStorage.setItem("engramfont-dock-squircle", String(value));
+    this.applySquircle();
+  }
+
   // ---- keyboard settings dialog (EngramFont original) ----
   // English-only by design: no localization keys for this UI
 
@@ -880,6 +897,22 @@ export class KeyboardDock {
         html.div({ class: "kd-settings-option kd-settings-scale-row" }, [
           scaleInput,
           scaleValue,
+        ]),
+      ])
+    );
+
+    // corner style (squircle = continuous corners, iOS-like)
+    const squircleInput = html.input({ type: "checkbox" });
+    squircleInput.checked = this.squircle;
+    squircleInput.addEventListener("change", () =>
+      this.setSquircle(squircleInput.checked)
+    );
+    content.appendChild(
+      html.div({ class: "kd-settings-section" }, [
+        html.div({ class: "kd-settings-section-title" }, ["Corners"]),
+        html.label({ class: "kd-settings-option" }, [
+          squircleInput,
+          "Squircle corners",
         ]),
       ])
     );

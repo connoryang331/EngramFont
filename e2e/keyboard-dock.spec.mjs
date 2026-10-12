@@ -446,6 +446,18 @@ test("E2E-11 keyboard settings dialog", async ({ page }) => {
     await page.evaluate(() => localStorage.getItem("engramfont-dock-scale"))
   ).toBe("1.25");
 
+  // squircle corners toggle
+  const squircleInput = page.locator(
+    '.kd-settings-section:has-text("Corners") input[type="checkbox"]'
+  );
+  await squircleInput.check();
+  await expect(page.locator("#keyboard-dock")).toHaveClass(/kd-squircle/);
+  expect(
+    await page.evaluate(() => localStorage.getItem("engramfont-dock-squircle"))
+  ).toBe("true");
+  await squircleInput.uncheck();
+  await expect(page.locator("#keyboard-dock")).not.toHaveClass(/kd-squircle/);
+
   // the seeded binding is listed; reset-all clears it everywhere
   await expect(page.locator(".kd-settings-binding-row")).toHaveCount(1);
   await page.locator(".kd-settings-bindings-reset").click();

@@ -687,17 +687,10 @@ kerning-handle.negative {
   --kd-cluster-bg: oklch(0.985 0.0041 91.45 / 0.98);
 }
 
-/* filled chips (color-coded keys, ctrl/alt/move) keep a hairline ring plus a
-   soft drop shadow on the light canvas; transparent keys get none — their
-   content carries a light halo instead (the curved SVG space key gets no box
-   shadow; its button box is the sector's bounding rectangle) */
-#keyboard-dock.kd-theme-light
-  .kd-key:not(.kd-char-key):not(.kd-arc-space):not([data-special="space"]),
-#keyboard-dock.kd-theme-light .kd-fn-option {
-  box-shadow:
-    0 0 0 1px oklch(0 0 0 / 0.07),
-    0 1px 2px oklch(0 0 0 / 0.18);
-}
+/* every key now carries the universal hairline ring from .kd-key — no
+   per-theme ring/shadow variants needed (the curved SVG space key defines
+   its shape with the SVG stroke instead; its button box is just the sector's
+   bounding rectangle) */
 
 #keyboard-dock.kd-collapsed {
   display: none;
@@ -757,6 +750,9 @@ kerning-handle.negative {
   justify-content: center;
   padding: 0;
   user-select: none;
+  /* every key carries a hairline outline so its shape reads on the canvas
+     (fills are translucent, the outline is what defines the keycap) */
+  box-shadow: inset 0 0 0 1.5px var(--kd-key-outline);
 }
 
 /* night keys over a light canvas need *some* surface under the light
@@ -847,6 +843,12 @@ kerning-handle.negative {
   display: flex;
   flex-direction: column;
   gap: 5px;
+}
+
+/* squircle corners (settings toggle): continuous corners on every key and
+   menu option; engines without corner-shape keep the normal rounded corners */
+#keyboard-dock.kd-squircle :where(.kd-key, .kd-fn-option) {
+  corner-shape: squircle;
 }
 
 .kd-fn-option {
@@ -955,13 +957,9 @@ kerning-handle.negative {
 }
 
 /* the arc spacebar's SVG keycap follows the theme via variables */
-/* space keys: outline-only in the transparent style — the rectangular space
-   gets an inset ring; the curved SVG sector strokes instead of filling (its
-   button box is just the bounding rectangle, so it must not get the ring) */
-.kd-key.kd-special-key[data-special="space"]:not(.kd-arc-space) {
-  background-color: transparent;
-  box-shadow: inset 0 0 0 1.5px var(--kd-key-outline);
-}
+/* space keys: the rectangular space inherits the universal ring; the curved
+   SVG sector strokes instead of filling (its button box is just the bounding
+   rectangle, so it must not get a box ring) */
 
 .kd-key.kd-special-key[data-special="space"]:hover {
   background-color: var(--kd-keycap-bg-hover);
@@ -970,7 +968,8 @@ kerning-handle.negative {
 .kd-space-path {
   fill: transparent;
   stroke: var(--kd-key-outline);
-  stroke-width: 5;
+  /* same hairline weight as the other keys' rings */
+  stroke-width: 1.5;
 }
 
 /* transparent keys: a light halo keeps labels readable where canvas glyphs

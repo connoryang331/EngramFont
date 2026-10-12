@@ -112,6 +112,13 @@
 - kd-active 高亮从实心改半透明（新增 --kd-keycap-active = 前景色 60% α，双主题各配），
   画布笔画透过高亮键仍可见；move 键的激活态同理
 
+### R3-T3.19 · 全键描边 + squircle 设置 + space 细边（2026-10-12）
+- 所有按键加 1.5px 内圈描边（--kd-key-outline，浅/深主题各配），透明填充 + 细描边的完整 ghost 形态；
+  删除原先 light 主题专属的芯片外圈+投影规则和 rect space 专用 ring（被通用描边取代）
+- 设置页新增 Corners → "Squircle corners" 开关（localStorage `engramfont-dock-squircle`）：
+  dock 加 kd-squircle 类，`corner-shape: squircle`（Chromium 139+ 生效，旧引擎优雅回退普通圆角）
+- 弧形 spacebar 的 SVG 描边 5px→1.5px，与其它键的描边粗细一致（light/dark 同理）
+
 ### R7-T7.4 · 背景图上下文编辑（2026-10-12）
 - Edit image 上下文 action（选中字形有背景图时启用）→ 解锁 + 选中 backgroundImage/0
 - 离开选中自动重锁（selection 监听）；全局 Unlock/Lock 菜单项已移除

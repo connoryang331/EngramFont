@@ -655,13 +655,13 @@ kerning-handle.negative {
      Keys are TRANSPARENT by default (floating icons/labels over the canvas,
      hover reveals the keycap); the kd-style-* color chips keep their fill.
      The dock itself is frameless in EVERY layout — keys only */
-  --kd-keycap-bg: #2d2d30;
-  --kd-keycap-bg-alt: rgba(60, 60, 64, 0.55);
-  --kd-keycap-bg-alt-hover: rgba(60, 60, 64, 0.8);
-  --kd-keycap-bg-hover: rgba(232, 230, 225, 0.18);
-  --kd-keycap-fg: #e8e6e1;
-  --kd-key-outline: rgba(232, 230, 225, 0.6);
-  --kd-cluster-bg: #262629fa;
+  --kd-keycap-bg: oklch(0.2983 0.0054 286.07);
+  --kd-keycap-bg-alt: oklch(0.3577 0.0068 286.05 / 0.55);
+  --kd-keycap-bg-alt-hover: oklch(0.3577 0.0068 286.05 / 0.8);
+  --kd-keycap-bg-hover: oklch(0.9251 0.0071 88.65 / 0.18);
+  --kd-keycap-fg: oklch(0.9251 0.0071 88.65);
+  --kd-key-outline: oklch(0.9251 0.0071 88.65 / 0.6);
+  --kd-cluster-bg: oklch(0.2698 0.0055 286.03 / 0.98);
   position: absolute;
   bottom: 0.75em;
   left: 50%;
@@ -676,13 +676,13 @@ kerning-handle.negative {
 
 /* day (light) keyboard theme — the default; #kd-theme-handle toggles */
 #keyboard-dock.kd-theme-light {
-  --kd-keycap-bg: #f1efeb;
-  --kd-keycap-bg-alt: rgba(222, 219, 212, 0.6);
-  --kd-keycap-bg-alt-hover: rgba(222, 219, 212, 0.85);
-  --kd-keycap-bg-hover: rgba(51, 50, 47, 0.1);
-  --kd-keycap-fg: #33322f;
-  --kd-key-outline: rgba(51, 50, 47, 0.5);
-  --kd-cluster-bg: #fbfaf7fa;
+  --kd-keycap-bg: oklch(0.9526 0.0058 84.57);
+  --kd-keycap-bg-alt: oklch(0.8918 0.01 87.48 / 0.6);
+  --kd-keycap-bg-alt-hover: oklch(0.8918 0.01 87.48 / 0.85);
+  --kd-keycap-bg-hover: oklch(0.3171 0.0054 91.55 / 0.1);
+  --kd-keycap-fg: oklch(0.3171 0.0054 91.55);
+  --kd-key-outline: oklch(0.3171 0.0054 91.55 / 0.5);
+  --kd-cluster-bg: oklch(0.985 0.0041 91.45 / 0.98);
 }
 
 /* filled chips (color-coded keys, ctrl/alt/move) keep a hairline ring plus a
@@ -693,8 +693,8 @@ kerning-handle.negative {
   .kd-key:not(.kd-char-key):not(.kd-arc-space):not([data-special="space"]),
 #keyboard-dock.kd-theme-light .kd-fn-option {
   box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.07),
-    0 1px 2px rgba(0, 0, 0, 0.18);
+    0 0 0 1px oklch(0 0 0 / 0.07),
+    0 1px 2px oklch(0 0 0 / 0.18);
 }
 
 #keyboard-dock.kd-collapsed {
@@ -763,7 +763,7 @@ kerning-handle.negative {
    the rule at (0,1,0): it beats the base transparent above it and loses to
    the .kd-style-* chips, :hover, .kd-active and the space outline below */
 .kd-theme-dark :where(.kd-key:not(.kd-arc-space)) {
-  background-color: rgba(38, 38, 41, 0.42);
+  background-color: oklch(0.2698 0.0055 286.03 / 0.42);
 }
 
 .kd-key:hover {
@@ -771,7 +771,7 @@ kerning-handle.negative {
 }
 
 .kd-key:focus-visible {
-  outline: 2px solid #0666ee;
+  outline: 2px solid oklch(0.5495 0.2195 259.95);
   outline-offset: 1px;
 }
 
@@ -791,7 +791,7 @@ kerning-handle.negative {
   top: 2px;
   right: 4px;
   font-size: 9px;
-  color: #0666ee;
+  color: oklch(0.5495 0.2195 259.95);
 }
 
 .kd-key-shift {
@@ -897,7 +897,7 @@ kerning-handle.negative {
 
 .kd-settings-scale-row input[type="range"] {
   flex: 1;
-  accent-color: #0666ee;
+  accent-color: oklch(0.5495 0.2195 259.95);
 }
 
 .kd-settings-scale-value {
@@ -919,7 +919,7 @@ kerning-handle.negative {
 .kd-settings-binding-key {
   min-width: 2.2em;
   text-align: center;
-  border: 1px solid #8886;
+  border: 1px solid oklch(0.6268 0 89.88 / 0.4);
   border-radius: 4px;
   padding: 0.05em 0.4em;
   font-family: engramfont-ui-regular, sans-serif;
@@ -942,7 +942,7 @@ kerning-handle.negative {
 .kd-settings-bindings-reset {
   align-self: flex-start;
   margin-top: 0.2em;
-  border: 1px solid #8886;
+  border: 1px solid oklch(0.6268 0 89.88 / 0.4);
   background: transparent;
   color: inherit;
   border-radius: 1em;
@@ -973,7 +973,7 @@ kerning-handle.negative {
    pass underneath (kept subtle — a heavy halo washes out the thin font) */
 #keyboard-dock.kd-theme-light .kd-key .kd-key-main,
 #keyboard-dock.kd-theme-light .kd-key .kd-key-shift {
-  text-shadow: 0 0 2px rgba(255, 255, 255, 0.65);
+  text-shadow: 0 0 2px oklch(1 0 0 / 0.65);
 }
 
 #keyboard-dock:not(.kd-theme-light) .kd-key .kd-key-main,
@@ -981,86 +981,86 @@ kerning-handle.negative {
   /* mild halo — the translucent night cap does the real work on light
      canvases; this only helps where canvas glyphs pass underneath */
   text-shadow:
-    0 1px 1px rgba(0, 0, 0, 0.45),
-    0 0 2px rgba(0, 0, 0, 0.4);
+    0 1px 1px oklch(0 0 0 / 0.45),
+    0 0 2px oklch(0 0 0 / 0.4);
 }
 
 #keyboard-dock.kd-theme-light .kd-key .kd-fn-icon {
-  filter: drop-shadow(0 1px 1px rgba(255, 255, 255, 0.7));
+  filter: drop-shadow(0 1px 1px oklch(1 0 0 / 0.7));
 }
 
 #keyboard-dock:not(.kd-theme-light) .kd-key .kd-fn-icon {
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.55));
+  filter: drop-shadow(0 1px 1px oklch(0 0 0 / 0.55));
 }
 
 #keyboard-dock:not(.kd-theme-light) .kd-space-path {
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 1px 1px oklch(0 0 0 / 0.5));
 }
 
 .kd-style-orange {
-  --kd-chip: 255, 135, 65;
-  background-color: rgba(var(--kd-chip), 0.55);
-  color: #262629;
+  --kd-chip: 0.7456 0.1673 48.14;
+  background-color: oklch(var(--kd-chip) / 0.55);
+  color: oklch(0.2698 0.0055 286.03);
   font-weight: 600;
 }
 
 .kd-style-orange:hover {
-  background-color: rgba(var(--kd-chip), 0.8);
+  background-color: oklch(var(--kd-chip) / 0.8);
 }
 
 .kd-style-purple {
-  --kd-chip: 156, 111, 255;
-  background-color: rgba(var(--kd-chip), 0.55);
+  --kd-chip: 0.6559 0.2053 294.46;
+  background-color: oklch(var(--kd-chip) / 0.55);
 }
 
 .kd-style-purple:hover {
-  background-color: rgba(var(--kd-chip), 0.8);
+  background-color: oklch(var(--kd-chip) / 0.8);
 }
 
 .kd-style-yellow {
-  --kd-chip: 234, 215, 48;
-  background-color: rgba(var(--kd-chip), 0.55);
+  --kd-chip: 0.8686 0.1709 102.4;
+  background-color: oklch(var(--kd-chip) / 0.55);
 }
 
 .kd-style-yellow:hover {
-  background-color: rgba(var(--kd-chip), 0.8);
+  background-color: oklch(var(--kd-chip) / 0.8);
 }
 
 .kd-style-red {
-  --kd-chip: 255, 81, 81;
-  background-color: rgba(var(--kd-chip), 0.55);
+  --kd-chip: 0.6775 0.2105 24.73;
+  background-color: oklch(var(--kd-chip) / 0.55);
 }
 
 .kd-style-red:hover {
-  background-color: rgba(var(--kd-chip), 0.8);
+  background-color: oklch(var(--kd-chip) / 0.8);
 }
 
 .kd-style-green {
-  --kd-chip: 0, 175, 88;
-  background-color: rgba(var(--kd-chip), 0.55);
+  --kd-chip: 0.6602 0.1748 151.71;
+  background-color: oklch(var(--kd-chip) / 0.55);
 }
 
 .kd-style-green:hover {
-  background-color: rgba(var(--kd-chip), 0.8);
+  background-color: oklch(var(--kd-chip) / 0.8);
 }
 
 .kd-style-blue {
-  --kd-chip: 6, 102, 238;
-  background-color: rgba(var(--kd-chip), 0.55);
+  --kd-chip: 0.5495 0.2195 259.95;
+  background-color: oklch(var(--kd-chip) / 0.55);
   font-style: italic;
 }
 
 .kd-style-blue:hover {
-  background-color: rgba(var(--kd-chip), 0.8);
+  background-color: oklch(var(--kd-chip) / 0.8);
 }
 
 .kd-style-beige {
-  --kd-chip: 234, 215, 201;
-  background-color: rgba(var(--kd-chip), 0.65);
+  --kd-chip: 0.8909 0.0284 58.79;
+  background-color: oklch(var(--kd-chip) / 0.65);
 }
 
 .kd-style-beige:hover {
-  background-color: rgba(var(--kd-chip), 0.85);
+  background-color: oklch(var(--kd-chip) / 0.85);
 }
 
 /* the neutral modifier chips (ctrl/alt/move/empty) are translucent too —
@@ -1086,7 +1086,7 @@ kerning-handle.negative {
   width: 14px;
   height: 34px;
   border-radius: 7px;
-  background-color: #0006;
+  background-color: oklch(0 0 0 / 0.4);
   pointer-events: none;
 }
 
@@ -1167,7 +1167,7 @@ kerning-handle.negative {
   font-size: 22px;
   cursor: pointer;
   z-index: 25;
-  box-shadow: 0 4px 18px #0006;
+  box-shadow: 0 4px 18px oklch(0 0 0 / 0.4);
   display: none;
 }
 
@@ -1183,8 +1183,8 @@ kerning-handle.negative {
   right: 10px;
   border: none;
   border-radius: 1em;
-  background-color: #3c3c40;
-  color: #e8e6e1;
+  background-color: oklch(0.3577 0.0068 286.05);
+  color: oklch(0.9251 0.0071 88.65);
   font-size: 11px;
   padding: 2px 8px;
   cursor: pointer;
@@ -1196,8 +1196,8 @@ kerning-handle.negative {
   right: 40px;
   border: none;
   border-radius: 1em;
-  background-color: #3c3c40;
-  color: #e8e6e1;
+  background-color: oklch(0.3577 0.0068 286.05);
+  color: oklch(0.9251 0.0071 88.65);
   font-size: 11px;
   padding: 2px 8px;
   cursor: pointer;
@@ -1207,7 +1207,7 @@ kerning-handle.negative {
 /* the dock panel is frameless in every layout — keys only; the collapse
    circle keeps a surface so it stays visible on any canvas */
 :root.dark-theme #dock-collapse-button {
-  background-color: #1c1c1ef5;
+  background-color: oklch(0.2273 0.0038 286.09 / 0.96);
 }
 
 /* split/arc mode: park the two handles in the middle bottom, flanking the

@@ -374,7 +374,7 @@ test("E2E-10 keyboard day/night theme toggle", async ({ page }) => {
   await expect(dock).toHaveClass(/kd-theme-light/);
   await expect(key).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await key.hover();
-  await expect(key).toHaveCSS("background-color", "rgba(51, 50, 47, 0.1)");
+  await expect(key).toHaveCSS("background-color", "oklch(0.3171 0.0054 91.55 / 0.1)");
   await page.mouse.move(400, 300);
   await expect(key).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
 
@@ -387,7 +387,7 @@ test("E2E-10 keyboard day/night theme toggle", async ({ page }) => {
     await page.evaluate(() => localStorage.getItem("engramfont-dock-theme"))
   ).toBe("dark");
   await key.hover();
-  await expect(key).toHaveCSS("background-color", "rgba(232, 230, 225, 0.18)");
+  await expect(key).toHaveCSS("background-color", "oklch(0.9251 0.0071 88.65 / 0.18)");
 
   await page.reload();
   await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });

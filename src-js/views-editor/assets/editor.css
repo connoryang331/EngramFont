@@ -1295,14 +1295,11 @@ menu-bar {
   transform: translateX(-50%);
 }
 
-/* the arc space sector doubling as the move key: center its label on the
-   sector (the SVG path fills the button) */
+/* the arc space sector doubling as the move key: the label is positioned
+   inline at the sector's mid-arc point (JS) and centered on that anchor */
 .kd-arc-space .kd-key-main {
   position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  transform: translate(-50%, -50%);
   pointer-events: none;
 }
 

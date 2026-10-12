@@ -281,12 +281,14 @@
 - R4.T4.16：Related Glyphs 挪到 ; 键（, 恢复为字符键）；左右悬浮面板改为顶天立地——
   top: 8px 到 --kd-dock-clearance 拉通（height: auto），面板信息多，原 32em 高度不够；
   合并左右两段悬浮 CSS 为一个块
-- R4.T4.17：split 布局（arc/straight）右半区 spacebar 与 move 合并为一个 4u 宽 move 键
-  （原 space+move 冗余）：arc 用加宽的弧形扇区（data-special=move，中央 move 标签，
-  pointerdown → togglePanMode），straight 用新 moveKeyRight 元素、左端 clip-path 裁出
-  笔直斜线（顶边起于 n 键左缘 = 行宽差 79px，底边保持整行长度，不超出 n）；独立 move 键
-  从 split 右簇移除（merged 布局不变：5u space + 1.25u move）；蓝色 view（mode）键在
-  split 下 2.25u→2u；E2E-6 arc 计数 70→69
+- R4.T4.17：split 布局（arc/straight）右半区 spacebar 与 move 合并为一个 move 键
+  （原 space+move 冗余）：arc 用弧形扇区（data-special=move，标签锚在扇区中弧点——
+  bbox 中心会偏离弯曲键帽；pointerdown → togglePanMode），straight 用 moveKeyRight、
+  左端 clip-path 裁出笔直斜边（圆角随 radius 设置走，path() 裁剪避免多边形与圆角冲突
+  出尖角）；move 键右端止于 n 键左缘（弧长对齐：cursor 是弧度，px 需 /radius——
+  单位混用曾让扇区翻倍长）、左侧空格键同理止于 b 键右缘（3.8u→3.3u，放弃此前的
+  楼梯外凸）；独立 move 键从 split 右簇移除（merged 不变：5u space + 1.25u move）；
+  蓝色 view（mode）键 split 下 2.25u→2u；E2E-6 arc 计数 70→69
 
 ### R3-T3.30 · 按键 8 接入 Knife Tool（2026-10-12）
 - 「8」= knife tool 单功能键（无子菜单，按下即选）：activateTool 直连原生

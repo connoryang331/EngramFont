@@ -255,6 +255,9 @@
   右上角工程路径栏 opacity:0 隐藏（保留布局占位，E2E waitFor 不受影响）
 - R4.T4.10：ESC 位键改名「EFD」，tooltip = Engram Font Designer（title 与 aria-label 同步；
   打开的仍是 EngramFont 应用菜单）
+- R4.T4.11：mini 键菜单改向上弹出（menu-panel 新增 openUp 选项：菜单底边贴锚点上方 2px，
+  顶到窗口上缘则回落向下）；弧形左 spacebar 3.5u→3.8u——右端越过 b 键约一个楼梯级差（~28px），
+  与 File/5/t/g/b 右缘构成连续阶梯；EFD 键帽 56px→48px 稍窄
 
 ### R3-T3.30 · 按键 8 接入 Knife Tool（2026-10-12）
 - 「8」= knife tool 单功能键（无子菜单，按下即选）：activateTool 直连原生

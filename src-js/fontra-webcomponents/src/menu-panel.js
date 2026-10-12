@@ -122,6 +122,7 @@ export class MenuPanel extends SimpleElement {
   constructor(menuItems, options = {}) {
     super();
     this.hidden = options.hidden ?? false;
+    this.openUp = options.openUp ?? false;
     this.immediatelyActive = options.immediatelyActive ?? true;
     this.position = options.position;
     this.onSelect = options.onSelect;
@@ -203,12 +204,23 @@ export class MenuPanel extends SimpleElement {
     assignStyles(x, y);
     // Ensure the whole menu is visible, and not cropped by the window
     const bodyRect = document.body.getBoundingClientRect();
-    const { right, width, bottom } = this.getBoundingClientRect();
-    if (right > bodyRect.right) {
-      x -= width + 2;
+    let rect = this.getBoundingClientRect();
+    if (this.openUp) {
+      // grow upward from the requested y: the menu's bottom edge sits just
+      // above it
+      y -= rect.bottom - y + 2;
+      assignStyles(x, y);
+      rect = this.getBoundingClientRect();
     }
-    if (bottom > bodyRect.bottom) {
-      y -= bottom - bodyRect.bottom + 2;
+    if (rect.right > bodyRect.right) {
+      x -= rect.width + 2;
+    }
+    if (rect.bottom > bodyRect.bottom) {
+      y -= rect.bottom - bodyRect.bottom + 2;
+    }
+    if (rect.top < bodyRect.top) {
+      // opened upward but hit the window top: fall back below the anchor
+      y += bodyRect.top - rect.top + 2;
     }
     assignStyles(x, y);
   }

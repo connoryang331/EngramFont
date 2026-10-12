@@ -91,7 +91,7 @@ const SPLIT_CUTS = [6, 6, 6, 6, 3];
 // thumb keys); merged mode keeps the single wide space in the row.
 const SPLIT_ROW5_CUT = 3;
 const SPACE_SPAN_MERGED = 5;
-const SPACE_SPAN_LEFT = 3.5;
+const SPACE_SPAN_LEFT = 3.8;
 const SPACE_SPAN_RIGHT = 2.5;
 const MOVE_SPAN_MERGED = 1.25;
 const MOVE_SPAN_SPLIT = 1.5;
@@ -757,11 +757,11 @@ export class KeyboardDock {
     }
   }
 
-  // ---- menu keys: open the matching menubar menu BELOW the key ----
+  // ---- menu keys: open the matching menubar menu ABOVE the key ----
 
   openMiniMenu(menuTitle, anchorElement) {
     // reuse the menubar's menu item definitions, but show the panel right
-    // below the mini key (showMenu closes any other open panel first)
+    // above the mini key (showMenu closes any other open panel first)
     const menuBar = document.querySelector("menu-bar");
     const menu = menuBar?.items?.find(
       (m) => (m.title || "").toLowerCase() === menuTitle.toLowerCase()
@@ -770,7 +770,7 @@ export class KeyboardDock {
       return;
     }
     const rect = anchorElement.getBoundingClientRect();
-    showMenu(menu.getItems(), { x: rect.left, y: rect.bottom + 4 });
+    showMenu(menu.getItems(), { x: rect.left, y: rect.top }, { openUp: true });
   }
 
   makeMiniKeyRow() {

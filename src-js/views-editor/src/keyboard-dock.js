@@ -1730,7 +1730,6 @@ export class KeyboardDock {
 
     const leftPlacements = [];
     const rightPlacements = [];
-    const row1Angles = []; // number-row key angles: the menu keys mirror them
     let leftMaxX = 0;
     let rightMaxX = 0;
     let leftMaxY = 0;
@@ -1777,9 +1776,6 @@ export class KeyboardDock {
         leftMaxX = Math.max(leftMaxX, x + width / 2);
         leftMaxY = Math.max(leftMaxY, y + keyHeight / 2);
         leftPlacements.push({ keyElement, x, y, rot: angle, width });
-        if (rowIndex === 0) {
-          row1Angles.push(angle);
-        }
       }
 
       // RIGHT half: mirrored — the arc descends to the left (rotation
@@ -1836,22 +1832,25 @@ export class KeyboardDock {
       }
     }
 
-    // half-height menu keys: each sits directly above its number-row key,
-    // following the same arc (one row up, same angles -> same tangent tilt)
+    // half-height menu keys: laid out on the same arc as the number row,
+    // left-aligned at the row's outer end with an even keyGap between caps
+    // (NOT on the number keys' centers — that made the gaps ragged). The
+    // row's total extent stays inside the number row: File's right edge
+    // does not stick out past the 5 key.
     // one keyGap above the number-row caps (number tops = topPad - keyHeight/2)
     const miniOuterY =
       topPad - keyHeight / 2 - keyGap - miniKeyHeight / 2;
-    this.miniKeys.forEach((key, index) => {
-      let angle = row1Angles[index];
-      if (angle === undefined) {
-        // keys past the number row continue the arc at mini-key pitch
-        const prev = row1Angles[row1Angles.length - 1];
-        angle = prev + (miniKeyWidth + keyGap) / radius;
-      }
+    let miniCursor = 0; // arc position of each key's left edge
+    this.miniKeys.forEach((key) => {
+      const width = key.classList.contains("kd-mini-key-wide")
+        ? miniKeyWidth + 6
+        : miniKeyWidth;
+      const angle = (miniCursor + width / 2) / radius;
+      miniCursor += width + keyGap;
       const mx = radius * Math.sin(angle);
       const my = miniOuterY + radius * (1 - Math.cos(angle));
       key.style.position = "absolute";
-      key.style.left = `${Math.round(sidePad + mx - miniKeyWidth / 2)}px`;
+      key.style.left = `${Math.round(sidePad + mx - width / 2)}px`;
       key.style.top = `${Math.round(my - miniKeyHeight / 2)}px`;
       key.style.transform = `rotate(${((angle * 180) / Math.PI).toFixed(2)}deg)`;
       halfLeft.appendChild(key);

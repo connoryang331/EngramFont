@@ -108,6 +108,10 @@
   悬停光晕/投影、space 描边、手柄、focus/bound/accent、夜间键帽等
 - E2E-10 颜色断言同步为 Chrome 的 oklch 计算序列化
 
+### R3-T3.18 · 激活高亮透明化（2026-10-12）
+- kd-active 高亮从实心改半透明（新增 --kd-keycap-active = 前景色 60% α，双主题各配），
+  画布笔画透过高亮键仍可见；move 键的激活态同理
+
 ### R7-T7.4 · 背景图上下文编辑（2026-10-12）
 - Edit image 上下文 action（选中字形有背景图时启用）→ 解锁 + 选中 backgroundImage/0
 - 离开选中自动重锁（selection 监听）；全局 Unlock/Lock 菜单项已移除

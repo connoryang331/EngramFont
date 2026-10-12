@@ -659,6 +659,7 @@ kerning-handle.negative {
   --kd-keycap-bg-alt: oklch(0.3577 0.0068 286.05 / 0.55);
   --kd-keycap-bg-alt-hover: oklch(0.3577 0.0068 286.05 / 0.8);
   --kd-keycap-bg-hover: oklch(0.9251 0.0071 88.65 / 0.18);
+  --kd-keycap-active: oklch(0.9251 0.0071 88.65 / 0.6);
   --kd-keycap-fg: oklch(0.9251 0.0071 88.65);
   --kd-key-outline: oklch(0.9251 0.0071 88.65 / 0.6);
   --kd-cluster-bg: oklch(0.2698 0.0055 286.03 / 0.98);
@@ -680,6 +681,7 @@ kerning-handle.negative {
   --kd-keycap-bg-alt: oklch(0.8918 0.01 87.48 / 0.6);
   --kd-keycap-bg-alt-hover: oklch(0.8918 0.01 87.48 / 0.85);
   --kd-keycap-bg-hover: oklch(0.3171 0.0054 91.55 / 0.1);
+  --kd-keycap-active: oklch(0.3171 0.0054 91.55 / 0.6);
   --kd-keycap-fg: oklch(0.3171 0.0054 91.55);
   --kd-key-outline: oklch(0.3171 0.0054 91.55 / 0.5);
   --kd-cluster-bg: oklch(0.985 0.0041 91.45 / 0.98);
@@ -776,7 +778,9 @@ kerning-handle.negative {
 }
 
 .kd-key.kd-active {
-  background-color: var(--kd-keycap-fg);
+  /* the active highlight is translucent too — canvas strokes stay visible
+     through it (fg color at 60% alpha, see --kd-keycap-active) */
+  background-color: var(--kd-keycap-active);
   color: var(--kd-keycap-bg);
 }
 

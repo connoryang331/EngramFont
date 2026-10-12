@@ -650,3 +650,24 @@ test("E2E-12 pen tools key mirrors the native multi-tool", async ({ page }) => {
     "/images/pointer.svg"
   );
 });
+
+test("E2E-13 knife tool key selects the native knife", async ({ page }) => {
+  // key "8" is a single-function key: press selects the knife tool
+  await openEditor(page, "HHHH");
+  const key = page.locator('.kd-fn-key[data-fn="knife-tool"]');
+  await expect(key).toHaveCount(1);
+  await expect(key).not.toHaveClass(/kd-active/);
+
+  await key.click();
+  const knifeButton = page.locator(
+    '#edit-tools > .tool-button[data-tool="knife-tool"]'
+  );
+  await expect(knifeButton).toHaveClass(/selected/);
+  await expect(key).toHaveClass(/kd-active/);
+
+  // switching back to the pointer key deactivates the knife key
+  const pointerKey = page.locator('.kd-fn-key[data-fn*="pointer-tool"]');
+  await pointerKey.click();
+  await expect(key).not.toHaveClass(/kd-active/);
+  await expect(pointerKey).toHaveClass(/kd-active/);
+});

@@ -186,6 +186,11 @@
   （每次赋值即刷新 dock 功能键，覆盖原生工具栏/快捷键/clean view 全部路径）
 - E2E-12 补 cubic/quad 往返前置断言 + 跨组原生切换断言
 
+### R3-T3.30 · 按键 8 接入 Knife Tool（2026-10-12）
+- 「8」= knife tool 单功能键（无子菜单，按下即选）：activateTool 直连原生
+  setSelectedTool；buildFnKey 拆出单工具分支（跳过长按/右键弹层逻辑）
+- E2E-13：选中/失活与原生工具栏 selected 状态联动
+
 ### R7-T7.4 · 背景图上下文编辑（2026-10-12）
 - Edit image 上下文 action（选中字形有背景图时启用）→ 解锁 + 选中 backgroundImage/0
 - 离开选中自动重锁（selection 监听）；全局 Unlock/Lock 菜单项已移除

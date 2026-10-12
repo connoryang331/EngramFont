@@ -192,6 +192,17 @@ const DOCK_FN_KEYS = {
       },
     ],
   },
+  // key "8" is the knife tool (single tool — no sub-tools, press to select)
+  8: {
+    titleKey: "editor.knife-tool",
+    tools: [
+      {
+        tool: "knife-tool",
+        icon: "/images/knifetool.svg",
+        titleKey: "editor.knife-tool",
+      },
+    ],
+  },
 };
 
 function clamp01(value) {
@@ -503,6 +514,17 @@ export class KeyboardDock {
       })
     );
     this.fnKeyDefs.set(element, fnDef);
+    if (fnDef.tools.length === 1) {
+      // single-function key: press selects the tool, no sub-menu
+      element.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+        this.activateTool(fnDef.tools[0].tool, fnDef.tools[0].isSubtool);
+      });
+      element.addEventListener("contextmenu", (event) =>
+        event.preventDefault()
+      );
+      return element;
+    }
     element.addEventListener("pointerdown", (event) => {
       event.preventDefault();
       // native showSubTools: a 500ms hold reveals the sub-tools

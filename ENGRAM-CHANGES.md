@@ -228,6 +228,8 @@
   face 前置、dock 同步观察器照常工作）；#zoom-tools 缩放按钮保留
 - 相关 E2E 同步：keyboard-dock 各用例的"切走"步骤改用 knife dock 键；import E2E-1 改用
   dock 0 键选 sidebearing（先选工具再折叠 dock）；proof E2E-1 去掉工具栏可见性断言
+- 追加隐藏：缩放按钮组（.tools-overlay 整个药丸容器）与右上角 proof 模式切换按钮
+  （#canvas-mode-button，R5 过渡件）——模式切换走 dock 的 mode 键；proof E2E 改用 mode 键切换
 
 ### R3-T3.30 · 按键 8 接入 Knife Tool（2026-10-12）
 - 「8」= knife tool 单功能键（无子菜单，按下即选）：activateTool 直连原生

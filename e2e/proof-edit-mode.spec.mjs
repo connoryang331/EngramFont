@@ -43,7 +43,7 @@ test("E2E-1 mode toggle switches UI, persists across reload", async ({ page }) =
   // permanently hidden — the keyboard dock carries the tools now)
   await expect(page.locator("#proof-toolbar")).toBeHidden();
 
-  await page.locator("#canvas-mode-button").click();
+  await page.locator('[data-special="mode"]').click();
   await expect(page.locator("#proof-toolbar")).toBeVisible();
   await expect(page.locator("#edit-tools")).toBeHidden();
   expect(
@@ -58,14 +58,14 @@ test("E2E-1 mode toggle switches UI, persists across reload", async ({ page }) =
   await expect(page.locator("#edit-tools")).toBeHidden();
 
   // back to edit hides the proof toolbar again
-  await page.locator("#canvas-mode-button").click();
+  await page.locator('[data-special="mode"]').click();
   await expect(page.locator("#proof-toolbar")).toBeHidden();
 });
 
 test("E2E-2 proof presets set the canvas text", async ({ page }) => {
   const project = findImportedProject();
   await openEditor(page, project);
-  await page.locator("#canvas-mode-button").click();
+  await page.locator('[data-special="mode"]').click();
   await expect(page.locator("#proof-toolbar")).toBeVisible();
 
   const expectedTexts = {

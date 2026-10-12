@@ -651,8 +651,13 @@ kerning-handle.negative {
 /* R3 · keyboard dock */
 /* the native toolbar is hidden: every tool lives on the keyboard dock now
    (keys 6 7 8 9 0 - =). The DOM stays functional — tool selection, native
-   face promotion and the dock's sync observer all keep working */
-#edit-tools {
+   face promotion and the dock's sync observer all keep working.
+   The zoom buttons and the interim proof-mode pill are hidden with it:
+   mode switching lives on the dock's mode key */
+#edit-tools,
+#zoom-tools,
+.tools-overlay,
+#canvas-mode-button {
   display: none;
 }
 

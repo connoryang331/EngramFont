@@ -155,6 +155,11 @@
   切角上限放宽到 bandHalf（Radius 16 → 端头全圆弧、无直线段），bbox padding 改随描边宽度
 - 效果：spacebar 与字母键同高、圆角一致跟随 Radius/Squircle/Border width
 
+### R3-T3.26 · 修复 spacebar 端头收细（2026-10-12）
+- 切角上限从 bandHalf 放宽后又暴露新问题：43px 径向边两端各切 21.5px 后直线段归零，
+  两个高饱满度 cubic 在中点捏出细尖（seam 端目视收细）；上限回调至 0.7×bandHalf（≈15px），
+  每端保留 ≥13px 直线段，带宽全程均匀
+
 ### R3-T3.25 · 子菜单透明化 + 子工具切换同步修复（2026-10-12）
 - pointer tools 弹出选项（kd-fn-option）从实心改半透明（0.55，双主题）+ 同款细描边圈，
   激活态用 --kd-keycap-active 透明反色，与画布按键一致

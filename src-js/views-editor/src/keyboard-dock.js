@@ -1382,9 +1382,12 @@ export class KeyboardDock {
     // width settings: the outline gets corner fillets sized by the radius
     // setting, with the squircle exponent controlling how "full" each fillet
     // is, and the stroke width follows the border width setting (via CSS)
+    // cap the fillet at 70% of the band half: both ends share one 43px
+    // radial edge — cutting past ~15px each leaves no straight edge and the
+    // two big curves pinch the middle into a thin tip
     const filletR = Math.max(
       0,
-      Math.min(this.radius, bandHalf, (ro * angularSpan) / 4)
+      Math.min(this.radius, bandHalf * 0.7, (ro * angularSpan) / 4)
     );
     const fullness = 0.55 + 0.05 * this.squircle;
     const unit = (from, to) => {

@@ -221,6 +221,24 @@ const DOCK_FN_KEYS = {
       },
     ],
   },
+  // key "0" mirrors the native metrics multi-tool (sidebearing / kerning)
+  0: {
+    titleKey: "editor.sidebearing-tool",
+    tools: [
+      {
+        tool: "sidebearing-tool",
+        icon: "/images/sidebearingtool.svg",
+        titleKey: "editor.sidebearing-tool",
+        isSubtool: true,
+      },
+      {
+        tool: "kerning-tool",
+        icon: "/images/kerningtool.svg",
+        titleKey: "editor.kerning-tool",
+        isSubtool: true,
+      },
+    ],
+  },
 };
 
 function clamp01(value) {

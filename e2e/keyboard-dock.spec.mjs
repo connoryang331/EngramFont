@@ -706,3 +706,41 @@ test("E2E-14 shape tools key mirrors the native multi-tool", async ({ page }) =>
   await expect(frontSubTool).toHaveAttribute("data-tool", "shape-tool-ellipse");
   await expect(key).toHaveClass(/kd-active/);
 });
+
+test("E2E-15 metrics key mirrors the native multi-tool", async ({ page }) => {
+  // key "0" is the metrics multi-tool: sidebearing (face) + kerning
+  await openEditor(page, "HHHH");
+  const key = page.locator('.kd-fn-key[data-fn*="kerning-tool"]');
+  await expect(key).toHaveCount(1);
+  await expect(key.locator(".kd-fn-icon")).toHaveAttribute(
+    "src",
+    "/images/sidebearingtool.svg"
+  );
+
+  const multiTool = page.locator(
+    '#edit-tools .multi-tool[data-tool="metrics-tool"]'
+  );
+  const frontSubTool = multiTool.locator(".subtool-button").first();
+
+  // flyout offers only kerning (the face already shows sidebearing)
+  await key.click({ button: "right" });
+  const kerningOption = page.locator('.kd-fn-option[data-tool="kerning-tool"]');
+  await expect(kerningOption).toHaveCount(1);
+  await expect(page.locator('.kd-fn-option[data-tool="sidebearing-tool"]')).toHaveCount(0);
+  await kerningOption.click();
+
+  await expect(frontSubTool).toHaveAttribute("data-tool", "kerning-tool");
+  await expect(key.locator(".kd-fn-icon")).toHaveAttribute(
+    "src",
+    "/images/kerningtool.svg"
+  );
+  await expect(key).toHaveClass(/kd-active/);
+  await expect(page.locator(".kd-fn-options")).toHaveCount(0);
+
+  // away natively -> deactivated; quick click restores kerning
+  await page.locator('#edit-tools > .tool-button[data-tool="hand-tool"]').click();
+  await expect(key).not.toHaveClass(/kd-active/);
+  await key.click();
+  await expect(frontSubTool).toHaveAttribute("data-tool", "kerning-tool");
+  await expect(key).toHaveClass(/kd-active/);
+});

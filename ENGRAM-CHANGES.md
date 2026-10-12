@@ -178,6 +178,14 @@
   只产生 childList（prepend）和 style（visibility）变化、无 class 变化，观察器此前只监听 class——
   现同时观察 childList + style，双向同步（原生选 scaling → dock 面图标变 scaling，反之亦然）
 
+### R3-T3.29 · "切回第一个子工具不同步"根因（2026-10-12）
+- 症状：quad→cubic、scale→pointer 不同步，反向正常。根因：DOCK_FN_KEYS 只给每组的
+  第二个子工具标了 isSubtool——dock 选第一个子工具时 setSelectedTool 未带 isSubtool，
+  原生工具栏不前置它，原生 face 停在旧子工具上
+- 修复：组内所有成员一律 isSubtool: true；另把 selectedToolIdentifier 包装为访问器
+  （每次赋值即刷新 dock 功能键，覆盖原生工具栏/快捷键/clean view 全部路径）
+- E2E-12 补 cubic/quad 往返前置断言 + 跨组原生切换断言
+
 ### R7-T7.4 · 背景图上下文编辑（2026-10-12）
 - Edit image 上下文 action（选中字形有背景图时启用）→ 解锁 + 选中 backgroundImage/0
 - 离开选中自动重锁（selection 监听）；全局 Unlock/Lock 菜单项已移除

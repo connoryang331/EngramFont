@@ -164,6 +164,7 @@ const DOCK_FN_KEYS = {
         tool: "pointer-tool",
         icon: "/images/pointer.svg",
         titleKey: "editor.pointer-tool",
+        isSubtool: true,
       },
       {
         tool: "pointer-tool-scale",
@@ -181,6 +182,7 @@ const DOCK_FN_KEYS = {
         tool: "pen-tool-cubic",
         icon: "/images/pointeradd.svg",
         titleKey: "editor.pen-tool-cubic",
+        isSubtool: true,
       },
       {
         tool: "pen-tool-quad",
@@ -299,6 +301,21 @@ export class KeyboardDock {
     this.ctrlActive = false;
     // function-key elements -> their DOCK_FN_KEYS definition
     this.fnKeyDefs = new Map();
+
+    // authoritative sync: editor.js assigns selectedToolIdentifier as a plain
+    // property on every tool change (native toolbar, shortcuts, this dock,
+    // clean-view enter/exit). Wrapping it with an accessor guarantees the
+    // function keys refresh on ALL of them — DOM observation alone misses
+    // switches that produce no class changes (sub-tool promotion etc.)
+    let selectedToolIdentifier = this.editorController.selectedToolIdentifier;
+    Object.defineProperty(this.editorController, "selectedToolIdentifier", {
+      configurable: true,
+      get: () => selectedToolIdentifier,
+      set: (value) => {
+        selectedToolIdentifier = value;
+        this.updateFnKeyStates();
+      },
+    });
 
     this.buildDom();
     this.applyLayout();

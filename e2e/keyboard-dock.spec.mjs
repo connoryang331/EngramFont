@@ -607,10 +607,46 @@ test("E2E-12 pen tools key mirrors the native multi-tool", async ({ page }) => {
   await expect(key).toHaveClass(/kd-active/);
   await expect(page.locator(".kd-fn-options")).toHaveCount(0);
 
+  // picking the cubic sub-tool from the dock must promote it natively too
+  // (every group member is a sub-tool — the old asymmetry left the native
+  // face on quad when switching back to cubic)
+  await key.click({ button: "right" });
+  await page.locator('.kd-fn-option[data-tool="pen-tool-cubic"]').click();
+  await expect(frontSubTool).toHaveAttribute("data-tool", "pen-tool-cubic");
+  await expect(key.locator(".kd-fn-icon")).toHaveAttribute(
+    "src",
+    "/images/pointeradd.svg"
+  );
+
+  // back to quadratic for the rest of the flow
+  await key.click({ button: "right" });
+  await page.locator('.kd-fn-option[data-tool="pen-tool-quad"]').click();
+  await expect(frontSubTool).toHaveAttribute("data-tool", "pen-tool-quad");
+
   // quick click re-selects the face tool after switching away natively
   await page.locator('#edit-tools > .tool-button[data-tool="hand-tool"]').click();
   await expect(key).not.toHaveClass(/kd-active/);
   await key.click();
   await expect(frontSubTool).toHaveAttribute("data-tool", "pen-tool-quad");
   await expect(key).toHaveClass(/kd-active/);
+
+  // cross-group: clicking the native pointer face hands activation back to
+  // the pointer key (pen key must deactivate) — the dock follows
+  // selectedToolIdentifier on EVERY assignment path
+  const pointerKey = page.locator('.kd-fn-key[data-fn*="pointer-tool"]');
+  await multiTool.locator(".subtool-button").first().click({ button: "right" });
+  await page.waitForTimeout(300);
+  await multiTool.locator('.subtool-button[data-tool="pen-tool-cubic"]').click();
+  await page.waitForTimeout(300);
+  const pointerMulti = page.locator(
+    '#edit-tools .multi-tool[data-tool="pointer-tools"]'
+  );
+  await pointerMulti.locator(".subtool-button").first().click();
+  await page.waitForTimeout(300);
+  await expect(pointerKey).toHaveClass(/kd-active/);
+  await expect(key).not.toHaveClass(/kd-active/);
+  await expect(pointerKey.locator(".kd-fn-icon")).toHaveAttribute(
+    "src",
+    "/images/pointer.svg"
+  );
 });

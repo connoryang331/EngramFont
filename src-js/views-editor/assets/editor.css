@@ -861,7 +861,9 @@ kerning-handle.negative {
   height: 44px;
   border: none;
   border-radius: var(--kd-corner-radius, 6px);
-  background-color: var(--kd-keycap-bg);
+  /* translucent like the canvas keys, with the same hairline ring */
+  background-color: oklch(0.2983 0.0054 286.07 / 0.55);
+  box-shadow: inset 0 0 0 var(--kd-key-outline-width, 1px) var(--kd-key-outline);
   color: var(--kd-keycap-fg);
   cursor: pointer;
   display: flex;
@@ -870,12 +872,16 @@ kerning-handle.negative {
   padding: 0;
 }
 
-.kd-fn-option:hover {
+#keyboard-dock.kd-theme-light .kd-fn-option {
+  background-color: oklch(0.9526 0.0058 84.57 / 0.55);
+}
+
+#keyboard-dock .kd-fn-option:hover {
   background-color: var(--kd-keycap-bg-hover);
 }
 
-.kd-fn-option.kd-active {
-  background-color: var(--kd-keycap-fg);
+#keyboard-dock .kd-fn-option.kd-active {
+  background-color: var(--kd-keycap-active);
   color: var(--kd-keycap-bg);
 }
 

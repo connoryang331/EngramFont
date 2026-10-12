@@ -155,6 +155,13 @@
   切角上限放宽到 bandHalf（Radius 16 → 端头全圆弧、无直线段），bbox padding 改随描边宽度
 - 效果：spacebar 与字母键同高、圆角一致跟随 Radius/Squircle/Border width
 
+### R3-T3.25 · 子菜单透明化 + 子工具切换同步修复（2026-10-12）
+- pointer tools 弹出选项（kd-fn-option）从实心改半透明（0.55，双主题）+ 同款细描边圈，
+  激活态用 --kd-keycap-active 透明反色，与画布按键一致
+- 修复 dock 面图标与原生工具栏不同步：pointer-tool ⇄ pointer-tool-scale 切换在原生工具栏上
+  只产生 childList（prepend）和 style（visibility）变化、无 class 变化，观察器此前只监听 class——
+  现同时观察 childList + style，双向同步（原生选 scaling → dock 面图标变 scaling，反之亦然）
+
 ### R7-T7.4 · 背景图上下文编辑（2026-10-12）
 - Edit image 上下文 action（选中字形有背景图时启用）→ 解锁 + 选中 backgroundImage/0
 - 离开选中自动重锁（selection 监听）；全局 Unlock/Lock 菜单项已移除

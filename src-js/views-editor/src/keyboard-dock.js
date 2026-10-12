@@ -368,14 +368,17 @@ export class KeyboardDock {
 
     // keep the function keys' active state in sync with tool switches made
     // from Fontra's own toolbar or keyboard shortcuts (#edit-tools is the
-    // native toolbar; every tool change toggles "selected" classes there)
+    // native toolbar). Sub-tool switches inside a multi-tool produce NO
+    // class changes — only childList (prepend) and style (visibility) — so
+    // observe those too
     const nativeToolbar = document.querySelector("#edit-tools");
     if (nativeToolbar) {
       this.fnToolObserver = new MutationObserver(() => this.updateFnKeyStates());
       this.fnToolObserver.observe(nativeToolbar, {
         subtree: true,
+        childList: true,
         attributes: true,
-        attributeFilter: ["class"],
+        attributeFilter: ["class", "style"],
       });
     }
     // the native tool setup ran before this dock was constructed, so the

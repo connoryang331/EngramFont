@@ -372,10 +372,10 @@ export class KeyboardDock {
     // function-key elements -> their DOCK_FN_KEYS definition
     this.fnKeyDefs = new Map();
     // half-height menu keys above the number row, left -> right. The first
-    // key occupies the ESC slot: labeled "Font", it opens the EngramFont
+    // key occupies the ESC slot: labeled "EFD", it opens the EngramFont
     // application menu (it does NOT act as Escape)
     this.miniMenus = [
-      { label: "Engram Font", menu: "EngramFont" },
+      { label: "EFD", menu: "EngramFont", tooltip: "Engram Font Designer" },
       { label: "Help", menu: "Help" },
       { label: "Glyph", menu: "Glyph" },
       { label: "Font", menu: "Font" },
@@ -383,17 +383,18 @@ export class KeyboardDock {
       { label: "Edit", menu: "Edit" },
       { label: "File", menu: "File" },
     ];
-    this.miniKeys = this.miniMenus.map(({ label, menu }) => {
+    this.miniKeys = this.miniMenus.map(({ label, menu, tooltip }) => {
       const key = withAriaLabel(
         html.button(
           {
             class: `kd-key kd-char-key kd-mini-key${
-              label === "Engram Font" ? " kd-mini-key-wide" : ""
+              tooltip ? " kd-mini-key-wide" : ""
             }`,
+            ...(tooltip ? { title: tooltip } : {}),
           },
           [label]
         ),
-        label
+        tooltip || label
       );
       key.addEventListener("click", () => this.openMiniMenu(menu, key));
       return key;

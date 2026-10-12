@@ -245,12 +245,16 @@
   排列（同角度、同切线倾斜、间距=一个键距）
 - mini 键同样跟随设置面板：Radius（min(radius, 11) 封顶半高）、Squircle、Border width、主题透明样式
 - E2E-1 加 mini 键断言；E2E-6 键数断言 63→69（弧）/62→68（合并）
-- 追加隐藏：缩放按钮组（.tools-overlay 整个药丸容器）与右上角 proof 模式切换按钮
-  （#canvas-mode-button，R5 过渡件）——模式切换走 dock 的 mode 键；proof E2E 改用 mode 键切换
+- 追加隐藏：缩放按钮组（.tools-overlay 整个药丸容器）、右上角 proof 模式切换按钮
+  （#canvas-mode-button，R5 过渡件）、顶部菜单栏（menu-bar）、右上角工程路径栏（opacity:0）
+- 隐藏后连带修复：E2E 全部 project-name/menubar 等待改为 state:"attached"（22 处）；
+  export/new-font 用例改经 dock File 键开菜单；import E2E-1 先选工具再折叠 dock
 - mini 键扩为 7 个：最左新增 ESC 位「Engram Font」键（打开 EngramFont 应用菜单，非 ESC 功能；
   键帽加宽 68px）；File 键超出数字行末尾时沿弧线以 mini 键距延续定位（不再被跳过）；
   弹出菜单改从按键下方出现（showMenu 复用 menubar 菜单定义）；原生顶栏 menu-bar 整条隐藏；
   右上角工程路径栏 opacity:0 隐藏（保留布局占位，E2E waitFor 不受影响）
+- R4.T4.10：ESC 位键改名「EFD」，tooltip = Engram Font Designer（title 与 aria-label 同步；
+  打开的仍是 EngramFont 应用菜单）
 
 ### R3-T3.30 · 按键 8 接入 Knife Tool（2026-10-12）
 - 「8」= knife tool 单功能键（无子菜单，按下即选）：activateTool 直连原生

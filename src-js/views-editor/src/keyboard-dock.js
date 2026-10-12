@@ -74,12 +74,14 @@ const DOCK_ROWS = [
 ];
 
 // T3.7 split layout: per-row key index where the row is cut into the
-// bottom-left and bottom-right clusters (SPEC §10: left = ~`1-5 / purple+q-t /
-// capsule+a-g / red+z-b / ctrl+alt, right = the rest)
-const SPLIT_CUTS = [6, 6, 6, 6, 3];
+// bottom-left and bottom-right clusters. Cuts are balanced so each cluster's
+// rows have matching unit widths (left: 6 units per row, right: 9, row4: 8)
+// — keys keep their fixed 52px width, no stretching, no blank edges.
+const SPLIT_CUTS = [6, 5, 5, 5, 3];
 
 // split mode: the left cluster gets its own space key (split-ergo style dual
-// thumb keys); merged mode keeps the single wide space in the row
+// thumb keys); merged mode keeps the single wide space in the row.
+// In split the right space/move narrow to 2/3 units to fit the 9-unit rows.
 const SPLIT_ROW5_CUT = 3;
 
 // proof-mode slider specs (v5 context keymap)
@@ -543,6 +545,12 @@ export class KeyboardDock {
     this.clusterRight.replaceChildren();
     const split = this.layout === "split";
 
+    // bottom-row spans differ per layout (merged: space 4 / move 4;
+    // split: space 2 / move 3 to match the 9-unit letter rows)
+    const [spaceKey, moveKey] = this.keyElements[4].slice(3, 5);
+    spaceKey.style.setProperty("--kd-span", split ? 2 : 4);
+    moveKey.style.setProperty("--kd-span", split ? 3 : 4);
+
     for (const [rowIndex, rowElements] of this.keyElements.entries()) {
       let fragments;
       if (!split) {
@@ -571,31 +579,6 @@ export class KeyboardDock {
       }
     }
     this.clusterRight.classList.toggle("kd-hidden", !split);
-    this.applyClusterWidths(split);
-  }
-
-  applyClusterWidths(split) {
-    // split mode: justify every row to its cluster width (keys flex by span),
-    // so short rows don't leave blank areas at the cluster's edge
-    if (!split) {
-      this.clusterLeft.style.width = "";
-      this.clusterRight.style.width = "";
-      return;
-    }
-    for (const cluster of [this.clusterLeft, this.clusterRight]) {
-      let widest = 0;
-      for (const rowElement of cluster.querySelectorAll(".kd-row")) {
-        let rowWidth = 0;
-        const keyCount = rowElement.children.length;
-        for (const keyElement of rowElement.children) {
-          const span = parseInt(keyElement.style.getPropertyValue("--kd-span")) || 1;
-          rowWidth += span * 52;
-        }
-        rowWidth += Math.max(0, keyCount - 1) * 6;
-        widest = Math.max(widest, rowWidth);
-      }
-      cluster.style.width = `${widest + 24}px`; // + cluster padding
-    }
   }
 
   applyLayout() {

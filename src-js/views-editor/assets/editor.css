@@ -828,16 +828,8 @@ kerning-handle.negative {
   box-shadow: 0 4px 18px #0006;
 }
 
-/* justify rows inside split clusters: keys flex by span so every row fills
-   the cluster width (no blank edge) */
-#keyboard-dock.kd-split .kd-row {
-  width: 100%;
-}
-
-#keyboard-dock.kd-split .kd-key {
-  flex: var(--kd-span) 1 0;
-  width: auto;
-}
+/* split clusters keep the fixed 52px key widths (no stretching); the split
+   cuts are balanced so each cluster's rows have matching unit widths */
 
 /* the layout/collapse handles must stay clickable in split mode */
 #keyboard-dock.kd-split #kd-layout-handle,

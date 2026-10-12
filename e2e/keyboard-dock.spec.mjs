@@ -142,62 +142,58 @@ test("E2E-5 move key toggles pan (hand) tool", async ({ page }) => {
   expect(handStillSelected).toBe(false);
 });
 
-test("E2E-6 split layout: two clusters anchored apart, persists", async ({
-  page,
-}) => {
+test("E2E-6 curved split layout: arced halves, persists", async ({ page }) => {
   await openEditor(page);
 
-  // merged: single keyboard block, right cluster hidden
-  await expect(page.locator(".kd-cluster-right")).toBeHidden();
+  // merged: single keyboard block, arc hidden
+  await expect(page.locator(".kd-arc")).toBeHidden();
   const mergedKeys = await page.locator(".kd-cluster-left .kd-key").count();
   expect(mergedKeys).toBeGreaterThanOrEqual(28);
 
   await page.locator("#kd-layout-handle").click();
   await page.waitForTimeout(600);
 
-  // split: both clusters visible with keys, horizontally separated
-  const separation = await page.evaluate(() => {
-    const left = document
-      .querySelector(".kd-cluster-left")
+  // split: curved arc board with all keys, halves separated at the seam
+  await expect(page.locator(".kd-arc")).toBeVisible();
+  const seam = await page.evaluate(() => {
+    const five = document
+      .querySelector(".kd-arc [data-key='5']")
       .getBoundingClientRect();
-    const right = document
-      .querySelector(".kd-cluster-right")
+    const six = document
+      .querySelector(".kd-arc [data-key='6']")
       .getBoundingClientRect();
-    return {
-      gap: right.left - left.right,
-      leftKeys: document.querySelectorAll(".kd-cluster-left .kd-key").length,
-      rightKeys: document.querySelectorAll(".kd-cluster-right .kd-key").length,
-    };
+    const keys = document.querySelectorAll(".kd-arc .kd-key").length;
+    const rotated = [
+      ...document.querySelectorAll(".kd-arc .kd-key"),
+    ].filter((k) => (k.style.transform || "").includes("rotate")).length;
+    return { gap: Math.round(six.left - five.right), keys, rotated };
   });
-  expect(separation.gap).toBeGreaterThan(100);
-  expect(separation.leftKeys).toBeGreaterThan(0);
-  expect(separation.rightKeys).toBeGreaterThan(0);
-  // split-ergo: each cluster has its own space key
-  expect(
-    await page.locator(".kd-cluster-left [data-special='space']").isVisible()
-  ).toBe(true);
-  expect(
-    await page.locator(".kd-cluster-right [data-special='space']").isVisible()
-  ).toBe(true);
-  expect(separation.leftKeys + separation.rightKeys).toBe(mergedKeys + 1);
+  expect(seam.gap).toBeGreaterThan(60); // visible seam gap between the halves
+  expect(seam.keys).toBe(mergedKeys + 1); // + the second space key
+  expect(seam.rotated).toBe(seam.keys); // every key rotates along its arc
+  // split-ergo: each half has its own space key
+  const spaceCount = await page
+    .locator(".kd-arc [data-special='space']")
+    .count();
+  expect(spaceCount).toBe(2);
   expect(
     await page.evaluate(() => localStorage.getItem("engramfont-dock-layout"))
   ).toBe("split");
 
-  // keys remain functional in split layout (DEL resets the text)
-  await page
-    .locator(".kd-cluster-right [data-special='del']")
-    .click();
+  // keys remain functional in the arc layout (DEL resets the text);
+  // force: the rotated key's bbox center falls outside the rotated rect,
+  // so the default hit-test would see the canvas underneath
+  await page.locator(".kd-arc [data-special='del']").click({ force: true });
   await page.waitForTimeout(600);
 
   // persists across reload; merge restores the single block
   await page.reload();
   await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
   await page.waitForTimeout(1500);
-  await expect(page.locator(".kd-cluster-right")).toBeVisible();
+  await expect(page.locator(".kd-arc")).toBeVisible();
   await page.locator("#kd-layout-handle").click();
   await page.waitForTimeout(400);
-  await expect(page.locator(".kd-cluster-right")).toBeHidden();
+  await expect(page.locator(".kd-arc")).toBeHidden();
   // merged mode: back to the single wide space key
   await expect(
     page.locator(".kd-cluster-left [data-special='space']")

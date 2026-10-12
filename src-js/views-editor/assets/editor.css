@@ -817,38 +817,23 @@ kerning-handle.negative {
   pointer-events: none;
 }
 
-/* split layout (T3.7): the dock becomes a transparent full-width flex row and
-   the two clusters sit at the bottom corners of the canvas */
+/* split layout (T3.7): one curved board — the dock keeps its frame and wraps
+   the arc container */
 #keyboard-dock.kd-split {
-  left: 0;
-  right: 0;
-  transform: none;
-  width: auto;
-  max-width: none;
-  background-color: transparent;
-  padding: 0;
-  box-shadow: none;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  pointer-events: none;
+  width: max-content;
 }
 
-#keyboard-dock.kd-split .kd-cluster {
-  pointer-events: auto;
-  background-color: #262629fa;
-  border-radius: 12px;
-  padding: 12px;
-  box-shadow: 0 4px 18px #0006;
+.kd-arc {
+  position: relative;
 }
 
-/* split clusters keep the fixed 52px key widths (no stretching); the split
-   cuts are balanced so each cluster's rows have matching unit widths */
+.kd-arc .kd-key {
+  position: absolute;
+  margin: 0;
+}
 
-/* the layout/collapse handles must stay clickable in split mode */
-#keyboard-dock.kd-split #kd-layout-handle,
-#keyboard-dock.kd-split #kd-collapse-handle {
-  pointer-events: auto;
+.kd-arc.kd-hidden {
+  display: none;
 }
 
 /* collapse button */

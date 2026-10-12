@@ -203,13 +203,15 @@ export class KeyboardDock {
     this.dockElement = html.div({ id: "keyboard-dock" }, []);
     container.appendChild(this.dockElement);
 
-    // two cluster containers: in merged mode they hold one continuous
-    // keyboard (right cluster empty+hidden), in split mode they anchor to
-    // the bottom-left / bottom-right canvas corners
+    // two cluster containers: merged mode holds one continuous keyboard in
+    // the left cluster; split mode lays the keys out along concentric arcs
+    // in .kd-arc (image-2 style curved split board)
     this.clusterLeft = html.div({ class: "kd-cluster kd-cluster-left" }, []);
     this.clusterRight = html.div({ class: "kd-cluster kd-cluster-right" }, []);
+    this.arcElement = html.div({ class: "kd-rows kd-arc" }, []);
     this.dockElement.appendChild(this.clusterLeft);
     this.dockElement.appendChild(this.clusterRight);
+    this.dockElement.appendChild(this.arcElement);
 
     this.sliderElements = {};
     this.keyElements = DOCK_ROWS.map((row) => row.map((keyDef) => this.buildKey(keyDef)));
@@ -554,6 +556,7 @@ export class KeyboardDock {
     // appendChild re-parents, so all listeners on the keys survive
     this.clusterLeft.replaceChildren();
     this.clusterRight.replaceChildren();
+    this.arcElement.replaceChildren();
     const split = this.layout === "split";
 
     // bottom-row spans differ per layout (merged: one 5u space; split: dual
@@ -568,34 +571,122 @@ export class KeyboardDock {
       split ? MOVE_SPAN_SPLIT : MOVE_SPAN_MERGED
     );
 
-    for (const [rowIndex, rowElements] of this.keyElements.entries()) {
-      let fragments;
-      if (!split) {
-        fragments = [rowElements];
-      } else if (rowIndex === 4) {
-        // bottom row: the left cluster gets its own space key
-        fragments = [
-          [...rowElements.slice(0, SPLIT_ROW5_CUT), this.spaceKeyLeft],
-          rowElements.slice(SPLIT_ROW5_CUT),
-        ];
-      } else {
-        fragments = [
-          rowElements.slice(0, SPLIT_CUTS[rowIndex]),
-          rowElements.slice(SPLIT_CUTS[rowIndex]),
-        ];
-      }
-      for (const [fragmentIndex, fragment] of fragments.entries()) {
-        const host =
-          split && fragmentIndex === 1 ? this.clusterRight : this.clusterLeft;
-        const rowElement = html.div({ class: "kd-row" }, []);
-        rowElement.dataset.row = rowIndex;
-        host.appendChild(rowElement);
-        for (const keyElement of fragment) {
-          rowElement.appendChild(keyElement);
-        }
+    if (split) {
+      this.renderArcKeys();
+      this.clusterLeft.classList.add("kd-hidden");
+      this.clusterRight.classList.add("kd-hidden");
+      this.arcElement.classList.remove("kd-hidden");
+      return;
+    }
+
+    // merged: left cluster visible, right cluster + arc hidden
+    this.clusterLeft.classList.remove("kd-hidden");
+    this.arcElement.classList.add("kd-hidden");
+    // clear the arc layout's inline styles — they would break flow layout
+    for (const rowElements of this.keyElements) {
+      for (const keyElement of rowElements) {
+        keyElement.style.position = "";
+        keyElement.style.left = "";
+        keyElement.style.top = "";
+        keyElement.style.transform = "";
       }
     }
-    this.clusterRight.classList.toggle("kd-hidden", !split);
+    this.spaceKeyLeft.style.position = "";
+    this.spaceKeyLeft.style.left = "";
+    this.spaceKeyLeft.style.top = "";
+    this.spaceKeyLeft.style.transform = "";
+    for (const [rowIndex, rowElements] of this.keyElements.entries()) {
+      const rowElement = html.div({ class: "kd-row" }, []);
+      rowElement.dataset.row = rowIndex;
+      this.clusterLeft.appendChild(rowElement);
+      for (const keyElement of rowElements) {
+        rowElement.appendChild(keyElement);
+      }
+    }
+    this.clusterRight.classList.add("kd-hidden");
+    this.arcElement.classList.add("kd-hidden");
+  }
+
+  renderArcKeys() {
+    // curved split board (reference: curved ortho boards) — each row is an
+    // arc of the same radius whose peak sits at the seam; the per-row arc
+    // center is below the peak, so rows arch up towards the middle (like the
+    // reference photos) while stacking top-down in the normal row order.
+    // Keys rotate along the tangent; the QWERTY seam (5|6, T/Y, G/H, B/N)
+    // splits the halves with a small angular gap.
+    const arc = this.arcElement;
+    arc.replaceChildren();
+
+    const keyGap = 6;
+    const keyHeight = 44;
+    const rowHeight = keyHeight + 8;
+    const radius = 1400; // curvature of every row
+    const seamHalfAngle = (2.5 * Math.PI) / 180; // 2.5 deg each side of the seam
+    const topPad = 16;
+
+    const keyWidthPx = (span) => 52 * span + (span - 1) * keyGap;
+    const spanOf = (keyElement) =>
+      parseFloat(keyElement.style.getPropertyValue("--kd-span")) || 1;
+
+    const halves = this.keyElements.map((rowElements, rowIndex) => {
+      const cut = rowIndex === 4 ? SPLIT_ROW5_CUT : SPLIT_CUTS[rowIndex];
+      const left = [...rowElements.slice(0, cut)];
+      if (rowIndex === 4) {
+        left.push(this.spaceKeyLeft);
+      }
+      const right = rowElements.slice(cut);
+      return { left, right };
+    });
+
+    const placements = [];
+    for (const [rowIndex, { left, right }] of halves.entries()) {
+      const peakY = topPad + rowIndex * rowHeight;
+      // left half: keys ordered seam -> outer = reverse of array order,
+      // angles negative (left of the peak)
+      let cursor = -seamHalfAngle;
+      for (const keyElement of [...left].reverse()) {
+        const width = keyWidthPx(spanOf(keyElement));
+        const delta = (width + keyGap) / radius;
+        const angle = cursor - delta / 2;
+        cursor -= delta;
+        placements.push({ keyElement, angle, width, peakY });
+      }
+      cursor = seamHalfAngle;
+      for (const keyElement of right) {
+        const width = keyWidthPx(spanOf(keyElement));
+        const delta = (width + keyGap) / radius;
+        const angle = cursor + delta / 2;
+        cursor += delta;
+        placements.push({ keyElement, angle, width, peakY });
+      }
+    }
+
+    // project onto screen coordinates and normalize into the container
+    let minX = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
+    const points = placements.map(({ keyElement, angle, width, peakY }) => {
+      const x = radius * Math.sin(angle);
+      const y = peakY + radius * (1 - Math.cos(angle));
+      minX = Math.min(minX, x - width / 2);
+      maxX = Math.max(maxX, x + width / 2);
+      maxY = Math.max(maxY, y + keyHeight / 2);
+      return { keyElement, x, y, angle, width };
+    });
+    const sidePad = 14;
+    const bottomPad = 14;
+    const width = maxX - minX + sidePad * 2;
+    const height = maxY + bottomPad;
+    arc.style.width = `${Math.round(width)}px`;
+    arc.style.height = `${Math.round(height)}px`;
+
+    for (const { keyElement, x, y, angle, width } of points) {
+      keyElement.style.position = "absolute";
+      keyElement.style.left = `${Math.round(x - minX + sidePad - width / 2)}px`;
+      keyElement.style.top = `${Math.round(y - keyHeight / 2)}px`;
+      keyElement.style.transform = `rotate(${((angle * 180) / Math.PI).toFixed(2)}deg)`;
+      arc.appendChild(keyElement);
+    }
   }
 
   applyLayout() {

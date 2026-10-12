@@ -270,3 +270,4 @@ src/fontra/client
 # isolated e2e fixtures + export artifacts
 .e2e-fonts/
 .exports
+test-results/

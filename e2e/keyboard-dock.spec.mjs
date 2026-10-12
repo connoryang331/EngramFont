@@ -142,21 +142,49 @@ test("E2E-5 move key toggles pan (hand) tool", async ({ page }) => {
   expect(handStillSelected).toBe(false);
 });
 
-test("E2E-6 curved split layout: arced halves, persists", async ({ page }) => {
+test("E2E-6 layout handle cycles merged -> straight -> arc", async ({
+  page,
+}) => {
   await openEditor(page);
 
-  // merged: single keyboard block, arc hidden
-  await expect(page.locator(".kd-arc")).toBeHidden();
+  // merged: single block
+  await expect(page.locator(".kd-cluster-left")).toBeVisible();
+  await expect(page.locator(".kd-half-left")).toBeHidden();
   const mergedKeys = await page.locator(".kd-cluster-left .kd-key").count();
   expect(mergedKeys).toBeGreaterThanOrEqual(28);
 
   await page.locator("#kd-layout-handle").click();
+  await page.waitForTimeout(400);
+
+  // straight split: two framed clusters anchored apart, fixed-width keys
+  await expect(page.locator("#keyboard-dock.kd-straight")).toHaveCount(1);
+  await expect(page.locator(".kd-cluster-left")).toBeVisible();
+  await expect(page.locator(".kd-cluster-right")).toBeVisible();
+  const straight = await page.evaluate(() => {
+    const left = document
+      .querySelector(".kd-cluster-left")
+      .getBoundingClientRect();
+    const right = document
+      .querySelector(".kd-cluster-right")
+      .getBoundingClientRect();
+    return Math.round(right.left - left.right);
+  });
+  expect(straight).toBeGreaterThan(100);
+  expect(
+    await page.evaluate(() => localStorage.getItem("engramfont-dock-layout"))
+  ).toBe("straight");
+  // DEL functional in straight mode
+  await page.locator(".kd-cluster-right [data-special='del']").click();
+  await page.waitForTimeout(500);
+
+  await page.locator("#kd-layout-handle").click();
   await page.waitForTimeout(600);
 
-  // split: two separate floating half keyboards, horizontally apart
+  // arc split: two floating curved halves, rotated keys, dual space
+  await expect(page.locator("#keyboard-dock.kd-arc")).toHaveCount(1);
   await expect(page.locator(".kd-half-left")).toBeVisible();
   await expect(page.locator(".kd-half-right")).toBeVisible();
-  const separation = await page.evaluate(() => {
+  const arc = await page.evaluate(() => {
     const left = document
       .querySelector(".kd-half-left")
       .getBoundingClientRect();
@@ -169,40 +197,37 @@ test("E2E-6 curved split layout: arced halves, persists", async ({ page }) => {
     ].filter((k) => (k.style.transform || "").includes("rotate")).length;
     return {
       gap: Math.round(right.left - left.right),
-      leftKeys: document.querySelectorAll(".kd-half-left .kd-key").length,
-      rightKeys: document.querySelectorAll(".kd-half-right .kd-key").length,
       keys,
       rotated,
       level: Math.abs(left.bottom - right.bottom),
     };
   });
-  expect(separation.gap).toBeGreaterThan(100); // two detached keyboards
-  expect(separation.leftKeys).toBeGreaterThan(0);
-  expect(separation.rightKeys).toBeGreaterThan(0);
-  expect(separation.keys).toBe(mergedKeys + 1); // + the second space key
-  expect(separation.rotated).toBe(separation.keys); // arcs: keys rotate
-  // both halves bottom-aligned -> corresponding rows sit level
-  expect(separation.level).toBeLessThanOrEqual(2);
-  // split-ergo: each half has its own space key
-  expect(await page.locator(".kd-half-left [data-special='space']").count()).toBe(1);
-  expect(await page.locator(".kd-half-right [data-special='space']").count()).toBe(1);
+  expect(arc.gap).toBeGreaterThan(100);
+  expect(arc.keys).toBe(mergedKeys + 1); // + the second space key
+  expect(arc.rotated).toBe(arc.keys);
+  expect(arc.level).toBeLessThanOrEqual(2);
   expect(
     await page.evaluate(() => localStorage.getItem("engramfont-dock-layout"))
-  ).toBe("split");
+  ).toBe("arc");
+  // DEL functional in arc mode; force: rotated bbox center falls outside
+  await page.locator(".kd-half-right [data-special='del']").click({
+    force: true,
+  });
+  await page.waitForTimeout(500);
 
-  // keys remain functional in the arc layout (DEL resets the text);
-  // force: the rotated key's bbox center falls outside the rotated rect,
-  // so the default hit-test would see the canvas underneath
-  await page.locator(".kd-half-right [data-special='del']").click({ force: true });
-  await page.waitForTimeout(600);
-
-  // persists across reload; merge restores the single block
+  // persists across reload (arc stays arc)
   await page.reload();
   await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
   await page.waitForTimeout(1500);
   await expect(page.locator(".kd-half-left")).toBeVisible();
+
+  // cycle back to merged
   await page.locator("#kd-layout-handle").click();
   await page.waitForTimeout(400);
+  expect(
+    await page.evaluate(() => localStorage.getItem("engramfont-dock-layout"))
+  ).toBe("merged");
+  await expect(page.locator(".kd-cluster-left")).toBeVisible();
   await expect(page.locator(".kd-half-left")).toBeHidden();
   // merged mode: back to the single wide space key
   await expect(

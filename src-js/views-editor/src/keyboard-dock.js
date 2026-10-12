@@ -179,12 +179,22 @@ export function defaultPreviewText(fontController) {
   return text;
 }
 
+// keyboard layouts cycled by the handle: merged block -> straight split
+// (neat rows) -> curved split (K860 arcs) -> merged
+export const dockLayouts = ["merged", "straight", "arc"];
+
 export class KeyboardDock {
   constructor(editorController) {
     this.editorController = editorController;
     this.collapsed =
       localStorage.getItem("engramfont-dock-collapsed") === "true";
-    this.layout = localStorage.getItem("engramfont-dock-layout") || "merged";
+    const storedLayout = localStorage.getItem("engramfont-dock-layout");
+    // "split" was the pre-three-state value -> the straight layout
+    this.layout = dockLayouts.includes(storedLayout)
+      ? storedLayout
+      : storedLayout === "split"
+        ? "straight"
+        : "merged";
     this.bindings = JSON.parse(
       localStorage.getItem("engramfont-key-bindings") || "{}"
     );
@@ -560,7 +570,16 @@ export class KeyboardDock {
     this.clusterRight.replaceChildren();
     this.halfLeft.replaceChildren();
     this.halfRight.replaceChildren();
-    const split = this.layout === "split";
+    // reset container visibility — each branch below re-adds as needed
+    for (const container of [
+      this.clusterLeft,
+      this.clusterRight,
+      this.halfLeft,
+      this.halfRight,
+    ]) {
+      container.classList.remove("kd-hidden");
+    }
+    const split = this.layout !== "merged";
 
     // bottom-row spans differ per layout (merged: one 5u space; split: dual
     // 3.5u/2.5u spaces with a 1.5u move between them)
@@ -574,7 +593,7 @@ export class KeyboardDock {
       split ? MOVE_SPAN_SPLIT : MOVE_SPAN_MERGED
     );
 
-    if (split) {
+    if (this.layout === "arc") {
       this.renderArcKeys();
       this.clusterLeft.classList.add("kd-hidden");
       this.clusterRight.classList.add("kd-hidden");
@@ -583,7 +602,6 @@ export class KeyboardDock {
       return;
     }
 
-    // merged: left cluster visible, right cluster + halves hidden
     this.clusterLeft.classList.remove("kd-hidden");
     this.halfLeft.classList.add("kd-hidden");
     this.halfRight.classList.add("kd-hidden");
@@ -600,6 +618,30 @@ export class KeyboardDock {
     this.spaceKeyLeft.style.left = "";
     this.spaceKeyLeft.style.top = "";
     this.spaceKeyLeft.style.transform = "";
+
+    if (this.layout === "straight") {
+      // neat split: two framed clusters anchored to the canvas corners,
+      // rows cut at the QWERTY seam (fixed 52px keys, no stretching)
+      for (const [rowIndex, rowElements] of this.keyElements.entries()) {
+        const cut = rowIndex === 4 ? SPLIT_ROW5_CUT : SPLIT_CUTS[rowIndex];
+        const fragments = [
+          [this.clusterLeft, rowElements.slice(0, cut)],
+          [this.clusterRight, rowElements.slice(cut)],
+        ];
+        for (const [host, fragment] of fragments) {
+          const rowElement = html.div({ class: "kd-row" }, []);
+          rowElement.dataset.row = rowIndex;
+          host.appendChild(rowElement);
+          for (const keyElement of fragment) {
+            rowElement.appendChild(keyElement);
+          }
+        }
+      }
+      this.clusterRight.classList.remove("kd-hidden");
+      return;
+    }
+
+    // merged: one continuous keyboard in the left cluster
     for (const [rowIndex, rowElements] of this.keyElements.entries()) {
       const rowElement = html.div({ class: "kd-row" }, []);
       rowElement.dataset.row = rowIndex;
@@ -714,11 +756,17 @@ export class KeyboardDock {
   }
 
   applyLayout() {
-    this.dockElement.classList.toggle("kd-split", this.layout === "split");
+    this.dockElement.classList.toggle("kd-straight", this.layout === "straight");
+    this.dockElement.classList.toggle("kd-arc", this.layout === "arc");
+    const handle = document.querySelector("#kd-layout-handle");
+    if (handle) {
+      handle.title = translate("dock.layout.toggle", this.layout);
+    }
   }
 
   toggleLayout() {
-    this.layout = this.layout === "merged" ? "split" : "merged";
+    const index = dockLayouts.indexOf(this.layout);
+    this.layout = dockLayouts[(index + 1) % dockLayouts.length];
     localStorage.setItem("engramfont-dock-layout", this.layout);
     this.renderKeys();
     this.applyLayout();

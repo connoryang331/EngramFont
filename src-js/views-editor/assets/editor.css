@@ -817,10 +817,36 @@ kerning-handle.negative {
   pointer-events: none;
 }
 
-/* split layout (T3.7): two separate floating half keyboards (no tray) —
-   each half is a transparent group of arc-placed keys anchored to a canvas
-   corner; both halves bottom-aligned so corresponding rows sit level */
-#keyboard-dock.kd-split {
+/* straight split layout (T3.7): two framed clusters anchored to the canvas
+   corners — the dock becomes a transparent full-width flex row */
+#keyboard-dock.kd-straight {
+  left: 0;
+  right: 0;
+  transform: none;
+  width: auto;
+  max-width: none;
+  height: 0;
+  background-color: transparent;
+  padding: 0;
+  box-shadow: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+#keyboard-dock.kd-straight .kd-cluster {
+  pointer-events: auto;
+  background-color: #262629fa;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 4px 18px #0006;
+}
+
+/* curved split layout (K860): two separate floating half keyboards (no
+   tray) — each half is a transparent group of arc-placed keys anchored to a
+   canvas corner; both halves bottom-aligned so corresponding rows sit level */
+#keyboard-dock.kd-arc {
   left: 0;
   right: 0;
   transform: none;
@@ -913,8 +939,10 @@ kerning-handle.negative {
 /* split mode: park the handles in the valley gap between the two floating
    halves (the dock itself is a zero-height overlay there, so anchor them to
    the viewport) */
-#keyboard-dock.kd-split #kd-layout-handle,
-#keyboard-dock.kd-split #kd-collapse-handle {
+#keyboard-dock.kd-straight #kd-layout-handle,
+#keyboard-dock.kd-straight #kd-collapse-handle,
+#keyboard-dock.kd-arc #kd-layout-handle,
+#keyboard-dock.kd-arc #kd-collapse-handle {
   position: fixed;
   bottom: 1em;
   top: auto;
@@ -922,11 +950,13 @@ kerning-handle.negative {
   pointer-events: auto;
 }
 
-#keyboard-dock.kd-split #kd-layout-handle {
+#keyboard-dock.kd-straight #kd-layout-handle,
+#keyboard-dock.kd-arc #kd-layout-handle {
   left: 50%;
   transform: translateX(-50%);
 }
 
-#keyboard-dock.kd-split #kd-collapse-handle {
+#keyboard-dock.kd-straight #kd-collapse-handle,
+#keyboard-dock.kd-arc #kd-collapse-handle {
   left: calc(50% + 44px);
 }

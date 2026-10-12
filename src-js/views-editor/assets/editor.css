@@ -1295,24 +1295,34 @@ menu-bar {
   transform: translateX(-50%);
 }
 
-/* ---- floating left sidebar ----
-   The left sidebar panels (text entry, glyph search, designspace, reference
-   font) open as a floating panel ABOVE the LEFT half of the keyboard dock
-   (where the panel keys 2-5 live) instead of a full-height column — the
-   column squeezed the dock. The panel is left-aligned with the left cluster
-   (anchoring vars published by keyboard-dock.js) and slides out from the
-   left: the width transition grows rightward from the left edge while the
-   content stays left-pinned (float: left) */
-.sidebar-container.left {
+/* ---- floating sidebars ----
+   The sidebar panels open as floating panels above the keyboard halves
+   instead of full-height columns — the columns squeezed the dock. The left
+   panels (keys 2-5) anchor above the LEFT cluster, the right panels (keys
+   [ ] \ ; ') above the RIGHT cluster (anchoring vars published by
+   keyboard-dock.js); both stretch from just under the window top down to
+   the keys — tall, because the panels carry a lot of info — and slide out
+   sideways (width grows from their anchored edge, content stays pinned to
+   that edge, overflow clipped) */
+.sidebar-container.left,
+.sidebar-container.right {
   position: fixed;
-  right: auto;
-  top: auto;
+  top: 8px;
   bottom: var(--kd-dock-clearance, 45vh);
-  left: var(--kd-dock-left-inset, 12px);
-  height: min(60vh, 32em);
+  height: auto;
   border-radius: 0.8em;
   box-shadow: 0 0 8px #0006;
   overflow: hidden;
+}
+
+.sidebar-container.left {
+  right: auto;
+  left: var(--kd-dock-left-inset, 12px);
+}
+
+.sidebar-container.right {
+  left: auto;
+  right: var(--kd-dock-right-inset, 12px);
 }
 
 .sidebar-container.left > .sidebar-content {
@@ -1320,35 +1330,13 @@ menu-bar {
   height: 100%;
 }
 
-/* the dock's panel keys (2-5) replaced the native left-edge tab strip */
-.tab-overlay-container.left {
-  display: none;
-}
-
-/* ---- floating right sidebar ----
-   Same pattern as the left: the right sidebar panels (selection info,
-   transformation, glyph note, related glyphs, characters & glyphs) opened by
-   keys [ ] \ , ' float above the RIGHT half of the keyboard, right-aligned
-   with the right cluster, sliding out from the right edge (width grows
-   leftward, content stays right-pinned) */
-.sidebar-container.right {
-  position: fixed;
-  left: auto;
-  top: auto;
-  bottom: var(--kd-dock-clearance, 45vh);
-  right: var(--kd-dock-right-inset, 12px);
-  height: min(60vh, 32em);
-  border-radius: 0.8em;
-  box-shadow: 0 0 8px #0006;
-  overflow: hidden;
-}
-
 .sidebar-container.right > .sidebar-content {
   float: right;
   height: 100%;
 }
 
-/* the dock's panel keys replaced the native right-edge tab strip too */
+/* the dock's panel keys replaced the native edge tab strips */
+.tab-overlay-container.left,
 .tab-overlay-container.right {
   display: none;
 }

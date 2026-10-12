@@ -807,7 +807,7 @@ test("E2E-18 sidebar panel keys toggle their panels", async ({ page }) => {
     ["[", "selection-info"],
     ["]", "selection-transformation"],
     ["\\", "glyph-note"],
-    [",", "related-glyphs"],
+    [";", "related-glyphs"],
     ["'", "characters-glyphs"],
   ];
   for (const [key, panel] of cases) {

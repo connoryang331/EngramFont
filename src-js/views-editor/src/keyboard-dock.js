@@ -157,7 +157,7 @@ const BINDING_ACTION_LABELS = {
 // the native toolbar (which expands on hold/right-click and promotes the
 // chosen sub-tool to the front).
 const DOCK_FN_KEYS = {
-  // keys [ ] \ , ' toggle the RIGHT sidebar panels — the same panels as the
+  // keys [ ] \ ; ' toggle the RIGHT sidebar panels — the same panels as the
   // native right sidebar tabs, in tab-strip order
   "[": {
     titleKey: "sidebar.selection-info",
@@ -174,7 +174,7 @@ const DOCK_FN_KEYS = {
     panel: "glyph-note",
     icon: "/tabler-icons/notes.svg",
   },
-  ",": {
+  ";": {
     titleKey: "sidebar.related-glyphs",
     panel: "related-glyphs",
     icon: "/tabler-icons/binary-tree-2.svg",

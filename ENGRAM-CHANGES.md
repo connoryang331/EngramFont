@@ -273,10 +273,14 @@
   左侧边缘 tab 条隐藏（dock 键 2-5 已全面替代），E2E-18 原生路径断言改走
   editorController.toggleSidebar（tab 条已隐藏）
 - R4.T4.15：右侧五面板接键（tab 条顺序）：[ = Selection Info / ] = Selection Transformation /
-  \ = Glyph Note / , = Related Glyphs & Characters / ' = Characters & Glyphs；右侧栏同样
-  改悬浮——syncDockExtentVars 增发 --kd-dock-right-inset（右簇右缘），面板锚 dock 右半上方、
-  右对齐、宽度从右缘向左生长（内容 float:right）= 从右滑出；右缘 tab 条同样隐藏；
-  E2E-18 扩至 9 个面板开/关/激活断言 + 左右悬浮面板均不得低于按键顶缘
+  \ = Glyph Note / ; = Related Glyphs & Characters（R4.T4.16 从 , 键挪来，, 恢复字符键）/
+  ' = Characters & Glyphs；右侧栏同样改悬浮——syncDockExtentVars 增发 --kd-dock-right-inset
+  （右簇右缘），面板锚 dock 右半上方、右对齐、宽度从右缘向左生长（内容 float:right）=
+  从右滑出；右缘 tab 条同样隐藏；E2E-18 扩至 9 个面板开/关/激活断言 + 左右悬浮面板均不得
+  低于按键顶缘
+- R4.T4.16：Related Glyphs 挪到 ; 键（, 恢复为字符键）；左右悬浮面板改为顶天立地——
+  top: 8px 到 --kd-dock-clearance 拉通（height: auto），面板信息多，原 32em 高度不够；
+  合并左右两段悬浮 CSS 为一个块
 
 ### R3-T3.30 · 按键 8 接入 Knife Tool（2026-10-12）
 - 「8」= knife tool 单功能键（无子菜单，按下即选）：activateTool 直连原生

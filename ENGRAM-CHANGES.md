@@ -209,6 +209,10 @@
 - 「0」= metrics 多工具键（sidebearing 默认面 / kerning 子菜单），交互与 6/7/9 一致
 - E2E-15 覆盖弹层单项、原生提升、面图标切换、失活/回选
 
+### R3-T3.34d · 按键 - 接入 Power Ruler Tool（2026-10-12）
+- 「-」= power ruler 单功能键（按下即选），与 knife 同模式
+- E2E-16：选中/失活与原生工具栏联动
+
 ### R3-T3.30 · 按键 8 接入 Knife Tool（2026-10-12）
 - 「8」= knife tool 单功能键（无子菜单，按下即选）：activateTool 直连原生
   setSelectedTool；buildFnKey 拆出单工具分支（跳过长按/右键弹层逻辑）

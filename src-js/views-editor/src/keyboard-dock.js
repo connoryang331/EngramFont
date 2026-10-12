@@ -239,6 +239,17 @@ const DOCK_FN_KEYS = {
       },
     ],
   },
+  // key "-" is the power ruler tool (single tool — press to select)
+  "-": {
+    titleKey: "editor.power-ruler-tool",
+    tools: [
+      {
+        tool: "power-ruler-tool",
+        icon: "/images/ruler.svg",
+        titleKey: "editor.power-ruler-tool",
+      },
+    ],
+  },
 };
 
 function clamp01(value) {

@@ -744,3 +744,26 @@ test("E2E-15 metrics key mirrors the native multi-tool", async ({ page }) => {
   await expect(frontSubTool).toHaveAttribute("data-tool", "kerning-tool");
   await expect(key).toHaveClass(/kd-active/);
 });
+
+test("E2E-16 power ruler key selects the native ruler", async ({ page }) => {
+  // key "-" is a single-function key: press selects the power ruler
+  await openEditor(page, "HHHH");
+  const key = page.locator('.kd-fn-key[data-fn="power-ruler-tool"]');
+  await expect(key).toHaveCount(1);
+  await expect(key.locator(".kd-fn-icon")).toHaveAttribute(
+    "src",
+    "/images/ruler.svg"
+  );
+
+  await key.click();
+  const rulerButton = page.locator(
+    '#edit-tools > .tool-button[data-tool="power-ruler-tool"]'
+  );
+  await expect(rulerButton).toHaveClass(/selected/);
+  await expect(key).toHaveClass(/kd-active/);
+
+  const pointerKey = page.locator('.kd-fn-key[data-fn*="pointer-tool"]');
+  await pointerKey.click();
+  await expect(key).not.toHaveClass(/kd-active/);
+  await expect(pointerKey).toHaveClass(/kd-active/);
+});

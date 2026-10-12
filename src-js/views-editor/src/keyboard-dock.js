@@ -250,6 +250,18 @@ const DOCK_FN_KEYS = {
       },
     ],
   },
+  // key "=" is the hand tool (single tool — press to select; the dock's
+  // "move" key toggles the same tool)
+  "=": {
+    titleKey: "editor.hand-tool",
+    tools: [
+      {
+        tool: "hand-tool",
+        icon: "/images/hand.svg",
+        titleKey: "editor.hand-tool",
+      },
+    ],
+  },
 };
 
 function clamp01(value) {

@@ -767,3 +767,28 @@ test("E2E-16 power ruler key selects the native ruler", async ({ page }) => {
   await expect(key).not.toHaveClass(/kd-active/);
   await expect(pointerKey).toHaveClass(/kd-active/);
 });
+
+test("E2E-17 hand tool key selects the native hand", async ({ page }) => {
+  // key "=" is a single-function key: press selects the hand tool
+  await openEditor(page, "HHHH");
+  const key = page.locator('.kd-fn-key[data-fn="hand-tool"]');
+  await expect(key).toHaveCount(1);
+  await expect(key.locator(".kd-fn-icon")).toHaveAttribute(
+    "src",
+    "/images/hand.svg"
+  );
+
+  await key.click();
+  const handButton = page.locator(
+    '#edit-tools > .tool-button[data-tool="hand-tool"]'
+  );
+  await expect(handButton).toHaveClass(/selected/);
+  await expect(key).toHaveClass(/kd-active/);
+
+  // the dock's "move" key toggles the SAME hand tool: pressing it back
+  // selects the pointer again and deactivates the "=" key
+  await page.locator('[data-special="move"]').click();
+  await expect(key).not.toHaveClass(/kd-active/);
+  const pointerKey = page.locator('.kd-fn-key[data-fn*="pointer-tool"]');
+  await expect(pointerKey).toHaveClass(/kd-active/);
+});

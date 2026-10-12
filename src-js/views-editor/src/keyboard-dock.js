@@ -677,7 +677,12 @@ export class KeyboardDock {
     const [bx, by] = corner(ro, thetaStart + angularSpan);
     const [cxx, cyy] = corner(ri, thetaStart + angularSpan);
     const [dx, dy] = corner(ri, thetaStart);
-    const pathD = `M ${ax.toFixed(1)} ${ay.toFixed(1)} A ${ro} ${ro} 0 0 1 ${bx.toFixed(1)} ${by.toFixed(1)} L ${cxx.toFixed(1)} ${cyy.toFixed(1)} A ${ri} ${ri} 0 0 0 ${dx.toFixed(1)} ${dy.toFixed(1)} Z`;
+    // mirrored halves traverse the circle counter-clockwise on screen — the
+    // sweep flags must flip, or the sector bows the wrong way (up instead of
+    // sagging into the valley)
+    const sweepOuter = mirror ? 0 : 1;
+    const sweepInner = mirror ? 1 : 0;
+    const pathD = `M ${ax.toFixed(1)} ${ay.toFixed(1)} A ${ro} ${ro} 0 0 ${sweepOuter} ${bx.toFixed(1)} ${by.toFixed(1)} L ${cxx.toFixed(1)} ${cyy.toFixed(1)} A ${ri} ${ri} 0 0 ${sweepInner} ${dx.toFixed(1)} ${dy.toFixed(1)} Z`;
 
     const minX = Math.min(ax, bx, cxx, dx) - strokeW / 2;
     const minY = Math.min(ay, by, cyy, dy) - strokeW / 2;
@@ -769,7 +774,7 @@ export class KeyboardDock {
           const angularSpan = keyWidthPx(SPACE_SPAN_LEFT) / radius;
           const { button, bbox } = this.buildSpaceArcButton(
             outerY,
-            cursor,
+            cursor - keyGap / 2 / radius,
             angularSpan,
             radius,
             leftFrameX,
@@ -808,7 +813,7 @@ export class KeyboardDock {
           const angularSpan = keyWidthPx(SPACE_SPAN_RIGHT) / radius;
           const { button, bbox } = this.buildSpaceArcButton(
             outerY,
-            cursor,
+            cursor - keyGap / 2 / radius,
             angularSpan,
             radius,
             rightFrameX,

@@ -26,7 +26,7 @@ test("E2E-1 add -> edit image contextual activation -> auto re-lock", async ({
   await page.goto(
     `editor.html?project=Untitled.fontra${makeFragment({ text: "a" })}`
   );
-  await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
+  await page.locator("#engramfont-project-name").waitFor({ state: "attached", timeout: 30000 });
   await page.waitForTimeout(2500);
 
   // add a background image via the context menu + file chooser
@@ -91,7 +91,7 @@ test("E2E-2 edit image selects; clicking away re-locks (state assertions)", asyn
   await page.goto(
     `editor.html?project=Untitled.fontra${makeFragment({ text: "a" })}`
   );
-  await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
+  await page.locator("#engramfont-project-name").waitFor({ state: "attached", timeout: 30000 });
   await page.waitForTimeout(2500);
 
   const state = () =>
@@ -133,7 +133,7 @@ test("E2E-3 replace button swaps image data, keeps transformation", async ({
   await page.goto(
     `editor.html?project=Untitled.fontra${makeFragment({ text: "a" })}`
   );
-  await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
+  await page.locator("#engramfont-project-name").waitFor({ state: "attached", timeout: 30000 });
   await page.waitForTimeout(2500);
 
   // select the image and open the selection-info sidebar programmatically

@@ -38,7 +38,7 @@ test("E2E-1 import Inter.ttf -> editor opens imported project", async ({
   });
   await page
     .locator("#engramfont-project-name")
-    .waitFor({ timeout: 30000 })
+    .waitFor({ state: "attached", timeout: 30000 })
     .catch(() => {});
   const projectName = await page
     .locator("#engramfont-project-name")

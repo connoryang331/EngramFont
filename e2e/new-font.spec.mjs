@@ -19,7 +19,7 @@ test("E2E-1 landing card creates latin-kernel font, opens editor", async ({
   await page.waitForURL(`editor.html?project=${name}.fontra`, {
     timeout: 60000,
   });
-  await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
+  await page.locator("#engramfont-project-name").waitFor({ state: "attached", timeout: 30000 });
   await page.waitForTimeout(2000);
 
   // the latin-kernel template seeded 62 editable glyphs
@@ -68,10 +68,11 @@ test("E2E-4 File menu New Font opens dialog, opens new project in new tab", asyn
   context,
 }) => {
   await page.goto("/editor.html?project=TestFont.fontra");
-  await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
+  await page.locator("#engramfont-project-name").waitFor({ state: "attached", timeout: 30000 });
   await page.waitForTimeout(2000);
 
-  await page.locator("menu-bar .menu-item").filter({ hasText: "File" }).click();
+  // the native menubar is hidden: open the File menu via the dock's File key
+  await page.locator(".kd-mini-key").filter({ hasText: "File" }).click();
   const newItem = page
     .locator("menu-panel .context-menu-item")
     .filter({ hasText: "New font" });
@@ -89,6 +90,6 @@ test("E2E-4 File menu New Font opens dialog, opens new project in new tab", asyn
   await nameInput.press("Enter");
 
   const popup = await popupPromise;
-  await popup.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
+  await popup.locator("#engramfont-project-name").waitFor({ state: "attached", timeout: 30000 });
   expect(popup.url()).toContain("editor.html?project=InEditor-");
 });

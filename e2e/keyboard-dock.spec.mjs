@@ -28,7 +28,7 @@ function findImportedProject() {
 async function openEditor(page, text = "a") {
   const project = findImportedProject();
   await page.goto(`editor.html?project=${project}${makeFragment({ text })}`);
-  await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
+  await page.locator("#engramfont-project-name").waitFor({ state: "attached", timeout: 30000 });
   await page.waitForTimeout(2500);
   return project;
 }
@@ -65,7 +65,7 @@ test("E2E-1 dock renders all rows, aria labels, collapses", async ({ page }) => 
     await page.evaluate(() => localStorage.getItem("engramfont-dock-collapsed"))
   ).toBe("true");
   await page.reload();
-  await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
+  await page.locator("#engramfont-project-name").waitFor({ state: "attached", timeout: 30000 });
   await page.waitForTimeout(1500);
   await expect(page.locator("#keyboard-dock")).toBeHidden();
   await page.locator("#dock-collapse-button").click();
@@ -163,7 +163,7 @@ test("E2E-6 layouts switch via the settings dialog", async ({
   await page.goto(`editor.html?project=${findImportedProject()}`);
   await page.evaluate(() => localStorage.removeItem("engramfont-dock-layout"));
   await page.reload();
-  await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
+  await page.locator("#engramfont-project-name").waitFor({ state: "attached", timeout: 30000 });
   await page.waitForTimeout(2500);
 
   // layouts switch through the settings dialog (the handle row only keeps
@@ -243,7 +243,7 @@ test("E2E-6 layouts switch via the settings dialog", async ({
 
   // persists across reload (merged stays merged)
   await page.reload();
-  await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
+  await page.locator("#engramfont-project-name").waitFor({ state: "attached", timeout: 30000 });
   await page.waitForTimeout(1500);
   await expect(page.locator(".kd-cluster-left")).toBeVisible();
 
@@ -394,7 +394,7 @@ test("E2E-10 keyboard day/night theme toggle", async ({ page }) => {
   await expect(key).toHaveCSS("background-color", "oklch(0.9251 0.0071 88.65 / 0.18)");
 
   await page.reload();
-  await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
+  await page.locator("#engramfont-project-name").waitFor({ state: "attached", timeout: 30000 });
   await page.waitForTimeout(2000);
   await expect(page.locator("#keyboard-dock")).not.toHaveClass(/kd-theme-light/);
 
@@ -413,7 +413,7 @@ test("E2E-11 keyboard settings dialog", async ({ page }) => {
     localStorage.setItem("engramfont-key-bindings", JSON.stringify({ q: "zoom-fit" }))
   );
   await page.reload();
-  await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
+  await page.locator("#engramfont-project-name").waitFor({ state: "attached", timeout: 30000 });
   await page.waitForTimeout(2000);
 
   // the gear handle pops the settings dialog up, centered

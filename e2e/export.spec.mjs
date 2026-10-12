@@ -10,13 +10,14 @@ test.beforeEach(async ({ page }) => {
   // action registration -> guarantees backendInfo (and the File menu) is ready
   await page
     .locator("#engramfont-project-name")
-    .waitFor({ timeout: 30000 })
+    .waitFor({ state: "attached", timeout: 30000 })
     .catch(() => {});
-  await page.locator("menu-bar .menu-item").first().waitFor({ timeout: 30000 });
+  await page.locator("menu-bar .menu-item").first().waitFor({ state: "attached", timeout: 30000 });
 });
 
 async function openExportSubmenu(page) {
-  await page.locator("menu-bar .menu-item").filter({ hasText: "File" }).click();
+  // the native menubar is hidden: open the File menu via the dock's File key
+  await page.locator(".kd-mini-key").filter({ hasText: "File" }).click();
   const exportItem = page
     .locator("menu-panel .context-menu-item")
     .filter({ hasText: "Export as" });

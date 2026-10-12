@@ -28,11 +28,11 @@ function findImportedProject() {
 
 async function openEditor(page, project, text = "a") {
   await page.goto(`editor.html?project=${project}${makeFragment({ text })}`);
-  await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
+  await page.locator("#engramfont-project-name").waitFor({ state: "attached", timeout: 30000 });
   // reset to a known mode
   await page.evaluate(() => localStorage.removeItem("engramfont-canvas-mode"));
   await page.reload();
-  await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
+  await page.locator("#engramfont-project-name").waitFor({ state: "attached", timeout: 30000 });
   await page.waitForTimeout(2000);
 }
 
@@ -52,7 +52,7 @@ test("E2E-1 mode toggle switches UI, persists across reload", async ({ page }) =
 
   // persistence: reload keeps proof mode
   await page.reload();
-  await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
+  await page.locator("#engramfont-project-name").waitFor({ state: "attached", timeout: 30000 });
   await page.waitForTimeout(1500);
   await expect(page.locator("#proof-toolbar")).toBeVisible();
   await expect(page.locator("#edit-tools")).toBeHidden();
@@ -122,7 +122,7 @@ test("E2E-3 proof mode metric lines span the full line width", async ({ page }) 
 
   await page.evaluate(() => localStorage.setItem("engramfont-canvas-mode", "proof"));
   await page.reload();
-  await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
+  await page.locator("#engramfont-project-name").waitFor({ state: "attached", timeout: 30000 });
   await page.waitForTimeout(2500);
 
   const proofTop = await scanTopInk();

@@ -651,11 +651,14 @@ kerning-handle.negative {
 /* R3 · keyboard dock */
 #keyboard-dock {
   /* keyboard day/night theme (EngramFont original): the #kd-theme-handle
-     flips these variables; every dock surface derives from them */
+     flips these variables; every dock surface derives from them.
+     Keys are TRANSPARENT by default (floating icons/labels over the canvas,
+     hover reveals the keycap); the kd-style-* color chips keep their fill */
   --kd-keycap-bg: #2d2d30;
   --kd-keycap-bg-alt: #3c3c40;
-  --kd-keycap-bg-hover: #3a3a3e;
+  --kd-keycap-bg-hover: rgba(232, 230, 225, 0.18);
   --kd-keycap-fg: #e8e6e1;
+  --kd-key-outline: rgba(232, 230, 225, 0.6);
   --kd-cluster-bg: #262629fa;
   position: absolute;
   bottom: 0.75em;
@@ -675,15 +678,18 @@ kerning-handle.negative {
 #keyboard-dock.kd-theme-light {
   --kd-keycap-bg: #f1efeb;
   --kd-keycap-bg-alt: #dedbd4;
-  --kd-keycap-bg-hover: #e4e1db;
+  --kd-keycap-bg-hover: rgba(51, 50, 47, 0.1);
   --kd-keycap-fg: #33322f;
+  --kd-key-outline: rgba(51, 50, 47, 0.5);
   --kd-cluster-bg: #fbfaf7fa;
 }
 
-/* light keycaps sit on a light canvas — a hairline ring plus a soft drop
-   shadow keeps the keys defined (the curved SVG space key gets no box
+/* filled chips (color-coded keys, ctrl/alt/move) keep a hairline ring plus a
+   soft drop shadow on the light canvas; transparent keys get none — their
+   content carries a light halo instead (the curved SVG space key gets no box
    shadow; its button box is the sector's bounding rectangle) */
-#keyboard-dock.kd-theme-light .kd-key:not(.kd-arc-space),
+#keyboard-dock.kd-theme-light
+  .kd-key:not(.kd-char-key):not(.kd-arc-space):not([data-special="space"]),
 #keyboard-dock.kd-theme-light .kd-fn-option {
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.07),
@@ -736,7 +742,7 @@ kerning-handle.negative {
   height: 44px;
   border: none;
   border-radius: 6px;
-  background-color: var(--kd-keycap-bg);
+  background-color: transparent;
   color: var(--kd-keycap-fg);
   font-family: engramfont-ui-regular, sans-serif;
   font-size: 15px;
@@ -748,6 +754,15 @@ kerning-handle.negative {
   justify-content: center;
   padding: 0;
   user-select: none;
+}
+
+/* night keys over a light canvas need *some* surface under the light
+   letters: a translucent dark cap — it disappears on a dark canvas (the
+   theme's natural home) and stays readable on a light one. :where() holds
+   the rule at (0,1,0): it beats the base transparent above it and loses to
+   the .kd-style-* chips, :hover, .kd-active and the space outline below */
+.kd-theme-dark :where(.kd-key:not(.kd-arc-space)) {
+  background-color: rgba(38, 38, 41, 0.42);
 }
 
 .kd-key:hover {
@@ -853,9 +868,50 @@ kerning-handle.negative {
 }
 
 /* the arc spacebar's SVG keycap follows the theme via variables */
+/* space keys: outline-only in the transparent style — the rectangular space
+   gets an inset ring; the curved SVG sector strokes instead of filling (its
+   button box is just the bounding rectangle, so it must not get the ring) */
+.kd-key.kd-special-key[data-special="space"]:not(.kd-arc-space) {
+  background-color: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--kd-key-outline);
+}
+
+.kd-key.kd-special-key[data-special="space"]:hover {
+  background-color: var(--kd-keycap-bg-hover);
+}
+
 .kd-space-path {
-  fill: var(--kd-keycap-bg);
-  stroke: var(--kd-keycap-bg);
+  fill: transparent;
+  stroke: var(--kd-key-outline);
+  stroke-width: 5;
+}
+
+/* transparent keys: a light halo keeps labels readable where canvas glyphs
+   pass underneath (kept subtle — a heavy halo washes out the thin font) */
+#keyboard-dock.kd-theme-light .kd-key .kd-key-main,
+#keyboard-dock.kd-theme-light .kd-key .kd-key-shift {
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.65);
+}
+
+#keyboard-dock:not(.kd-theme-light) .kd-key .kd-key-main,
+#keyboard-dock:not(.kd-theme-light) .kd-key .kd-key-shift {
+  /* mild halo — the translucent night cap does the real work on light
+     canvases; this only helps where canvas glyphs pass underneath */
+  text-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.45),
+    0 0 2px rgba(0, 0, 0, 0.4);
+}
+
+#keyboard-dock.kd-theme-light .kd-key .kd-fn-icon {
+  filter: drop-shadow(0 1px 1px rgba(255, 255, 255, 0.7));
+}
+
+#keyboard-dock:not(.kd-theme-light) .kd-key .kd-fn-icon {
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.55));
+}
+
+#keyboard-dock:not(.kd-theme-light) .kd-space-path {
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5));
 }
 
 .kd-style-orange {

@@ -804,6 +804,9 @@ export class KeyboardDock {
 
   applyTheme() {
     this.dockElement.classList.toggle("kd-theme-light", this.theme === "light");
+    // class scope for the night-only surfaces (translucent keycaps) — kept
+    // off the #id so :hover/.kd-active/space rules can override it
+    this.dockElement.classList.toggle("kd-theme-dark", this.theme === "dark");
     // the glyph shows the mode you switch TO: sun in the dark theme,
     // moon in the light theme
     this.themeHandle.textContent = this.theme === "dark" ? "☀" : "☾";

@@ -363,9 +363,14 @@ test("E2E-10 keyboard day/night theme toggle", async ({ page }) => {
   const dock = page.locator("#keyboard-dock");
   const key = page.locator('[data-key="q"]');
 
-  // default is the day (light) keyboard theme
+  // keys are transparent (floating labels over the canvas); the keycap only
+  // appears on hover
   await expect(dock).toHaveClass(/kd-theme-light/);
-  await expect(key).toHaveCSS("background-color", "rgb(241, 239, 235)");
+  await expect(key).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await key.hover();
+  await expect(key).toHaveCSS("background-color", "rgba(51, 50, 47, 0.1)");
+  await page.mouse.move(400, 300);
+  await expect(key).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
 
   // toggle to dark via the handle; the choice persists across reloads
   await page.locator("#kd-theme-handle").click();
@@ -373,7 +378,8 @@ test("E2E-10 keyboard day/night theme toggle", async ({ page }) => {
   expect(
     await page.evaluate(() => localStorage.getItem("engramfont-dock-theme"))
   ).toBe("dark");
-  await expect(key).toHaveCSS("background-color", "rgb(45, 45, 48)");
+  await key.hover();
+  await expect(key).toHaveCSS("background-color", "rgba(232, 230, 225, 0.18)");
 
   await page.reload();
   await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
@@ -383,5 +389,5 @@ test("E2E-10 keyboard day/night theme toggle", async ({ page }) => {
   // back to day
   await page.locator("#kd-theme-handle").click();
   await expect(dock).toHaveClass(/kd-theme-light/);
-  await expect(key).toHaveCSS("background-color", "rgb(241, 239, 235)");
+  await expect(key).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
 });

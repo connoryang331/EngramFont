@@ -655,39 +655,62 @@ export class KeyboardDock {
     this.clusterRight.classList.add("kd-hidden");
   }
 
-  buildSpaceSegments(totalWidthPx) {
-    // arc layout: a wide space key rendered as one rigid rectangle looks
-    // like a straight chord; decompose it into per-unit segments placed
-    // along the arc so it bends like every other row
-    const count = Math.max(2, Math.round(totalWidthPx / 62));
-    const segWidth = totalWidthPx / count + 1; // 1px overlap hides the seams
-    const segments = [];
-    for (let i = 0; i < count; i++) {
-      const segment = withAriaLabel(
-        html.button(
-          {
-            class: "kd-key kd-special-key kd-style-dark kd-locked kd-space-segment",
-            "data-special": "space",
-          },
-          []
-        ),
-        translate("dock.key.space")
-      );
-      segment.style.width = `${segWidth.toFixed(1)}px`;
-      if (i === 0) {
-        segment.style.borderRadius = "6px 0 0 6px";
-      } else if (i === count - 1) {
-        segment.style.borderRadius = "0 6px 6px 0";
-      } else {
-        segment.style.borderRadius = "0";
-      }
-      segment.addEventListener("pointerdown", (event) => {
-        event.preventDefault();
-        this.appendSpace();
-      });
-      segments.push({ segment, width: segWidth });
-    }
-    return segments;
+  buildSpaceArcButton(outerY, angularSpan, radius, frameX, mirror) {
+    // K860-style spacebar: ONE continuously curved keycap drawn as an SVG
+    // annular sector (outer arc + inner arc; rounded joins via a same-color
+    // round stroke under the fill — MDN Paths recipe). The sector spans
+    // `angularSpan` radians on the centerline `radius`, starting at the
+    // row's outer end (screen x = frameX, y = outerY).
+    const keyHeight = 44;
+    const strokeW = 8;
+    const bandHalf = keyHeight / 2 - strokeW / 2; // path band; stroke pads it
+    const ro = radius + bandHalf;
+    const ri = radius - bandHalf;
+    const cy = outerY + radius; // arc center is below the outer end
+
+    const corner = (r, t) => {
+      const x = frameX + (mirror ? -1 : 1) * r * Math.sin(t);
+      const y = cy - r * Math.cos(t);
+      return [x, y];
+    };
+    const [ax, ay] = corner(ro, 0);
+    const [bx, by] = corner(ro, angularSpan);
+    const [cxx, cyy] = corner(ri, angularSpan);
+    const [dx, dy] = corner(ri, 0);
+    const pathD = `M ${ax.toFixed(1)} ${ay.toFixed(1)} A ${ro} ${ro} 0 0 1 ${bx.toFixed(1)} ${by.toFixed(1)} L ${cxx.toFixed(1)} ${cyy.toFixed(1)} A ${ri} ${ri} 0 0 0 ${dx.toFixed(1)} ${dy.toFixed(1)} Z`;
+
+    const minX = Math.min(ax, bx, cxx, dx) - strokeW / 2;
+    const minY = Math.min(ay, by, cyy, dy) - strokeW / 2;
+    const maxX = Math.max(ax, bx, cxx, dx) + strokeW / 2;
+    const maxY = Math.max(ay, by, cyy, dy) + strokeW / 2;
+    const width = maxX - minX;
+    const height = maxY - minY;
+
+    const button = withAriaLabel(
+      html.button(
+        {
+          class: "kd-key kd-special-key kd-style-dark kd-locked kd-arc-space",
+          "data-special": "space",
+        },
+        []
+      ),
+      translate("dock.key.space")
+    );
+    button.style.width = `${Math.round(width)}px`;
+    button.style.height = `${Math.round(height)}px`;
+    button.style.border = "none";
+    button.style.background = "transparent";
+    button.style.padding = "0";
+    button.innerHTML = `<svg width="${Math.round(width)}" height="${Math.round(
+      height
+    )}" viewBox="${minX.toFixed(1)} ${minY.toFixed(1)} ${width.toFixed(
+      1
+    )} ${height.toFixed(1)}"><path class="kd-space-path" d="${pathD}" fill="#2d2d30" stroke="#2d2d30" stroke-width="${strokeW}" stroke-linejoin="round" paint-order="stroke fill"/></svg>`;
+    button.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      this.appendSpace();
+    });
+    return { button, bbox: { minX, minY, maxX, maxY } };
   }
 
   renderArcKeys() {
@@ -739,20 +762,27 @@ export class KeyboardDock {
       // LEFT half: array order = outer -> seam; the arc descends to the
       // right (keys rotate clockwise, tilting into the valley)
       let cursor = 0;
+      let leftFrameX = sidePad; // screen x of every row's outer end
       for (const keyElement of left) {
         if (keyElement.dataset.special === "space") {
-          // wide space: bend it along the arc via segments
-          const totalWidth = keyWidthPx(SPACE_SPAN_LEFT);
-          for (const { segment, width } of this.buildSpaceSegments(totalWidth)) {
-            const delta = width / radius;
-            const angle = cursor + delta / 2;
-            cursor += delta;
-            const x = radius * Math.sin(angle);
-            const y = outerY + radius * (1 - Math.cos(angle));
-            leftMaxX = Math.max(leftMaxX, x + width / 2);
-            leftMaxY = Math.max(leftMaxY, y + keyHeight / 2);
-            leftPlacements.push({ keyElement: segment, x, y, rot: angle, width });
-          }
+          // wide space: ONE continuously curved SVG annular-sector keycap
+          const angularSpan = keyWidthPx(SPACE_SPAN_LEFT) / radius;
+          const { button, bbox } = this.buildSpaceArcButton(
+            outerY,
+            angularSpan,
+            radius,
+            leftFrameX,
+            false
+          );
+          leftMaxX = Math.max(leftMaxX, bbox.maxX - sidePad);
+          leftMaxY = Math.max(leftMaxY, bbox.maxY);
+          leftPlacements.push({
+            keyElement: button,
+            screenLeft: bbox.minX,
+            screenTop: bbox.minY,
+            isSvg: true,
+          });
+          cursor += angularSpan;
           continue;
         }
         const width = keyWidthPx(spanOf(keyElement));
@@ -770,19 +800,27 @@ export class KeyboardDock {
       // -angle); rows are right-flush: the outer end of every row sits at
       // the same right edge, like Backspace/Enter/right-Shift on a real board
       cursor = 0;
+      const rightFrameX = sidePad + rightMaxX; // screen x of the outer ends
       for (const keyElement of [...right].reverse()) {
         if (keyElement.dataset.special === "space") {
-          const totalWidth = keyWidthPx(SPACE_SPAN_RIGHT);
-          for (const { segment, width } of this.buildSpaceSegments(totalWidth)) {
-            const delta = width / radius;
-            const angle = cursor + delta / 2;
-            cursor += delta;
-            const x = radius * Math.sin(angle);
-            const y = outerY + radius * (1 - Math.cos(angle));
-            rightMaxX = Math.max(rightMaxX, x + width / 2);
-            rightMaxY = Math.max(rightMaxY, y + keyHeight / 2);
-            rightPlacements.push({ keyElement: segment, x, y, rot: -angle, width });
-          }
+          // wide space: ONE continuously curved SVG annular-sector keycap
+          const angularSpan = keyWidthPx(SPACE_SPAN_RIGHT) / radius;
+          const { button, bbox } = this.buildSpaceArcButton(
+            outerY,
+            angularSpan,
+            radius,
+            rightFrameX,
+            true
+          );
+          rightMaxY = Math.max(rightMaxY, bbox.maxY);
+          rightPlacements.push({
+            keyElement: button,
+            screenLeft: bbox.minX,
+            screenTop: bbox.minY,
+            isSvg: true,
+            isRight: true,
+          });
+          cursor += angularSpan;
           continue;
         }
         const width = keyWidthPx(spanOf(keyElement));
@@ -793,7 +831,14 @@ export class KeyboardDock {
         const y = outerY + radius * (1 - Math.cos(angle));
         rightMaxX = Math.max(rightMaxX, x + width / 2);
         rightMaxY = Math.max(rightMaxY, y + keyHeight / 2);
-        rightPlacements.push({ keyElement, x, y, rot: -angle, width });
+        rightPlacements.push({
+          keyElement,
+          x,
+          y,
+          rot: -angle,
+          width,
+          isRight: true,
+        });
       }
     }
 
@@ -802,22 +847,23 @@ export class KeyboardDock {
     halfRight.style.width = `${Math.round(rightMaxX + sidePad * 2)}px`;
     halfRight.style.height = `${Math.round(rightMaxY + bottomPad)}px`;
 
-    for (const { keyElement, x, y, rot, width } of leftPlacements) {
+    for (const placement of [...leftPlacements, ...rightPlacements]) {
+      if (placement.isSvg) {
+        const { keyElement, screenLeft, screenTop, isRight } = placement;
+        keyElement.style.position = "absolute";
+        keyElement.style.left = `${Math.round(screenLeft)}px`;
+        keyElement.style.top = `${Math.round(screenTop)}px`;
+        (isRight ? halfRight : halfLeft).appendChild(keyElement);
+        continue;
+      }
+      const { keyElement, x, y, rot, width, isRight } = placement;
       keyElement.style.position = "absolute";
-      keyElement.style.left = `${Math.round(sidePad + x - width / 2)}px`;
+      keyElement.style.left = isRight
+        ? `${Math.round(sidePad + (rightMaxX - x) - width / 2)}px`
+        : `${Math.round(sidePad + x - width / 2)}px`;
       keyElement.style.top = `${Math.round(y - keyHeight / 2)}px`;
       keyElement.style.transform = `rotate(${((rot * 180) / Math.PI).toFixed(2)}deg)`;
-      halfLeft.appendChild(keyElement);
-    }
-    // right half: mirrored x (the arc descends leftward), rows right-flush
-    for (const { keyElement, x, y, rot, width } of rightPlacements) {
-      keyElement.style.position = "absolute";
-      keyElement.style.left = `${Math.round(
-        sidePad + (rightMaxX - x) - width / 2
-      )}px`;
-      keyElement.style.top = `${Math.round(y - keyHeight / 2)}px`;
-      keyElement.style.transform = `rotate(${((rot * 180) / Math.PI).toFixed(2)}deg)`;
-      halfRight.appendChild(keyElement);
+      (isRight ? halfRight : halfLeft).appendChild(keyElement);
     }
   }
 

@@ -181,7 +181,10 @@ test("E2E-6 layout handle cycles arc -> straight -> merged", async ({
     };
   });
   expect(arc.gap).toBeGreaterThan(100);
-  expect(arc.rotated).toBe(arc.keys);
+  // 61 flow keys + 2 curved SVG space keys (one per half); the SVG spaces
+  // are not tangent-rotated (they ARE the arc)
+  expect(arc.keys).toBe(63);
+  expect(arc.rotated).toBe(arc.keys - 2);
   expect(arc.level).toBeLessThanOrEqual(2);
   await page.locator("#kd-layout-handle").click();
   await page.waitForTimeout(400);

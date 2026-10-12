@@ -1297,17 +1297,18 @@ menu-bar {
 
 /* ---- floating left sidebar ----
    The left sidebar panels (text entry, glyph search, designspace, reference
-   font) open as a floating panel ABOVE the keyboard dock instead of a
-   full-height column — the column squeezed the dock. The panel is
-   right-aligned with the dock (anchoring vars published by keyboard-dock.js)
-   and slides out from the right: the width transition grows leftward from
-   the right edge while the content stays right-pinned (float: right) */
+   font) open as a floating panel ABOVE the LEFT half of the keyboard dock
+   (where the panel keys 2-5 live) instead of a full-height column — the
+   column squeezed the dock. The panel is left-aligned with the left cluster
+   (anchoring vars published by keyboard-dock.js) and slides out from the
+   left: the width transition grows rightward from the left edge while the
+   content stays left-pinned (float: left) */
 .sidebar-container.left {
   position: fixed;
-  left: auto;
+  right: auto;
   top: auto;
   bottom: var(--kd-dock-clearance, 45vh);
-  right: var(--kd-dock-right-inset, 12px);
+  left: var(--kd-dock-left-inset, 12px);
   height: min(60vh, 32em);
   border-radius: 0.8em;
   box-shadow: 0 0 8px #0006;
@@ -1315,6 +1316,7 @@ menu-bar {
 }
 
 .sidebar-container.left > .sidebar-content {
+  float: left;
   height: 100%;
 }
 

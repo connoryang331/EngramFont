@@ -472,9 +472,11 @@ export class KeyboardDock {
   syncDockExtentVars() {
     // publish where the dock sits so the floating sidebar can anchor to it:
     // clearance = gap between the viewport bottom and the keys' top edge,
-    // right inset = gap between the viewport right edge and the keys.
-    // The dock element itself is a zero-height overlay in arc mode — union
-    // the visible cluster rects for the real key extent
+    // left inset = gap between the viewport left edge and the left cluster
+    // (the panels opened by keys 2-5 pop out ABOVE THE LEFT HALF of the
+    // keyboard, sliding out from the left). The dock element itself is a
+    // zero-height overlay in arc mode — union the visible cluster rects for
+    // the real key extent
     const rects = [
       this.clusterLeft,
       this.clusterRight,
@@ -487,15 +489,15 @@ export class KeyboardDock {
       return; // collapsed: keep the last anchor
     }
     const top = Math.min(...rects.map((rect) => rect.top));
-    const right = Math.max(...rects.map((rect) => rect.right));
+    const left = Math.min(...rects.map((rect) => rect.left));
     const rootStyle = document.documentElement.style;
     rootStyle.setProperty(
       "--kd-dock-clearance",
       `${Math.round(window.innerHeight - top + 10)}px`
     );
     rootStyle.setProperty(
-      "--kd-dock-right-inset",
-      `${Math.round(window.innerWidth - right)}px`
+      "--kd-dock-left-inset",
+      `${Math.round(left)}px`
     );
   }
 

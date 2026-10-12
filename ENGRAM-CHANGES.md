@@ -247,7 +247,8 @@
 - E2E-1 加 mini 键断言；E2E-6 键数断言 63→69（弧）/62→68（合并）
 - 追加隐藏：缩放按钮组（.tools-overlay 整个药丸容器）与右上角 proof 模式切换按钮
   （#canvas-mode-button，R5 过渡件）——模式切换走 dock 的 mode 键；proof E2E 改用 mode 键切换
-- mini 键扩为 7 个：最左新增 ESC 位「Font」键（打开 EngramFont 应用菜单，非 ESC 功能）；
+- mini 键扩为 7 个：最左新增 ESC 位「Engram Font」键（打开 EngramFont 应用菜单，非 ESC 功能；
+  键帽加宽 68px）；File 键超出数字行末尾时沿弧线以 mini 键距延续定位（不再被跳过）；
   弹出菜单改从按键下方出现（showMenu 复用 menubar 菜单定义）；原生顶栏 menu-bar 整条隐藏；
   右上角工程路径栏 opacity:0 隐藏（保留布局占位，E2E waitFor 不受影响）
 

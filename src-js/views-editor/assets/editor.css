@@ -793,6 +793,11 @@ menu-bar {
   margin-bottom: 6px;
 }
 
+.kd-mini-key-wide {
+  width: 68px;
+  font-size: 11px;
+}
+
 /* night keys over a light canvas need *some* surface under the light
    letters: a translucent dark cap — it disappears on a dark canvas (the
    theme's natural home) and stays readable on a light one. :where() holds

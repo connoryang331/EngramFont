@@ -375,7 +375,7 @@ export class KeyboardDock {
     // key occupies the ESC slot: labeled "Font", it opens the EngramFont
     // application menu (it does NOT act as Escape)
     this.miniMenus = [
-      { label: "Font", menu: "EngramFont" },
+      { label: "Engram Font", menu: "EngramFont" },
       { label: "Help", menu: "Help" },
       { label: "Glyph", menu: "Glyph" },
       { label: "Font", menu: "Font" },
@@ -385,7 +385,14 @@ export class KeyboardDock {
     ];
     this.miniKeys = this.miniMenus.map(({ label, menu }) => {
       const key = withAriaLabel(
-        html.button({ class: "kd-key kd-char-key kd-mini-key" }, [label]),
+        html.button(
+          {
+            class: `kd-key kd-char-key kd-mini-key${
+              label === "Engram Font" ? " kd-mini-key-wide" : ""
+            }`,
+          },
+          [label]
+        ),
         label
       );
       key.addEventListener("click", () => this.openMiniMenu(menu, key));
@@ -1834,9 +1841,11 @@ export class KeyboardDock {
     const miniOuterY =
       topPad - keyHeight / 2 - keyGap - miniKeyHeight / 2;
     this.miniKeys.forEach((key, index) => {
-      const angle = row1Angles[index];
+      let angle = row1Angles[index];
       if (angle === undefined) {
-        return;
+        // keys past the number row continue the arc at mini-key pitch
+        const prev = row1Angles[row1Angles.length - 1];
+        angle = prev + (miniKeyWidth + keyGap) / radius;
       }
       const mx = radius * Math.sin(angle);
       const my = miniOuterY + radius * (1 - Math.cos(angle));

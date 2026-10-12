@@ -157,6 +157,33 @@ const BINDING_ACTION_LABELS = {
 // the native toolbar (which expands on hold/right-click and promotes the
 // chosen sub-tool to the front).
 const DOCK_FN_KEYS = {
+  // keys [ ] \ , ' toggle the RIGHT sidebar panels — the same panels as the
+  // native right sidebar tabs, in tab-strip order
+  "[": {
+    titleKey: "sidebar.selection-info",
+    panel: "selection-info",
+    icon: "/images/info.svg",
+  },
+  "]": {
+    titleKey: "sidebar.selection-transformation",
+    panel: "selection-transformation",
+    icon: "/tabler-icons/shape.svg",
+  },
+  "\\": {
+    titleKey: "sidebar.glyph-note",
+    panel: "glyph-note",
+    icon: "/tabler-icons/notes.svg",
+  },
+  ",": {
+    titleKey: "sidebar.related-glyphs",
+    panel: "related-glyphs",
+    icon: "/tabler-icons/binary-tree-2.svg",
+  },
+  "'": {
+    titleKey: "sidebar.characters-glyphs",
+    panel: "characters-glyphs",
+    icon: "/tabler-icons/columns.svg",
+  },
   // keys 2-5 toggle the editor's sidebar panels — the same panels as the
   // native sidebar tabs (press again to close; the key lights up while the
   // panel is open)
@@ -470,13 +497,13 @@ export class KeyboardDock {
   }
 
   syncDockExtentVars() {
-    // publish where the dock sits so the floating sidebar can anchor to it:
+    // publish where the dock sits so the floating sidebars can anchor to it:
     // clearance = gap between the viewport bottom and the keys' top edge,
-    // left inset = gap between the viewport left edge and the left cluster
-    // (the panels opened by keys 2-5 pop out ABOVE THE LEFT HALF of the
-    // keyboard, sliding out from the left). The dock element itself is a
-    // zero-height overlay in arc mode — union the visible cluster rects for
-    // the real key extent
+    // left inset = gap to the left cluster (panels from keys 2-5 float above
+    // the LEFT half), right inset = gap to the right cluster (panels from
+    // keys [ ] \ , ' float above the RIGHT half). The dock element itself is
+    // a zero-height overlay in arc mode — union the visible cluster rects
+    // for the real key extent
     const rects = [
       this.clusterLeft,
       this.clusterRight,
@@ -490,6 +517,7 @@ export class KeyboardDock {
     }
     const top = Math.min(...rects.map((rect) => rect.top));
     const left = Math.min(...rects.map((rect) => rect.left));
+    const right = Math.max(...rects.map((rect) => rect.right));
     const rootStyle = document.documentElement.style;
     rootStyle.setProperty(
       "--kd-dock-clearance",
@@ -498,6 +526,10 @@ export class KeyboardDock {
     rootStyle.setProperty(
       "--kd-dock-left-inset",
       `${Math.round(left)}px`
+    );
+    rootStyle.setProperty(
+      "--kd-dock-right-inset",
+      `${Math.round(window.innerWidth - right)}px`
     );
   }
 

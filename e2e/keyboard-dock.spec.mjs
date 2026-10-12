@@ -795,14 +795,20 @@ test("E2E-17 hand tool key selects the native hand", async ({ page }) => {
 });
 
 test("E2E-18 sidebar panel keys toggle their panels", async ({ page }) => {
-  // keys 2-5 toggle the sidebar panels, same as the native sidebar tabs;
-  // each key lights up (kd-active) while its panel is the open one
+  // keys 2-5 (left sidebar) and [ ] \ , ' (right sidebar) toggle the sidebar
+  // panels, same as the native sidebar tabs; each key lights up (kd-active)
+  // while its panel is the open one
   await openEditor(page, "a");
   const cases = [
     ["5", "text-entry"],
     ["4", "glyph-search"],
     ["3", "designspace-navigation"],
     ["2", "reference-font"],
+    ["[", "selection-info"],
+    ["]", "selection-transformation"],
+    ["\\", "glyph-note"],
+    [",", "related-glyphs"],
+    ["'", "characters-glyphs"],
   ];
   for (const [key, panel] of cases) {
     const panelKey = page.locator(`.kd-fn-key[data-panel="${panel}"]`);
@@ -818,11 +824,34 @@ test("E2E-18 sidebar panel keys toggle their panels", async ({ page }) => {
   }
   // opening a panel OUTSIDE the dock (native path through the wrapped
   // editorController.toggleSidebar — tab strip, actions) lights the key too;
-  // the left-edge tab strip itself is hidden (the dock keys replaced it)
+  // the edge tab strips themselves are hidden (the dock keys replaced them)
   await page.evaluate(() =>
     window.editorController.toggleSidebar("glyph-search", true)
   );
   await expect(
     page.locator('.kd-fn-key[data-panel="glyph-search"]')
   ).toHaveClass(/kd-active/);
+
+  // both floating sidebars sit ABOVE the keyboard (never squeeze it): each
+  // panel's bottom edge clears the keys' top edge
+  await page.evaluate(() =>
+    window.editorController.toggleSidebar("reference-font", true)
+  );
+  await page.evaluate(() =>
+    window.editorController.toggleSidebar("selection-info", true)
+  );
+  await page.waitForTimeout(400);
+  const keysTop = await page.evaluate(() => {
+    const rects = [...document.querySelectorAll(".kd-cluster, .kd-half")]
+      .map((el) => el.getBoundingClientRect())
+      .filter((r) => r.width || r.height);
+    return Math.min(...rects.map((r) => r.top));
+  });
+  for (const side of ["left", "right"]) {
+    const box = await page
+      .locator(`.sidebar-container.${side}`)
+      .boundingBox();
+    expect(box.height).toBeGreaterThan(100);
+    expect(box.y + box.height).toBeLessThanOrEqual(keysTop + 2);
+  }
 });

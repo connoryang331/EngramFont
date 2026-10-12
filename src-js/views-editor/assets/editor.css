@@ -1324,3 +1324,31 @@ menu-bar {
 .tab-overlay-container.left {
   display: none;
 }
+
+/* ---- floating right sidebar ----
+   Same pattern as the left: the right sidebar panels (selection info,
+   transformation, glyph note, related glyphs, characters & glyphs) opened by
+   keys [ ] \ , ' float above the RIGHT half of the keyboard, right-aligned
+   with the right cluster, sliding out from the right edge (width grows
+   leftward, content stays right-pinned) */
+.sidebar-container.right {
+  position: fixed;
+  left: auto;
+  top: auto;
+  bottom: var(--kd-dock-clearance, 45vh);
+  right: var(--kd-dock-right-inset, 12px);
+  height: min(60vh, 32em);
+  border-radius: 0.8em;
+  box-shadow: 0 0 8px #0006;
+  overflow: hidden;
+}
+
+.sidebar-container.right > .sidebar-content {
+  float: right;
+  height: 100%;
+}
+
+/* the dock's panel keys replaced the native right-edge tab strip too */
+.tab-overlay-container.right {
+  display: none;
+}

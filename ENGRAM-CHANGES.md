@@ -270,8 +270,13 @@
   keyboard-dock.syncDockExtentVars 发布的 --kd-dock-clearance/--kd-dock-left-inset 决定，
   随布局/缩放/折叠/窗口缩放同步；取四个 cluster 可见矩形并集——arc 模式 dock 元素是零高
   覆盖层），宽度过渡从左缘向右生长 = 从左滑出（内容 float:left 左贴 + overflow:hidden 裁剪）；
-  左侧边缘 tab 条隐藏（dock 键 2-5 已全面替代），右侧栏行为不变；E2E-18 原生路径断言改走
+  左侧边缘 tab 条隐藏（dock 键 2-5 已全面替代），E2E-18 原生路径断言改走
   editorController.toggleSidebar（tab 条已隐藏）
+- R4.T4.15：右侧五面板接键（tab 条顺序）：[ = Selection Info / ] = Selection Transformation /
+  \ = Glyph Note / , = Related Glyphs & Characters / ' = Characters & Glyphs；右侧栏同样
+  改悬浮——syncDockExtentVars 增发 --kd-dock-right-inset（右簇右缘），面板锚 dock 右半上方、
+  右对齐、宽度从右缘向左生长（内容 float:right）= 从右滑出；右缘 tab 条同样隐藏；
+  E2E-18 扩至 9 个面板开/关/激活断言 + 左右悬浮面板均不得低于按键顶缘
 
 ### R3-T3.30 · 按键 8 接入 Knife Tool（2026-10-12）
 - 「8」= knife tool 单功能键（无子菜单，按下即选）：activateTool 直连原生

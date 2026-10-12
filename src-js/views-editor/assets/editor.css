@@ -653,7 +653,8 @@ kerning-handle.negative {
   /* keyboard day/night theme (EngramFont original): the #kd-theme-handle
      flips these variables; every dock surface derives from them.
      Keys are TRANSPARENT by default (floating icons/labels over the canvas,
-     hover reveals the keycap); the kd-style-* color chips keep their fill */
+     hover reveals the keycap); the kd-style-* color chips keep their fill.
+     The dock itself is frameless in EVERY layout — keys only */
   --kd-keycap-bg: #2d2d30;
   --kd-keycap-bg-alt: #3c3c40;
   --kd-keycap-bg-hover: rgba(232, 230, 225, 0.18);
@@ -667,10 +668,8 @@ kerning-handle.negative {
   width: max-content;
   max-width: 96%;
   z-index: 25;
-  background-color: var(--kd-cluster-bg);
-  border-radius: 12px;
-  padding: 12px;
-  box-shadow: 0 4px 18px #0006;
+  background-color: transparent;
+  padding: 0;
   transition: all 280ms ease;
 }
 
@@ -1057,10 +1056,6 @@ kerning-handle.negative {
 
 #keyboard-dock.kd-straight .kd-cluster {
   pointer-events: auto;
-  background-color: var(--kd-cluster-bg);
-  border-radius: 12px;
-  padding: 12px;
-  box-shadow: 0 4px 18px #0006;
 }
 
 /* curved split layout (K860): two separate floating half keyboards (no
@@ -1138,7 +1133,8 @@ kerning-handle.negative {
 }
 
 /* dark theme adjustments: dock is dark-on-dark already; keep contrast */
-:root.dark-theme #keyboard-dock,
+/* the dock panel is frameless in every layout — keys only; the collapse
+   circle keeps a surface so it stays visible on any canvas */
 :root.dark-theme #dock-collapse-button {
   background-color: #1c1c1ef5;
 }

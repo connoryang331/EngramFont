@@ -92,6 +92,10 @@
   （toggleLayout/toggleTheme 一并移除，setLayout/setTheme 供弹窗用）；arc/straight 下两钮分居中线两侧
 - E2E-6/E2E-10 改走设置弹窗切布局/主题；E2E-11 增加 Scale 断言（zoom 样式 + 持久化）
 
+### R3-T3.15 · 直线对开两侧留边（2026-10-12）
+- straight 布局的 dock 左右 inset 从 0 改为 calc(0.75em + 14px)，与弧形半边的可视边距
+  （0.75em 定位 + 14px sidePad）一致，实测两侧均为 24px；修掉右簇 DEL 贴浏览器边缘的问题
+
 ### R7-T7.4 · 背景图上下文编辑（2026-10-12）
 - Edit image 上下文 action（选中字形有背景图时启用）→ 解锁 + 选中 backgroundImage/0
 - 离开选中自动重锁（selection 监听）；全局 Unlock/Lock 菜单项已移除

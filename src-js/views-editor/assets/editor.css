@@ -1050,8 +1050,10 @@ kerning-handle.negative {
 /* straight split layout (T3.7): two framed clusters anchored to the canvas
    corners — the dock becomes a transparent full-width flex row */
 #keyboard-dock.kd-straight {
-  left: 0;
-  right: 0;
+  /* same visual edge margin as the arc halves: their 0.75em inset plus the
+     14px sidePad baked into their inline widths */
+  left: calc(0.75em + 14px);
+  right: calc(0.75em + 14px);
   transform: none;
   width: auto;
   max-width: none;

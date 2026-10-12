@@ -741,7 +741,7 @@ kerning-handle.negative {
   background-color: transparent;
   color: var(--kd-keycap-fg);
   font-family: engramfont-ui-regular, sans-serif;
-  font-size: 15px;
+  font-size: var(--kd-key-font-size, 16px);
   cursor: pointer;
   position: relative;
   display: flex;
@@ -750,8 +750,12 @@ kerning-handle.negative {
   justify-content: center;
   padding: 0;
   user-select: none;
-  /* every key carries a hairline outline so its shape reads on the canvas
-     (fills are translucent, the outline is what defines the keycap) */
+}
+
+/* letter/character keys (and the icon function keys) are pure ghosts: no
+   fill, hairline outline only — that outline defines their keycap shape;
+   the kd-style-* color chips carry no outline */
+.kd-char-key {
   box-shadow: inset 0 0 0 1.5px var(--kd-key-outline);
 }
 
@@ -845,10 +849,11 @@ kerning-handle.negative {
   gap: 5px;
 }
 
-/* squircle corners (settings toggle): continuous corners on every key and
-   menu option; engines without corner-shape keep the normal rounded corners */
-#keyboard-dock.kd-squircle :where(.kd-key, .kd-fn-option) {
-  corner-shape: squircle;
+/* squircle corners (settings slider): a superellipse exponent applied to
+   every key and menu option via --kd-corner-shape ("round" at 0); engines
+   without corner-shape keep the normal rounded corners */
+#keyboard-dock :where(.kd-key, .kd-fn-option) {
+  corner-shape: var(--kd-corner-shape, round);
 }
 
 .kd-fn-option {
@@ -957,9 +962,12 @@ kerning-handle.negative {
 }
 
 /* the arc spacebar's SVG keycap follows the theme via variables */
-/* space keys: the rectangular space inherits the universal ring; the curved
-   SVG sector strokes instead of filling (its button box is just the bounding
-   rectangle, so it must not get a box ring) */
+/* space keys: the rectangular space gets the same hairline ring as the
+   letter keys; the curved SVG sector strokes instead of filling (its button
+   box is just the bounding rectangle, so it must not get a box ring) */
+.kd-key.kd-special-key[data-special="space"]:not(.kd-arc-space) {
+  box-shadow: inset 0 0 0 1.5px var(--kd-key-outline);
+}
 
 .kd-key.kd-special-key[data-special="space"]:hover {
   background-color: var(--kd-keycap-bg-hover);

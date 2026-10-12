@@ -243,8 +243,29 @@ export class KeyboardDock {
     // whole-keyboard scale (0.6–1.6), set in the settings dialog
     const storedScale = parseFloat(localStorage.getItem("engramfont-dock-scale"));
     this.scale = Math.min(1.6, Math.max(0.6, storedScale || 1));
-    // squircle (continuous) key corners, set in the settings dialog
-    this.squircle = localStorage.getItem("engramfont-dock-squircle") === "true";
+    // squircle corners: 0 = normal round corners, otherwise the superellipse
+    // exponent (2 = classic squircle, higher = boxier); adjustable in the
+    // settings dialog, applies to every key
+    const storedSquircle = localStorage.getItem("engramfont-dock-squircle");
+    const parsedSquircle = parseFloat(storedSquircle);
+    this.squircle =
+      storedSquircle === "true"
+        ? 2 // legacy checkbox value
+        : Number.isFinite(parsedSquircle) && parsedSquircle > 0
+          ? Math.min(8, parsedSquircle)
+          : 0;
+    // split layouts: distance between the keyboards and the browser edges
+    const storedGap = parseFloat(localStorage.getItem("engramfont-dock-split-gap"));
+    this.splitGap = Number.isFinite(storedGap)
+      ? Math.min(40, Math.max(0, storedGap))
+      : 12;
+    // key label font size
+    const storedFontSize = parseFloat(
+      localStorage.getItem("engramfont-dock-font-size")
+    );
+    this.fontSize = Number.isFinite(storedFontSize)
+      ? Math.min(24, Math.max(12, storedFontSize))
+      : 16;
     this.altActive = false;
     this.ctrlActive = false;
     // function-key elements -> their DOCK_FN_KEYS definition
@@ -255,6 +276,8 @@ export class KeyboardDock {
     this.applyTheme();
     this.applyScale();
     this.applySquircle();
+    this.applyFontSize();
+    this.applySplitGap();
     this.applyCollapsed();
     addCanvasModeListener(() => this.updateModeUI());
     this.updateModeUI();
@@ -840,15 +863,62 @@ export class KeyboardDock {
   // ---- squircle (continuous) key corners (EngramFont original) ----
 
   applySquircle() {
-    // needs a Chromium that supports corner-shape; older engines just keep
-    // the normal rounded corners (graceful degradation)
-    this.dockElement.classList.toggle("kd-squircle", this.squircle);
+    // needs an engine with corner-shape support; older ones just keep the
+    // normal rounded corners (graceful degradation)
+    this.dockElement.style.setProperty(
+      "--kd-corner-shape",
+      this.squircle > 0 ? `superellipse(${this.squircle})` : "round"
+    );
   }
 
   setSquircle(value) {
     this.squircle = value;
     localStorage.setItem("engramfont-dock-squircle", String(value));
     this.applySquircle();
+  }
+
+  // ---- split gap + key font size (EngramFont original) ----
+
+  applyFontSize() {
+    this.dockElement.style.setProperty(
+      "--kd-key-font-size",
+      `${this.fontSize}px`
+    );
+  }
+
+  setFontSize(value) {
+    this.fontSize = value;
+    localStorage.setItem("engramfont-dock-font-size", String(value));
+    this.applyFontSize();
+  }
+
+  applySplitGap() {
+    // the distance between the split keyboards and the browser edges; the
+    // arc half additionally uses it as its inner sidePad, so the VISUAL gap
+    // is the same value in both split layouts
+    const gap = `${this.splitGap}px`;
+    if (this.layout === "straight") {
+      this.dockElement.style.left = gap;
+      this.dockElement.style.right = gap;
+    } else {
+      this.dockElement.style.left = "";
+      this.dockElement.style.right = "";
+    }
+    if (this.layout === "arc") {
+      this.halfLeft.style.left = "0px";
+      this.halfRight.style.right = "0px";
+      // the arc places its keys with sidePad = the gap; re-place them
+      this.renderKeys();
+    } else {
+      this.halfLeft.style.left = "";
+      this.halfRight.style.right = "";
+    }
+  }
+
+  setSplitGap(value) {
+    this.splitGap = value;
+    localStorage.setItem("engramfont-dock-split-gap", String(value));
+    this.applySplitGap();
   }
 
   // ---- keyboard settings dialog (EngramFont original) ----
@@ -901,18 +971,81 @@ export class KeyboardDock {
       ])
     );
 
-    // corner style (squircle = continuous corners, iOS-like)
-    const squircleInput = html.input({ type: "checkbox" });
-    squircleInput.checked = this.squircle;
-    squircleInput.addEventListener("change", () =>
-      this.setSquircle(squircleInput.checked)
-    );
+    // split layouts: distance between the keyboards and the browser edges
+    const gapValue = html.span({ class: "kd-settings-scale-value" }, [
+      `${this.splitGap}px`,
+    ]);
+    const gapInput = html.input({
+      type: "range",
+      min: "0",
+      max: "40",
+      step: "1",
+    });
+    gapInput.value = String(this.splitGap);
+    gapInput.addEventListener("input", () => {
+      const value = parseFloat(gapInput.value);
+      gapValue.textContent = `${value}px`;
+      this.setSplitGap(value);
+    });
     content.appendChild(
       html.div({ class: "kd-settings-section" }, [
-        html.div({ class: "kd-settings-section-title" }, ["Corners"]),
-        html.label({ class: "kd-settings-option" }, [
+        html.div({ class: "kd-settings-section-title" }, ["Split gap"]),
+        html.div({ class: "kd-settings-option kd-settings-scale-row" }, [
+          gapInput,
+          gapValue,
+        ]),
+      ])
+    );
+
+    // key label font size
+    const fontSizeValue = html.span({ class: "kd-settings-scale-value" }, [
+      `${this.fontSize}px`,
+    ]);
+    const fontSizeInput = html.input({
+      type: "range",
+      min: "12",
+      max: "24",
+      step: "1",
+    });
+    fontSizeInput.value = String(this.fontSize);
+    fontSizeInput.addEventListener("input", () => {
+      const value = parseFloat(fontSizeInput.value);
+      fontSizeValue.textContent = `${value}px`;
+      this.setFontSize(value);
+    });
+    content.appendChild(
+      html.div({ class: "kd-settings-section" }, [
+        html.div({ class: "kd-settings-section-title" }, ["Font size"]),
+        html.div({ class: "kd-settings-option kd-settings-scale-row" }, [
+          fontSizeInput,
+          fontSizeValue,
+        ]),
+      ])
+    );
+
+    // corner style (squircle): an adjustable superellipse exponent that
+    // applies to every key — 0 keeps the normal round corners
+    const squircleValue = html.span({ class: "kd-settings-scale-value" }, [
+      this.squircle > 0 ? String(this.squircle) : "off",
+    ]);
+    const squircleInput = html.input({
+      type: "range",
+      min: "0",
+      max: "8",
+      step: "0.5",
+    });
+    squircleInput.value = String(this.squircle);
+    squircleInput.addEventListener("input", () => {
+      const value = parseFloat(squircleInput.value);
+      squircleValue.textContent = value > 0 ? String(value) : "off";
+      this.setSquircle(value);
+    });
+    content.appendChild(
+      html.div({ class: "kd-settings-section" }, [
+        html.div({ class: "kd-settings-section-title" }, ["Squircle"]),
+        html.div({ class: "kd-settings-option kd-settings-scale-row" }, [
           squircleInput,
-          "Squircle corners",
+          squircleValue,
         ]),
       ])
     );
@@ -1082,11 +1215,17 @@ export class KeyboardDock {
 
     if (this.layout === "straight") {
       // neat split: two framed clusters anchored to the canvas corners,
-      // rows cut at the QWERTY seam (fixed 52px keys, no stretching)
+      // rows cut at the QWERTY seam (fixed 52px keys, no stretching).
+      // Split mode keeps dual thumb spaces: the left cluster gets its own
+      // (bordered like the right one), as in the arc layout
       for (const [rowIndex, rowElements] of this.keyElements.entries()) {
         const cut = rowIndex === 4 ? SPLIT_ROW5_CUT : SPLIT_CUTS[rowIndex];
+        const leftFragment = rowElements.slice(0, cut);
+        if (rowIndex === 4) {
+          leftFragment.push(this.spaceKeyLeft);
+        }
         const fragments = [
-          [this.clusterLeft, rowElements.slice(0, cut)],
+          [this.clusterLeft, leftFragment],
           [this.clusterRight, rowElements.slice(cut)],
         ];
         for (const [host, fragment] of fragments) {
@@ -1198,7 +1337,9 @@ export class KeyboardDock {
     const keyHeight = 44;
     const rowHeight = keyHeight + 8;
     const radius = 1600; // sag of the rows into the valley
-    const sidePad = 14;
+    // the inner side padding IS the split gap: it keeps the arc's visual
+    // browser-edge distance equal to the straight layout's
+    const sidePad = this.splitGap;
     const topPad = 16;
     const bottomPad = 14;
     const seamGap = 70; // horizontal gap between the halves
@@ -1349,6 +1490,8 @@ export class KeyboardDock {
   applyLayout() {
     this.dockElement.classList.toggle("kd-straight", this.layout === "straight");
     this.dockElement.classList.toggle("kd-arc", this.layout === "arc");
+    // the split gap is applied as inline insets scoped to the active layout
+    this.applySplitGap();
   }
 
   setLayout(value) {

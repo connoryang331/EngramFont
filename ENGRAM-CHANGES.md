@@ -119,6 +119,17 @@
   dock 加 kd-squircle 类，`corner-shape: squircle`（Chromium 139+ 生效，旧引擎优雅回退普通圆角）
 - 弧形 spacebar 的 SVG 描边 5px→1.5px，与其它键的描边粗细一致（light/dark 同理）
 
+### R3-T3.20 · 描边范围收紧 + 分离距离/字号设置 + 直线模式补左空格（2026-10-12）
+- 描边范围收紧：仅字母/字符键（kd-char-key，含图标功能键）和 spacebar 有 1.5px 描边，
+  彩色芯片（红蓝黄紫米/中性 ctrl 等）不再带描边
+- 直线对开模式补上左侧 spacebar（spaceKeyLeft 此前只在弧形布局加入），与右空格同样带描边
+- 设置页新增两组滑杆：
+  - Split gap（分离距离，0–40px，默认 12）：直线=dock 左右 inset；弧形=半边 sidePad（视觉边距两布局一致）
+  - Font size（按键字号，12–24px，默认 16，原 15）：CSS 变量 --kd-key-font-size
+- squircle 从勾选改为可调数值滑杆（0=off，0.5 步进，2=经典 squircle，最大 8）：
+  --kd-corner-shape = superellipse(n)，对所有按键和菜单选项生效；旧 "true" 存值迁移为 2
+- E2E-11 扩充：squircle 滑杆（var 断言）、分离距离（inline inset + 持久化）、字号（computed + 持久化）
+
 ### R7-T7.4 · 背景图上下文编辑（2026-10-12）
 - Edit image 上下文 action（选中字形有背景图时启用）→ 解锁 + 选中 backgroundImage/0
 - 离开选中自动重锁（selection 监听）；全局 Unlock/Lock 菜单项已移除

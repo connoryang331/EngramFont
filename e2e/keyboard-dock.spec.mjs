@@ -431,12 +431,16 @@ test("E2E-11 keyboard settings dialog", async ({ page }) => {
   ).toBe("dark");
 
   // the scale slider applies live to the key containers and persists
-  const scaleInput = page.locator('.kd-settings-scale-row input[type="range"]');
+  const scaleInput = page.locator(
+    '.kd-settings-section:has-text("Scale") .kd-settings-scale-row input[type="range"]'
+  );
   await scaleInput.evaluate((el) => {
     el.value = "1.25";
     el.dispatchEvent(new Event("input", { bubbles: true }));
   });
-  await expect(page.locator(".kd-settings-scale-value")).toHaveText("125%");
+  await expect(
+    page.locator('.kd-settings-section:has-text("Scale") .kd-settings-scale-value')
+  ).toHaveText("125%");
   expect(
     await page.evaluate(
       () => document.querySelector(".kd-cluster-left").style.zoom
@@ -446,17 +450,73 @@ test("E2E-11 keyboard settings dialog", async ({ page }) => {
     await page.evaluate(() => localStorage.getItem("engramfont-dock-scale"))
   ).toBe("1.25");
 
-  // squircle corners toggle
+  // squircle slider: a superellipse exponent applied to every key (0 = off)
   const squircleInput = page.locator(
-    '.kd-settings-section:has-text("Corners") input[type="checkbox"]'
+    '.kd-settings-section:has-text("Squircle") input[type="range"]'
   );
-  await squircleInput.check();
-  await expect(page.locator("#keyboard-dock")).toHaveClass(/kd-squircle/);
+  await squircleInput.evaluate((el) => {
+    el.value = "2";
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await expect(
+    page.locator('.kd-settings-section:has-text("Squircle") .kd-settings-scale-value')
+  ).toHaveText("2");
+  expect(
+    await page.evaluate(() =>
+      document
+        .querySelector("#keyboard-dock")
+        .style.getPropertyValue("--kd-corner-shape")
+    )
+  ).toBe("superellipse(2)");
   expect(
     await page.evaluate(() => localStorage.getItem("engramfont-dock-squircle"))
-  ).toBe("true");
-  await squircleInput.uncheck();
-  await expect(page.locator("#keyboard-dock")).not.toHaveClass(/kd-squircle/);
+  ).toBe("2");
+  await squircleInput.evaluate((el) => {
+    el.value = "0";
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  expect(
+    await page.evaluate(() =>
+      document
+        .querySelector("#keyboard-dock")
+        .style.getPropertyValue("--kd-corner-shape")
+    )
+  ).toBe("round");
+
+  // split gap slider: inline insets on the straight dock + persistence
+  const gapInput = page.locator(
+    '.kd-settings-section:has-text("Split gap") input[type="range"]'
+  );
+  await gapInput.evaluate((el) => {
+    el.value = "10";
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await expect(page.locator('.kd-settings-section:has-text("Split gap") .kd-settings-scale-value')).toHaveText("10px");
+  const dock = page.locator("#keyboard-dock");
+  expect(await dock.evaluate((el) => el.style.left)).toBe("10px");
+  expect(
+    await page.evaluate(() => localStorage.getItem("engramfont-dock-split-gap"))
+  ).toBe("10");
+
+  // key font size slider: CSS variable on the dock + persistence
+  const fontSizeInput = page.locator(
+    '.kd-settings-section:has-text("Font size") input[type="range"]'
+  );
+  await fontSizeInput.evaluate((el) => {
+    el.value = "18";
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await expect(
+    page.locator('.kd-settings-section:has-text("Font size") .kd-settings-scale-value')
+  ).toHaveText("18px");
+  expect(
+    await page
+      .locator('[data-key="q"]')
+      .evaluate((el) => getComputedStyle(el).fontSize)
+  ).toBe("18px");
+  expect(
+    await page.evaluate(() => localStorage.getItem("engramfont-dock-font-size"))
+  ).toBe("18");
 
   // the seeded binding is listed; reset-all clears it everywhere
   await expect(page.locator(".kd-settings-binding-row")).toHaveCount(1);

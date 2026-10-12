@@ -656,7 +656,8 @@ kerning-handle.negative {
      hover reveals the keycap); the kd-style-* color chips keep their fill.
      The dock itself is frameless in EVERY layout — keys only */
   --kd-keycap-bg: #2d2d30;
-  --kd-keycap-bg-alt: #3c3c40;
+  --kd-keycap-bg-alt: rgba(60, 60, 64, 0.55);
+  --kd-keycap-bg-alt-hover: rgba(60, 60, 64, 0.8);
   --kd-keycap-bg-hover: rgba(232, 230, 225, 0.18);
   --kd-keycap-fg: #e8e6e1;
   --kd-key-outline: rgba(232, 230, 225, 0.6);
@@ -676,7 +677,8 @@ kerning-handle.negative {
 /* day (light) keyboard theme — the default; #kd-theme-handle toggles */
 #keyboard-dock.kd-theme-light {
   --kd-keycap-bg: #f1efeb;
-  --kd-keycap-bg-alt: #dedbd4;
+  --kd-keycap-bg-alt: rgba(222, 219, 212, 0.6);
+  --kd-keycap-bg-alt-hover: rgba(222, 219, 212, 0.85);
   --kd-keycap-bg-hover: rgba(51, 50, 47, 0.1);
   --kd-keycap-fg: #33322f;
   --kd-key-outline: rgba(51, 50, 47, 0.5);
@@ -996,38 +998,79 @@ kerning-handle.negative {
 }
 
 .kd-style-orange {
-  background-color: #ff8741;
+  --kd-chip: 255, 135, 65;
+  background-color: rgba(var(--kd-chip), 0.55);
   color: #262629;
   font-weight: 600;
 }
 
+.kd-style-orange:hover {
+  background-color: rgba(var(--kd-chip), 0.8);
+}
+
 .kd-style-purple {
-  background-color: #9c6fff;
+  --kd-chip: 156, 111, 255;
+  background-color: rgba(var(--kd-chip), 0.55);
+}
+
+.kd-style-purple:hover {
+  background-color: rgba(var(--kd-chip), 0.8);
 }
 
 .kd-style-yellow {
-  background-color: #ead730;
+  --kd-chip: 234, 215, 48;
+  background-color: rgba(var(--kd-chip), 0.55);
+}
+
+.kd-style-yellow:hover {
+  background-color: rgba(var(--kd-chip), 0.8);
 }
 
 .kd-style-red {
-  background-color: #ff5151;
+  --kd-chip: 255, 81, 81;
+  background-color: rgba(var(--kd-chip), 0.55);
+}
+
+.kd-style-red:hover {
+  background-color: rgba(var(--kd-chip), 0.8);
 }
 
 .kd-style-green {
-  background-color: #00af58;
+  --kd-chip: 0, 175, 88;
+  background-color: rgba(var(--kd-chip), 0.55);
+}
+
+.kd-style-green:hover {
+  background-color: rgba(var(--kd-chip), 0.8);
 }
 
 .kd-style-blue {
-  background-color: #0666ee;
+  --kd-chip: 6, 102, 238;
+  background-color: rgba(var(--kd-chip), 0.55);
   font-style: italic;
 }
 
-.kd-style-beige {
-  background-color: #ead7c9;
+.kd-style-blue:hover {
+  background-color: rgba(var(--kd-chip), 0.8);
 }
 
+.kd-style-beige {
+  --kd-chip: 234, 215, 201;
+  background-color: rgba(var(--kd-chip), 0.65);
+}
+
+.kd-style-beige:hover {
+  background-color: rgba(var(--kd-chip), 0.85);
+}
+
+/* the neutral modifier chips (ctrl/alt/move/empty) are translucent too —
+   glyph strokes show through every key */
 .kd-style-dark.kd-key {
   background-color: var(--kd-keycap-bg-alt);
+}
+
+.kd-style-dark.kd-key:hover {
+  background-color: var(--kd-keycap-bg-alt-hover);
 }
 
 /* sliders (capsule look) */

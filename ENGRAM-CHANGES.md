@@ -96,6 +96,12 @@
 - straight 布局的 dock 左右 inset 从 0 改为 calc(0.75em + 14px)，与弧形半边的可视边距
   （0.75em 定位 + 14px sidePad）一致，实测两侧均为 24px；修掉右簇 DEL 贴浏览器边缘的问题
 
+### R3-T3.16 · 彩色按键半透明化（2026-10-12）
+- 其余实心按键全部改半透明（α≈0.55，米色 0.65）：紫/黄/红/绿/蓝/橙/米芯片 + ctrl/alt/move/empty 中性芯片
+  （--kd-keycap-bg-alt 改 rgba，双主题各配 hover 加深档 α≈0.8）
+- 用 --kd-chip RGB 变量模式：基态 rgba(var(--kd-chip), 0.55)，hover 加深而非被通用 hover 灰底替换
+- 画布笔画可穿透所有按键可见；悬停显现键帽、激活反色、子工具弹窗保持实心
+
 ### R7-T7.4 · 背景图上下文编辑（2026-10-12）
 - Edit image 上下文 action（选中字形有背景图时启用）→ 解锁 + 选中 backgroundImage/0
 - 离开选中自动重锁（selection 监听）；全局 Unlock/Lock 菜单项已移除

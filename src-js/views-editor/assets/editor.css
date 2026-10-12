@@ -653,12 +653,21 @@ kerning-handle.negative {
    (keys 6 7 8 9 0 - =). The DOM stays functional — tool selection, native
    face promotion and the dock's sync observer all keep working.
    The zoom buttons and the interim proof-mode pill are hidden with it:
-   mode switching lives on the dock's mode key */
+   mode switching lives on the dock's mode key. The top menubar is hidden
+   too — the dock's half-height menu keys open its menus */
 #edit-tools,
 #zoom-tools,
 .tools-overlay,
-#canvas-mode-button {
+#canvas-mode-button,
+menu-bar {
   display: none;
+}
+
+/* the project path bar: hidden (kept in the layout at opacity 0 so the
+   editor's own project-name plumbing and tests are unaffected) */
+#engramfont-project-name {
+  opacity: 0;
+  pointer-events: none;
 }
 
 #keyboard-dock {

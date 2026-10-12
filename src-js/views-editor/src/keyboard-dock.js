@@ -371,15 +371,24 @@ export class KeyboardDock {
     this.ctrlActive = false;
     // function-key elements -> their DOCK_FN_KEYS definition
     this.fnKeyDefs = new Map();
-    // half-height menu keys above the number row (left -> right): each opens
-    // its menubar menu
-    this.miniMenus = ["Help", "Glyph", "Font", "View", "Edit", "File"];
-    this.miniKeys = this.miniMenus.map((title) => {
+    // half-height menu keys above the number row, left -> right. The first
+    // key occupies the ESC slot: labeled "Font", it opens the EngramFont
+    // application menu (it does NOT act as Escape)
+    this.miniMenus = [
+      { label: "Font", menu: "EngramFont" },
+      { label: "Help", menu: "Help" },
+      { label: "Glyph", menu: "Glyph" },
+      { label: "Font", menu: "Font" },
+      { label: "View", menu: "View" },
+      { label: "Edit", menu: "Edit" },
+      { label: "File", menu: "File" },
+    ];
+    this.miniKeys = this.miniMenus.map(({ label, menu }) => {
       const key = withAriaLabel(
-        html.button({ class: "kd-key kd-char-key kd-mini-key" }, [title]),
-        title
+        html.button({ class: "kd-key kd-char-key kd-mini-key" }, [label]),
+        label
       );
-      key.addEventListener("click", () => this.openMenuBarMenu(title));
+      key.addEventListener("click", () => this.openMiniMenu(menu, key));
       return key;
     });
 
@@ -740,21 +749,20 @@ export class KeyboardDock {
     }
   }
 
-  // ---- menu keys: open the matching menubar menu ----
+  // ---- menu keys: open the matching menubar menu BELOW the key ----
 
-  openMenuBarMenu(title) {
-    // the menu items live in the menu-bar's shadow DOM; dispatch a mousedown
-    // on the matching item so the MenuBar's own toggle logic runs
+  openMiniMenu(menuTitle, anchorElement) {
+    // reuse the menubar's menu item definitions, but show the panel right
+    // below the mini key (showMenu closes any other open panel first)
     const menuBar = document.querySelector("menu-bar");
-    if (!menuBar?.shadowRoot) {
+    const menu = menuBar?.items?.find(
+      (m) => (m.title || "").toLowerCase() === menuTitle.toLowerCase()
+    );
+    if (!menu) {
       return;
     }
-    for (const item of menuBar.shadowRoot.querySelectorAll(".menu-item")) {
-      if (item.textContent.trim().toLowerCase() === title.toLowerCase()) {
-        item.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-        return;
-      }
-    }
+    const rect = anchorElement.getBoundingClientRect();
+    showMenu(menu.getItems(), { x: rect.left, y: rect.bottom + 4 });
   }
 
   makeMiniKeyRow() {

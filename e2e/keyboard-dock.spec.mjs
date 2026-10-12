@@ -43,15 +43,12 @@ test("E2E-1 dock renders all rows, aria labels, collapses", async ({ page }) => 
   await expect(page.locator("#keyboard-dock")).toBeVisible();
   const keyCount = await page.locator("#keyboard-dock .kd-key").count();
   expect(keyCount).toBeGreaterThanOrEqual(28);
-  // six half-height menu keys above the number row; clicking one opens its
-  // menubar menu (menu-panel lives in the menu-bar's shadow DOM)
-  await expect(page.locator(".kd-mini-key")).toHaveCount(6);
+  // seven half-height menu keys above the number row (the first occupies
+  // the ESC slot, opens the EngramFont app menu); clicking pops the menu
+  // DOWN below the key
+  await expect(page.locator(".kd-mini-key")).toHaveCount(7);
   await page.locator(".kd-mini-key").first().click();
-  expect(
-    await page
-      .locator("menu-bar")
-      .evaluate((m) => !!m.shadowRoot.querySelector("menu-panel"))
-  ).toBe(true);
+  await expect(page.locator("menu-panel")).toBeVisible();
   await page.keyboard.press("Escape");
   // every key has an aria-label
   const unlabeled = await page.evaluate(() => {
@@ -241,8 +238,8 @@ test("E2E-6 layouts switch via the settings dialog", async ({
   await expect(
     page.locator(".kd-cluster-left [data-special='space']")
   ).toBeVisible();
-  // merged: single keyboard, single space key (+6 half-height menu keys)
-  expect(await page.locator(".kd-cluster-left .kd-key").count()).toBe(68);
+  // merged: single keyboard, single space key (+7 half-height menu keys)
+  expect(await page.locator(".kd-cluster-left .kd-key").count()).toBe(69);
 
   // persists across reload (merged stays merged)
   await page.reload();

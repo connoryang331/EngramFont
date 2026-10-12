@@ -571,6 +571,12 @@ export class KeyboardDock {
     const alternatives = [...fnDef.tools]
       .filter((toolDef) => toolDef.tool !== faceTool.tool)
       .reverse();
+    // each option matches the parent key's visual size — arc keys render
+    // larger and the dock scale applies, so measure the key itself
+    const zoom = parseFloat(getComputedStyle(keyElement).zoom) || 1;
+    const optWidth = Math.round(keyElement.offsetWidth * zoom);
+    const optHeight = Math.round(keyElement.offsetHeight * zoom);
+    const optionGap = 5;
     for (const toolDef of alternatives) {
       const option = withAriaLabel(
         html.button(
@@ -583,12 +589,15 @@ export class KeyboardDock {
         ),
         translate(toolDef.titleKey)
       );
-      option.appendChild(
-        html.createDomElement("inline-svg", {
-          class: "kd-fn-icon",
-          src: toolDef.icon,
-        })
-      );
+      option.style.width = `${optWidth}px`;
+      option.style.height = `${optHeight}px`;
+      const icon = html.createDomElement("inline-svg", {
+        class: "kd-fn-icon",
+        src: toolDef.icon,
+      });
+      icon.style.width = `${Math.round(optHeight * 0.5)}px`;
+      icon.style.height = `${Math.round(optHeight * 0.5)}px`;
+      option.appendChild(icon);
       // the window closer closes on any mousedown — the option's own press
       // must not bubble into it (native stops the mousedown propagation too)
       option.addEventListener("pointerdown", (event) => {
@@ -607,17 +616,31 @@ export class KeyboardDock {
     }
     this.dockElement.appendChild(options);
     this._fnFlyout = options;
-    // pop the options up above the key (drop below when there's no room)
-    options.style.position = "fixed";
-    const rect = keyElement.getBoundingClientRect();
-    const flyWidth = options.offsetWidth;
-    const flyHeight = options.offsetHeight;
-    let left = rect.left + rect.width / 2 - flyWidth / 2;
-    left = Math.max(6, Math.min(left, window.innerWidth - flyWidth - 6));
-    const top =
-      rect.top - flyHeight - 8 >= 6 ? rect.top - flyHeight - 8 : rect.bottom + 8;
-    options.style.left = `${Math.round(left)}px`;
-    options.style.top = `${Math.round(top)}px`;
+    // pop the options out along the KEY'S OWN TANGENT: arc keys are tilted
+    // (inline rotate), so tilt the stack the same way and anchor it to the
+    // key's rotated top edge; straight keys have no rotation -> vertical
+    const rotateMatch = /rotate\((-?[\d.]+)deg\)/.exec(
+      keyElement.style.transform || ""
+    );
+    const theta = rotateMatch ? parseFloat(rotateMatch[1]) : 0;
+    const rad = (theta * Math.PI) / 180;
+    const upX = Math.sin(rad);
+    const upY = -Math.cos(rad);
+    const flyHeight =
+      alternatives.length * optHeight + (alternatives.length - 1) * optionGap;
+    const center = keyElement.getBoundingClientRect(); // AABB center == rotated center
+    const distance = optHeight / 2 + optionGap;
+    const above = center.top + center.height / 2 - flyHeight - distance >= 6;
+    const dirX = above ? upX : -upX;
+    const dirY = above ? upY : -upY;
+    const anchorX = center.left + center.width / 2 + dirX * distance;
+    const anchorY = center.top + center.height / 2 + dirY * distance;
+    options.style.left = `${Math.round(anchorX - optWidth / 2)}px`;
+    options.style.top = `${Math.round(
+      above ? anchorY - flyHeight : anchorY
+    )}px`;
+    options.style.transformOrigin = above ? "50% 100%" : "50% 0%";
+    options.style.transform = `rotate(${theta}deg)`;
     // native collapseSubtoolsAndCleanUp: any mousedown or Escape closes
     this._fnFlyoutCloser = (event) => {
       if (event.type === "mousedown" || event.key === "Escape") {

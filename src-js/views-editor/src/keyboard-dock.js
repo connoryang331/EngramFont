@@ -1352,10 +1352,10 @@ export class KeyboardDock {
     // [thetaStart, thetaStart + angularSpan] on the centerline `radius`
     // (thetaStart = the key's position along the row's arc).
     const keyHeight = 44;
-    // the stroke only pads the geometry bbox (and, via CSS, takes the border
-    // width setting); the outline's corner rounding is built into the path
-    const strokeW = 12;
-    const bandHalf = keyHeight / 2 - strokeW / 2; // path band; stroke pads it
+    // the band leaves room for the outline stroke so the spacebar's VISUAL
+    // height matches the regular keys; the outline's corner rounding is
+    // built into the path (radius/squircle/border settings all participate)
+    const bandHalf = keyHeight / 2 - this.outlineWidth / 2;
     const ro = radius + bandHalf;
     const ri = radius - bandHalf;
     const cy = outerY + radius; // arc center is below the outer end
@@ -1381,7 +1381,7 @@ export class KeyboardDock {
     // is, and the stroke width follows the border width setting (via CSS)
     const filletR = Math.max(
       0,
-      Math.min(this.radius, bandHalf / 2, (ro * angularSpan) / 4)
+      Math.min(this.radius, bandHalf, (ro * angularSpan) / 4)
     );
     const fullness = 0.55 + 0.05 * this.squircle;
     const unit = (from, to) => {
@@ -1430,10 +1430,12 @@ export class KeyboardDock {
       pathD = `M ${ax.toFixed(1)} ${ay.toFixed(1)} A ${ro} ${ro} 0 0 ${sweepOuter} ${bx.toFixed(1)} ${by.toFixed(1)} L ${cxx.toFixed(1)} ${cyy.toFixed(1)} A ${ri} ${ri} 0 0 ${sweepInner} ${dx.toFixed(1)} ${dy.toFixed(1)} Z`;
     }
 
-    const minX = Math.min(ax, bx, cxx, dx) - strokeW / 2;
-    const minY = Math.min(ay, by, cyy, dy) - strokeW / 2;
-    const maxX = Math.max(ax, bx, cxx, dx) + strokeW / 2;
-    const maxY = Math.max(ay, by, cyy, dy) + strokeW / 2;
+    // bbox padding: the outline stroke plus a little slack for the halo
+    const pad = this.outlineWidth / 2 + 1;
+    const minX = Math.min(ax, bx, cxx, dx) - pad;
+    const minY = Math.min(ay, by, cyy, dy) - pad;
+    const maxX = Math.max(ax, bx, cxx, dx) + pad;
+    const maxY = Math.max(ay, by, cyy, dy) + pad;
     const width = maxX - minX;
     const height = maxY - minY;
 
@@ -1452,12 +1454,15 @@ export class KeyboardDock {
     button.style.border = "none";
     button.style.background = "transparent";
     button.style.padding = "0";
-    // fill/stroke colors come from the .kd-space-path CSS rule (theme vars)
+    // fill/stroke colors come from the .kd-space-path CSS rule (theme vars);
+    // the inline stroke-width is just the pre-CSS fallback
     button.innerHTML = `<svg width="${Math.round(width)}" height="${Math.round(
       height
     )}" viewBox="${minX.toFixed(1)} ${minY.toFixed(1)} ${width.toFixed(
       1
-    )} ${height.toFixed(1)}"><path class="kd-space-path" d="${pathD}" stroke-width="${strokeW}" stroke-linejoin="round" paint-order="stroke fill"/></svg>`;
+    )} ${height.toFixed(1)}"><path class="kd-space-path" d="${pathD}" stroke-width="${
+      this.outlineWidth
+    }" stroke-linejoin="round" paint-order="stroke fill"/></svg>`;
     button.addEventListener("pointerdown", (event) => {
       event.preventDefault();
       this.appendSpace();

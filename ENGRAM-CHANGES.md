@@ -148,6 +148,13 @@
 - 切角上限从 bandHalf-2 改为 bandHalf/2：径向边（带宽 32px）两端各被切 16px 后只剩 4px 脖子，
   整个键帽被捏成楔形；按带宽 1/4 钳制（最大 8px）后形状恢复正常
 
+### R3-T3.24 · 弧形 spacebar 恢复全高 + 圆角跟随 Radius（2026-10-12）
+- 根因二连：旧粗描边（12px）一直在"偷偷撑高"spacebar（32px 几何带宽 + 12px 描边 = 44px 可视），
+  描边改细后可视化回 33px，看起来又薄又小；且切角钳 8px 与字母键 16px 圆角不匹配
+- 修复：带宽按 44px 可视高度 − 描边宽度计算（bandHalf = 22 − outlineWidth/2），
+  切角上限放宽到 bandHalf（Radius 16 → 端头全圆弧、无直线段），bbox padding 改随描边宽度
+- 效果：spacebar 与字母键同高、圆角一致跟随 Radius/Squircle/Border width
+
 ### R7-T7.4 · 背景图上下文编辑（2026-10-12）
 - Edit image 上下文 action（选中字形有背景图时启用）→ 解锁 + 选中 backgroundImage/0
 - 离开选中自动重锁（selection 监听）；全局 Unlock/Lock 菜单项已移除

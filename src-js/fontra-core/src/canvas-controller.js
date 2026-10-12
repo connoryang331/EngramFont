@@ -192,15 +192,20 @@ export class CanvasController {
       // are received, on both Windows and macOS.
       const scaleDown = clunkyScrollWheel ? 500 : event.ctrlKey ? 100 : 300;
       this._doPinchMagnify(event, 1 - deltaY / scaleDown);
-    } else {
+    } else if (event.shiftKey) {
+      // EngramFont: panning moved to shift+wheel (plain wheel now zooms)
       const scaleDown = clunkyScrollWheel ? 3 : 1;
       if (Math.abs(deltaX) > Math.abs(deltaY)) {
         this.origin.x -= deltaX / scaleDown;
       } else {
-        this.origin[event.shiftKey ? "x" : "y"] -= deltaY / scaleDown;
+        this.origin.y -= deltaY / scaleDown;
       }
       this.requestUpdate();
       this._dispatchEvent("viewBoxChanged", "origin");
+    } else {
+      // EngramFont default: plain wheel zooms in / zooms out
+      const scaleDown = clunkyScrollWheel ? 500 : 100;
+      this._doPinchMagnify(event, 1 - deltaY / scaleDown);
     }
   }
 

@@ -218,6 +218,11 @@
   move 切回 pointer 时 "=" 键高亮自动熄灭
 - E2E-17：选中/失活与原生工具栏及 move 键联动
 
+### R3-T3.34f · 画布滚轮默认改为缩放（2026-10-12）
+- 鼠标滚轮默认 = zoom in/out（原为平移）；Shift+滚轮 = 平移（原 plain wheel 行为迁到此处）；
+  Ctrl/Alt+滚轮保留（触控板捏合手势即以此形式到达）
+- 改动点：fontra-core/canvas-controller.js handleWheel；实测 magnification/origin 变化符合预期
+
 ### R3-T3.30 · 按键 8 接入 Knife Tool（2026-10-12）
 - 「8」= knife tool 单功能键（无子菜单，按下即选）：activateTool 直连原生
   setSelectedTool；buildFnKey 拆出单工具分支（跳过长按/右键弹层逻辑）

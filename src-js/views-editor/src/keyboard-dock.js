@@ -774,7 +774,7 @@ export class KeyboardDock {
           const angularSpan = keyWidthPx(SPACE_SPAN_LEFT) / radius;
           const { button, bbox } = this.buildSpaceArcButton(
             outerY,
-            cursor - keyGap / 2 / radius,
+            cursor + (keyGap * 1.5) / radius,
             angularSpan,
             radius,
             leftFrameX,
@@ -813,7 +813,7 @@ export class KeyboardDock {
           const angularSpan = keyWidthPx(SPACE_SPAN_RIGHT) / radius;
           const { button, bbox } = this.buildSpaceArcButton(
             outerY,
-            cursor - keyGap / 2 / radius,
+            cursor + (keyGap * 1.5) / radius,
             angularSpan,
             radius,
             rightFrameX,

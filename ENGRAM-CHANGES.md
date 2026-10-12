@@ -144,6 +144,10 @@
   （cubic 手柄长度 0.55+0.05×n），Border width 控制描边粗细——三项设置全部参与
 - E2E-11 补 Border width 断言
 
+### R3-T3.23 · 修复弧形 spacebar 圆角钳制（2026-10-12）
+- 切角上限从 bandHalf-2 改为 bandHalf/2：径向边（带宽 32px）两端各被切 16px 后只剩 4px 脖子，
+  整个键帽被捏成楔形；按带宽 1/4 钳制（最大 8px）后形状恢复正常
+
 ### R7-T7.4 · 背景图上下文编辑（2026-10-12）
 - Edit image 上下文 action（选中字形有背景图时启用）→ 解锁 + 选中 backgroundImage/0
 - 离开选中自动重锁（selection 监听）；全局 Unlock/Lock 菜单项已移除

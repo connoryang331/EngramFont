@@ -1381,7 +1381,7 @@ export class KeyboardDock {
     // is, and the stroke width follows the border width setting (via CSS)
     const filletR = Math.max(
       0,
-      Math.min(this.radius, bandHalf - 2, (ro * angularSpan) / 4)
+      Math.min(this.radius, bandHalf / 2, (ro * angularSpan) / 4)
     );
     const fullness = 0.55 + 0.05 * this.squircle;
     const unit = (from, to) => {

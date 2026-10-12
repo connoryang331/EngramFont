@@ -85,6 +85,13 @@
 - `:root.dark-theme` 的 dock 深色底板覆盖一并移除（折叠圆钮保留底色以便画布上可见）
 - 交互不受影响：手柄行、悬停显现键帽、设置弹窗照旧
 
+### R3-T3.14 · 键盘整体缩放 + 手柄去重（2026-10-12）
+- 设置页新增 Scale 滑杆（60%–160%，步进 5%，实时 % 显示）：zoom 应用到四个键容器（簇/半边），
+  不用 transform 以免破坏 fixed 定位的手柄行；localStorage `engramfont-dock-scale` 持久化
+- 底部手柄行从 4 个减到 2 个：[⚙ 设置] [– 折叠]——布局/主题与设置页重复，⇔ 和 ☾ 手柄删除
+  （toggleLayout/toggleTheme 一并移除，setLayout/setTheme 供弹窗用）；arc/straight 下两钮分居中线两侧
+- E2E-6/E2E-10 改走设置弹窗切布局/主题；E2E-11 增加 Scale 断言（zoom 样式 + 持久化）
+
 ### R7-T7.4 · 背景图上下文编辑（2026-10-12）
 - Edit image 上下文 action（选中字形有背景图时启用）→ 解锁 + 选中 backgroundImage/0
 - 离开选中自动重锁（selection 监听）；全局 Unlock/Lock 菜单项已移除

@@ -147,7 +147,7 @@ test("E2E-5 move key toggles pan (hand) tool", async ({ page }) => {
   expect(handStillSelected).toBe(false);
 });
 
-test("E2E-6 layout handle cycles arc -> straight -> merged", async ({
+test("E2E-6 layouts switch via the settings dialog", async ({
   page,
   context,
 }) => {
@@ -158,6 +158,15 @@ test("E2E-6 layout handle cycles arc -> straight -> merged", async ({
   await page.reload();
   await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
   await page.waitForTimeout(2500);
+
+  // layouts switch through the settings dialog (the handle row only keeps
+  // settings + collapse — no duplicate layout/theme buttons)
+  const setLayout = async (value) => {
+    await page.locator("#kd-settings-handle").click();
+    await page.locator(`input[name="kd-layout"][value="${value}"]`).check();
+    await page.locator("modal-dialog .dialog-box input.button").click();
+    await page.waitForTimeout(300);
+  };
 
   // arc first: floating curved halves
   await expect(page.locator(".kd-half-left")).toBeVisible();
@@ -186,10 +195,9 @@ test("E2E-6 layout handle cycles arc -> straight -> merged", async ({
   expect(arc.keys).toBe(63);
   expect(arc.rotated).toBe(arc.keys - 2);
   expect(arc.level).toBeLessThanOrEqual(2);
-  await page.locator("#kd-layout-handle").click();
-  await page.waitForTimeout(400);
+  await setLayout("straight");
 
-  // straight second: two framed clusters, rows level and flush
+  // straight second: two clusters, rows level and flush
   await expect(page.locator("#keyboard-dock.kd-straight")).toHaveCount(1);
   await expect(page.locator(".kd-cluster-left")).toBeVisible();
   await expect(page.locator(".kd-cluster-right")).toBeVisible();
@@ -210,8 +218,7 @@ test("E2E-6 layout handle cycles arc -> straight -> merged", async ({
   await page.locator(".kd-cluster-right [data-special='del']").click();
   await page.waitForTimeout(500);
 
-  await page.locator("#kd-layout-handle").click();
-  await page.waitForTimeout(400);
+  await setLayout("merged");
 
   // merged third: single block, single wide space
   await expect(page.locator("#keyboard-dock.kd-straight")).toHaveCount(0);
@@ -232,9 +239,8 @@ test("E2E-6 layout handle cycles arc -> straight -> merged", async ({
   await page.waitForTimeout(1500);
   await expect(page.locator(".kd-cluster-left")).toBeVisible();
 
-  // and the cycle continues: merged -> arc
-  await page.locator("#kd-layout-handle").click();
-  await page.waitForTimeout(400);
+  // and back to arc
+  await setLayout("arc");
   await expect(page.locator(".kd-half-left")).toBeVisible();
   expect(
     await page.evaluate(() => localStorage.getItem("engramfont-dock-layout"))
@@ -372,8 +378,10 @@ test("E2E-10 keyboard day/night theme toggle", async ({ page }) => {
   await page.mouse.move(400, 300);
   await expect(key).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
 
-  // toggle to dark via the handle; the choice persists across reloads
-  await page.locator("#kd-theme-handle").click();
+  // toggle to dark via the settings dialog; persists across reloads
+  await page.locator("#kd-settings-handle").click();
+  await page.locator('input[name="kd-theme"][value="dark"]').check();
+  await page.locator("modal-dialog .dialog-box input.button").click();
   await expect(dock).not.toHaveClass(/kd-theme-light/);
   expect(
     await page.evaluate(() => localStorage.getItem("engramfont-dock-theme"))
@@ -386,8 +394,10 @@ test("E2E-10 keyboard day/night theme toggle", async ({ page }) => {
   await page.waitForTimeout(2000);
   await expect(page.locator("#keyboard-dock")).not.toHaveClass(/kd-theme-light/);
 
-  // back to day
-  await page.locator("#kd-theme-handle").click();
+  // back to day (via the dialog again)
+  await page.locator("#kd-settings-handle").click();
+  await page.locator('input[name="kd-theme"][value="light"]').check();
+  await page.locator("modal-dialog .dialog-box input.button").click();
   await expect(dock).toHaveClass(/kd-theme-light/);
   await expect(key).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
 });
@@ -419,6 +429,22 @@ test("E2E-11 keyboard settings dialog", async ({ page }) => {
   expect(
     await page.evaluate(() => localStorage.getItem("engramfont-dock-theme"))
   ).toBe("dark");
+
+  // the scale slider applies live to the key containers and persists
+  const scaleInput = page.locator('.kd-settings-scale-row input[type="range"]');
+  await scaleInput.evaluate((el) => {
+    el.value = "1.25";
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await expect(page.locator(".kd-settings-scale-value")).toHaveText("125%");
+  expect(
+    await page.evaluate(
+      () => document.querySelector(".kd-cluster-left").style.zoom
+    )
+  ).toBe("1.25");
+  expect(
+    await page.evaluate(() => localStorage.getItem("engramfont-dock-scale"))
+  ).toBe("1.25");
 
   // the seeded binding is listed; reset-all clears it everywhere
   await expect(page.locator(".kd-settings-binding-row")).toHaveCount(1);

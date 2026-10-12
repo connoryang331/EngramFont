@@ -235,11 +235,14 @@ export class KeyboardDock {
     this.bindings = JSON.parse(
       localStorage.getItem("engramfont-key-bindings") || "{}"
     );
-    // day (light) keyboard theme is the default; #kd-theme-handle flips it
+    // day (light) keyboard theme is the default; the settings dialog flips it
     this.theme =
       localStorage.getItem("engramfont-dock-theme") === "dark"
         ? "dark"
         : "light";
+    // whole-keyboard scale (0.6–1.6), set in the settings dialog
+    const storedScale = parseFloat(localStorage.getItem("engramfont-dock-scale"));
+    this.scale = Math.min(1.6, Math.max(0.6, storedScale || 1));
     this.altActive = false;
     this.ctrlActive = false;
     // function-key elements -> their DOCK_FN_KEYS definition
@@ -248,6 +251,7 @@ export class KeyboardDock {
     this.buildDom();
     this.applyLayout();
     this.applyTheme();
+    this.applyScale();
     this.applyCollapsed();
     addCanvasModeListener(() => this.updateModeUI());
     this.updateModeUI();
@@ -280,20 +284,6 @@ export class KeyboardDock {
     });
     this.renderKeys();
 
-    // split/merge handle (EngramFont original, T3.7)
-    const layoutHandle = withAriaLabel(
-      html.button(
-        {
-          id: "kd-layout-handle",
-          title: translate("dock.layout.toggle"),
-        },
-        ["⇔"]
-      ),
-      translate("dock.layout.toggle")
-    );
-    layoutHandle.addEventListener("click", () => this.toggleLayout());
-    this.dockElement.appendChild(layoutHandle);
-
     // collapse handle (the circle button re-appears once collapsed)
     const collapseHandle = withAriaLabel(
       html.button(
@@ -307,21 +297,6 @@ export class KeyboardDock {
     );
     collapseHandle.addEventListener("click", () => this.toggleCollapsed());
     this.dockElement.appendChild(collapseHandle);
-
-    // day/night theme handle (EngramFont original): flips the keyboard
-    // between the light (day) and dark (night) keycap themes
-    this.themeHandle = withAriaLabel(
-      html.button(
-        {
-          id: "kd-theme-handle",
-          title: translate("dock.theme.toggle"),
-        },
-        []
-      ),
-      translate("dock.theme.toggle")
-    );
-    this.themeHandle.addEventListener("click", () => this.toggleTheme());
-    this.dockElement.appendChild(this.themeHandle);
 
     // keyboard settings handle (EngramFont original): pops the settings
     // dialog up in the middle of the screen (English-only UI by design)
@@ -830,9 +805,6 @@ export class KeyboardDock {
     // class scope for the night-only surfaces (translucent keycaps) — kept
     // off the #id so :hover/.kd-active/space rules can override it
     this.dockElement.classList.toggle("kd-theme-dark", this.theme === "dark");
-    // the glyph shows the mode you switch TO: sun in the dark theme,
-    // moon in the light theme
-    this.themeHandle.textContent = this.theme === "dark" ? "☀" : "☾";
   }
 
   setTheme(value) {
@@ -841,8 +813,25 @@ export class KeyboardDock {
     this.applyTheme();
   }
 
-  toggleTheme() {
-    this.setTheme(this.theme === "light" ? "dark" : "light");
+  // ---- whole-keyboard scale (EngramFont original) ----
+
+  applyScale() {
+    // zoom (not transform: the fixed-position handles must stay put) on the
+    // key containers only — the handle row keeps its size and centering
+    for (const container of [
+      this.clusterLeft,
+      this.clusterRight,
+      this.halfLeft,
+      this.halfRight,
+    ]) {
+      container.style.zoom = String(this.scale);
+    }
+  }
+
+  setScale(value) {
+    this.scale = value;
+    localStorage.setItem("engramfont-dock-scale", String(value));
+    this.applyScale();
   }
 
   // ---- keyboard settings dialog (EngramFont original) ----
@@ -868,6 +857,32 @@ export class KeyboardDock {
       );
     }
     content.appendChild(layoutSection);
+
+    // whole-keyboard scale (applies live)
+    const scaleValue = html.span({ class: "kd-settings-scale-value" }, [
+      `${Math.round(this.scale * 100)}%`,
+    ]);
+    const scaleInput = html.input({
+      type: "range",
+      min: "0.6",
+      max: "1.6",
+      step: "0.05",
+    });
+    scaleInput.value = String(this.scale);
+    scaleInput.addEventListener("input", () => {
+      const value = parseFloat(scaleInput.value);
+      scaleValue.textContent = `${Math.round(value * 100)}%`;
+      this.setScale(value);
+    });
+    content.appendChild(
+      html.div({ class: "kd-settings-section" }, [
+        html.div({ class: "kd-settings-section-title" }, ["Scale"]),
+        html.div({ class: "kd-settings-option kd-settings-scale-row" }, [
+          scaleInput,
+          scaleValue,
+        ]),
+      ])
+    );
 
     // day/night theme (applies live)
     const themeSection = html.div({ class: "kd-settings-section" }, []);
@@ -1301,15 +1316,6 @@ export class KeyboardDock {
   applyLayout() {
     this.dockElement.classList.toggle("kd-straight", this.layout === "straight");
     this.dockElement.classList.toggle("kd-arc", this.layout === "arc");
-    const handle = document.querySelector("#kd-layout-handle");
-    if (handle) {
-      handle.title = translate("dock.layout.toggle", this.layout);
-    }
-  }
-
-  toggleLayout() {
-    const index = dockLayouts.indexOf(this.layout);
-    this.setLayout(dockLayouts[(index + 1) % dockLayouts.length]);
   }
 
   setLayout(value) {

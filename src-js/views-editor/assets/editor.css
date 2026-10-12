@@ -893,6 +893,17 @@ kerning-handle.negative {
   cursor: pointer;
 }
 
+.kd-settings-scale-row input[type="range"] {
+  flex: 1;
+  accent-color: #0666ee;
+}
+
+.kd-settings-scale-value {
+  min-width: 3em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 .kd-settings-bindings-empty {
   opacity: 0.6;
 }
@@ -1119,10 +1130,25 @@ kerning-handle.negative {
   display: block;
 }
 
-#kd-layout-handle {
+/* keyboard settings + collapse: the only two handles (layout and theme
+   live in the settings dialog now); ⚙ settings, – collapse */
+#kd-collapse-handle {
   position: absolute;
   top: -12px;
   right: 10px;
+  border: none;
+  border-radius: 1em;
+  background-color: #3c3c40;
+  color: #e8e6e1;
+  font-size: 11px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+#kd-settings-handle {
+  position: absolute;
+  top: -12px;
+  right: 40px;
   border: none;
   border-radius: 1em;
   background-color: #3c3c40;
@@ -1139,59 +1165,13 @@ kerning-handle.negative {
   background-color: #1c1c1ef5;
 }
 
-#kd-collapse-handle {
-  position: absolute;
-  top: -12px;
-  right: 40px;
-  border: none;
-  border-radius: 1em;
-  background-color: #3c3c40;
-  color: #e8e6e1;
-  font-size: 11px;
-  padding: 2px 8px;
-  cursor: pointer;
-}
-
-/* day/night keyboard theme toggle (EngramFont original) */
-#kd-theme-handle {
-  position: absolute;
-  top: -12px;
-  right: 100px;
-  border: none;
-  border-radius: 1em;
-  background-color: #3c3c40;
-  color: #e8e6e1;
-  font-size: 11px;
-  padding: 2px 8px;
-  cursor: pointer;
-}
-
-/* keyboard settings (EngramFont original): the gear sits in the middle of
-   the handle row */
-#kd-settings-handle {
-  position: absolute;
-  top: -12px;
-  right: 70px;
-  border: none;
-  border-radius: 1em;
-  background-color: #3c3c40;
-  color: #e8e6e1;
-  font-size: 11px;
-  padding: 2px 8px;
-  cursor: pointer;
-}
-
-/* split mode: park the handles in the valley gap between the two floating
-   halves (the dock itself is a zero-height overlay there, so anchor them to
-   the viewport) */
-#keyboard-dock.kd-straight #kd-layout-handle,
+/* split/arc mode: park the two handles in the middle bottom, flanking the
+   screen centerline (the dock itself is a zero-height overlay there, so
+   anchor them to the viewport) */
 #keyboard-dock.kd-straight #kd-collapse-handle,
 #keyboard-dock.kd-straight #kd-settings-handle,
-#keyboard-dock.kd-straight #kd-theme-handle,
-#keyboard-dock.kd-arc #kd-layout-handle,
 #keyboard-dock.kd-arc #kd-collapse-handle,
-#keyboard-dock.kd-arc #kd-settings-handle,
-#keyboard-dock.kd-arc #kd-theme-handle {
+#keyboard-dock.kd-arc #kd-settings-handle {
   position: fixed;
   bottom: 1em;
   top: auto;
@@ -1199,28 +1179,14 @@ kerning-handle.negative {
   pointer-events: auto;
 }
 
-/* bottom handle row, evenly spaced around the middle: layout, collapse,
-   SETTINGS (center), theme */
-#keyboard-dock.kd-straight #kd-layout-handle,
-#keyboard-dock.kd-arc #kd-layout-handle {
-  left: calc(50% - 80px);
+#keyboard-dock.kd-straight #kd-settings-handle,
+#keyboard-dock.kd-arc #kd-settings-handle {
+  left: calc(50% - 22px);
   transform: translateX(-50%);
 }
 
 #keyboard-dock.kd-straight #kd-collapse-handle,
 #keyboard-dock.kd-arc #kd-collapse-handle {
-  left: calc(50% - 40px);
-  transform: translateX(-50%);
-}
-
-#keyboard-dock.kd-straight #kd-settings-handle,
-#keyboard-dock.kd-arc #kd-settings-handle {
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-#keyboard-dock.kd-straight #kd-theme-handle,
-#keyboard-dock.kd-arc #kd-theme-handle {
-  left: calc(50% + 40px);
+  left: calc(50% + 22px);
   transform: translateX(-50%);
 }

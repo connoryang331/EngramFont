@@ -157,6 +157,29 @@ const BINDING_ACTION_LABELS = {
 // the native toolbar (which expands on hold/right-click and promotes the
 // chosen sub-tool to the front).
 const DOCK_FN_KEYS = {
+  // keys 2-5 toggle the editor's sidebar panels — the same panels as the
+  // native sidebar tabs (press again to close; the key lights up while the
+  // panel is open)
+  2: {
+    titleKey: "sidebar.reference-font",
+    panel: "reference-font",
+    icon: "/images/reference.svg",
+  },
+  3: {
+    titleKey: "sidebar.designspace-navigation",
+    panel: "designspace-navigation",
+    icon: "/images/sliders.svg",
+  },
+  4: {
+    titleKey: "sidebar.glyph-search",
+    panel: "glyph-search",
+    icon: "/images/magnifyingglass.svg",
+  },
+  5: {
+    titleKey: "sidebar.text-entry",
+    panel: "text-entry",
+    icon: "/images/texttool.svg",
+  },
   6: {
     titleKey: "editor.pointer-tools",
     tools: [
@@ -415,6 +438,16 @@ export class KeyboardDock {
       },
     });
 
+    // same idea for the sidebar panel keys: both the dock's panel keys and
+    // the native sidebar tab clicks go through editorController.toggleSidebar,
+    // so wrapping it keeps the key highlights in sync on every toggle
+    const baseToggleSidebar = this.editorController.toggleSidebar;
+    this.editorController.toggleSidebar = (...args) => {
+      const onOff = baseToggleSidebar.apply(this.editorController, args);
+      this.updateFnKeyStates();
+      return onOff;
+    };
+
     this.buildDom();
     this.applyLayout();
     this.applyTheme();
@@ -578,7 +611,39 @@ export class KeyboardDock {
     return element;
   }
 
+  buildPanelKey(fnDef) {
+    // sidebar panel toggle key: press toggles the panel, exactly like
+    // clicking the native sidebar tab; the key lights up while it's open
+    const element = withAriaLabel(
+      html.button(
+        {
+          class: "kd-key kd-char-key kd-fn-key",
+          "data-panel": fnDef.panel,
+          title: translate(fnDef.titleKey),
+        },
+        []
+      ),
+      translate(fnDef.titleKey)
+    );
+    element.appendChild(
+      html.createDomElement("inline-svg", {
+        class: "kd-fn-icon",
+        src: fnDef.icon,
+      })
+    );
+    this.fnKeyDefs.set(element, fnDef);
+    element.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      this.editorController.toggleSidebar(fnDef.panel, true);
+    });
+    element.addEventListener("contextmenu", (event) => event.preventDefault());
+    return element;
+  }
+
   buildFnKey(keyDef, fnDef) {
+    if (fnDef.panel) {
+      return this.buildPanelKey(fnDef);
+    }
     // one key position mirroring Fontra's native multi-tool button (e.g. the
     // pointer tools): the face icon is the current sub-tool, a quick click
     // (re)selects it, and a long press / right click reveals the sub-tool
@@ -792,6 +857,17 @@ export class KeyboardDock {
   updateFnKeyStates() {
     const selected = this.editorController.selectedToolIdentifier;
     for (const [element, fnDef] of this.fnKeyDefs) {
+      if (fnDef.panel) {
+        // panel keys light up while their panel is the sidebar's open panel
+        const tab = document.querySelector(
+          `.sidebar-tab[data-sidebar-name="${fnDef.panel}"]`
+        );
+        element.classList.toggle(
+          "kd-active",
+          !!tab?.classList.contains("selected")
+        );
+        continue;
+      }
       const current = fnDef.tools.find((toolDef) => toolDef.tool === selected);
       element.classList.toggle("kd-active", !!current);
       // the face follows the selected group member, wherever it was chosen

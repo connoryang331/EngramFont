@@ -261,6 +261,10 @@
 - R4.T4.12：弧形 mini 键改为自带均匀节距的独立弧线排布（键距 = 键宽+keyGap，不再锚在数字键
   中心——原先节距 58px/键宽 42px 导致缝隙 13/16/6px 参差）；整行总长收进数字行范围，
   File 右缘不再超出 5 键（row1Angles 收集随之删除）
+- R4.T4.13：按键 2-5 接入侧边栏面板（2=Reference Font / 3=Designspace / 4=Glyph Search /
+  5=Text Entry）：DOCK_FN_KEYS 新增 panel 型条目（复用面板 iconPath 与 sidebar.* 标题键），
+  buildPanelKey 按下即 editorController.toggleSidebar；激活态读 sidebar-tab 的 selected，
+  包装 editorController.toggleSidebar 使原生侧栏标签点击同样点亮 dock 键；E2E-18
 
 ### R3-T3.30 · 按键 8 接入 Knife Tool（2026-10-12）
 - 「8」= knife tool 单功能键（无子菜单，按下即选）：activateTool 直连原生

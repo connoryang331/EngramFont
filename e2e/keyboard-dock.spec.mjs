@@ -793,3 +793,32 @@ test("E2E-17 hand tool key selects the native hand", async ({ page }) => {
   const pointerKey = page.locator('.kd-fn-key[data-fn*="pointer-tool"]');
   await expect(pointerKey).toHaveClass(/kd-active/);
 });
+
+test("E2E-18 sidebar panel keys toggle their panels", async ({ page }) => {
+  // keys 2-5 toggle the sidebar panels, same as the native sidebar tabs;
+  // each key lights up (kd-active) while its panel is the open one
+  await openEditor(page, "a");
+  const cases = [
+    ["5", "text-entry"],
+    ["4", "glyph-search"],
+    ["3", "designspace-navigation"],
+    ["2", "reference-font"],
+  ];
+  for (const [key, panel] of cases) {
+    const panelKey = page.locator(`.kd-fn-key[data-panel="${panel}"]`);
+    await expect(panelKey).toHaveCount(1);
+    await panelKey.click();
+    const tab = page.locator(`.sidebar-tab[data-sidebar-name="${panel}"]`);
+    await expect(tab).toHaveClass(/selected/);
+    await expect(panelKey).toHaveClass(/kd-active/);
+    // pressing the same key again closes its panel
+    await panelKey.click();
+    await expect(tab).not.toHaveClass(/selected/);
+    await expect(panelKey).not.toHaveClass(/kd-active/);
+  }
+  // opening a panel from the NATIVE tab lights the dock key too
+  await page.locator('.sidebar-tab[data-sidebar-name="glyph-search"]').click();
+  await expect(
+    page.locator('.kd-fn-key[data-panel="glyph-search"]')
+  ).toHaveClass(/kd-active/);
+});

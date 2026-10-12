@@ -1408,7 +1408,10 @@ export class KeyboardDock {
     if (filletR > 0.5) {
       // cut filletR into each edge at every corner and join with a cubic
       // whose handles sit on the edges — a round fillet at low squircle,
-      // a fuller (boxier) one as the exponent rises
+      // a fuller (boxier) one as the exponent rises. The arcs must run
+      // between their OWN cut points (on their circles) — starting the
+      // inner arc from the radial-line fillet point would draw a different,
+      // non-concentric arc and taper the band
       const t0 = thetaStart;
       const t1 = thetaStart + angularSpan;
       const outStartArc = corner(ro, t0 + filletR / ro);
@@ -1428,6 +1431,7 @@ export class KeyboardDock {
         `A ${ro} ${ro} 0 0 ${sweepOuter} ${fmt(outEndArc)} ` +
         `C ${fmt(pull(outEndArc, pOutEnd))} ${fmt(pull(eOutEnd, pOutEnd))} ${fmt(eOutEnd)} ` +
         `L ${fmt(eInEnd)} ` +
+        `C ${fmt(pull(eInEnd, pInEnd))} ${fmt(pull(inEndArc, pInEnd))} ${fmt(inEndArc)} ` +
         `A ${ri} ${ri} 0 0 ${sweepInner} ${fmt(inStartArc)} ` +
         `C ${fmt(pull(inStartArc, pInStart))} ${fmt(pull(eInStart, pInStart))} ${fmt(eInStart)} ` +
         `L ${fmt(eOutStart)} ` +

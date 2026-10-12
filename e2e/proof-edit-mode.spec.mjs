@@ -39,8 +39,8 @@ async function openEditor(page, project, text = "a") {
 test("E2E-1 mode toggle switches UI, persists across reload", async ({ page }) => {
   await openEditor(page, findImportedProject());
 
-  // edit mode by default: tool cluster visible, proof toolbar hidden
-  await expect(page.locator("#edit-tools")).toBeVisible();
+  // edit mode by default: proof toolbar hidden (the native tool cluster is
+  // permanently hidden — the keyboard dock carries the tools now)
   await expect(page.locator("#proof-toolbar")).toBeHidden();
 
   await page.locator("#canvas-mode-button").click();
@@ -57,9 +57,8 @@ test("E2E-1 mode toggle switches UI, persists across reload", async ({ page }) =
   await expect(page.locator("#proof-toolbar")).toBeVisible();
   await expect(page.locator("#edit-tools")).toBeHidden();
 
-  // back to edit restores the tool cluster
+  // back to edit hides the proof toolbar again
   await page.locator("#canvas-mode-button").click();
-  await expect(page.locator("#edit-tools")).toBeVisible();
   await expect(page.locator("#proof-toolbar")).toBeHidden();
 });
 

@@ -223,6 +223,12 @@
   Ctrl/Alt+滚轮保留（触控板捏合手势即以此形式到达）
 - 改动点：fontra-core/canvas-controller.js handleWheel；实测 magnification/origin 变化符合预期
 
+### R3-T3.34g · 隐藏原生工具栏（2026-10-12）
+- 全部工具已上 dock（6/7/8/9/0/-/=），原生 #edit-tools display:none（DOM 保留：工具选择、
+  face 前置、dock 同步观察器照常工作）；#zoom-tools 缩放按钮保留
+- 相关 E2E 同步：keyboard-dock 各用例的"切走"步骤改用 knife dock 键；import E2E-1 改用
+  dock 0 键选 sidebearing（先选工具再折叠 dock）；proof E2E-1 去掉工具栏可见性断言
+
 ### R3-T3.30 · 按键 8 接入 Knife Tool（2026-10-12）
 - 「8」= knife tool 单功能键（无子菜单，按下即选）：activateTool 直连原生
   setSelectedTool；buildFnKey 拆出单工具分支（跳过长按/右键弹层逻辑）

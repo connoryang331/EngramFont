@@ -53,11 +53,12 @@ test("E2E-1 import Inter.ttf -> editor opens imported project", async ({
     `editor.html?project=${importName}.fontra${makeFragment({ text: "a" })}`
   );
   await page.waitForTimeout(2500); // editor + glyph render
-  // collapse the keyboard dock: it overlaps the sidebearing handles
+  // select sidebearing via dock key "0" (the native toolbar is hidden),
+  // THEN collapse the keyboard dock: it overlaps the sidebearing handles
+  await page.locator('[data-fn*="kerning-tool"]').click();
+  await page.waitForTimeout(300);
   await page.locator("#kd-collapse-handle").click();
   await page.waitForTimeout(400);
-  await page.locator('[data-tool="sidebearing-tool"]').click();
-  await page.waitForTimeout(300);
   // the right LSB/RSB handle sits below the glyph (fit-zoom, 1440x900 viewport)
   await page.locator("#edit-canvas").hover({ position: { x: 1095, y: 813 } });
   await page.mouse.down();

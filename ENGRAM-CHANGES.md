@@ -54,6 +54,14 @@
 - 弧形 space 圆角对齐普通按键：SVG stroke 8→12（可视圆角 6px = .kd-key border-radius），seam 侧间隙 +2px 补偿
 - 修复：dock 弹层继承 `#keyboard-dock` 的 pointer-events:none → `.kd-fn-options` 显式 auto
 
+### R3-T3.10 · 键盘白天/黑夜主题（2026-10-12）
+- 默认白天（浅色）主题：dock 级 CSS 变量（--kd-keycap-bg/-alt/-hover/-fg、--kd-cluster-bg），浅色下浅键帽加深色文字、
+  细描边+软阴影保证与浅色画布的层次；激活态反色（浅色主题=深底浅字）
+- `#kd-theme-handle`（底部中央第三个手柄，☀/☾ 显示目标模式）切换，localStorage `engramfont-dock-theme` 持久化
+- 覆盖范围：普通/深色样式键帽、滑块胶囊、straight 簇背景、折叠圆钮、子工具弹层、弧形 SVG space
+  （.kd-space-path 改 CSS 变量取色，去掉 JS 硬编码 fill/stroke）；彩色功能键（紫/黄/红/绿/蓝/橙）双主题保持
+- 文案：`dock.theme.toggle`（en/zh-CN）；E2E-10：默认浅色→切深色→刷新保持→切回浅色
+
 ### R7-T7.4 · 背景图上下文编辑（2026-10-12）
 - Edit image 上下文 action（选中字形有背景图时启用）→ 解锁 + 选中 backgroundImage/0
 - 离开选中自动重锁（selection 监听）；全局 Unlock/Lock 菜单项已移除

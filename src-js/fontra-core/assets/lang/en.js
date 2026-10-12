@@ -545,6 +545,7 @@ export const strings = {
   "dock.layout.straight": "split rows",
   "dock.layout.arc": "curved split",
   "dock.layout.toggle": "Keyboard layout: %0 — click to change",
+  "dock.theme.toggle": "Toggle keyboard day/night theme",
   "dock.toggle": "Show or hide the keyboard",
   "action.new-font": "New font…",
   "background-image.labels.replace": "Replace image (keeps position and opacity)",

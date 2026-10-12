@@ -650,6 +650,13 @@ kerning-handle.negative {
 
 /* R3 · keyboard dock */
 #keyboard-dock {
+  /* keyboard day/night theme (EngramFont original): the #kd-theme-handle
+     flips these variables; every dock surface derives from them */
+  --kd-keycap-bg: #2d2d30;
+  --kd-keycap-bg-alt: #3c3c40;
+  --kd-keycap-bg-hover: #3a3a3e;
+  --kd-keycap-fg: #e8e6e1;
+  --kd-cluster-bg: #262629fa;
   position: absolute;
   bottom: 0.75em;
   left: 50%;
@@ -657,11 +664,30 @@ kerning-handle.negative {
   width: max-content;
   max-width: 96%;
   z-index: 25;
-  background-color: #262629fa;
+  background-color: var(--kd-cluster-bg);
   border-radius: 12px;
   padding: 12px;
   box-shadow: 0 4px 18px #0006;
   transition: all 280ms ease;
+}
+
+/* day (light) keyboard theme — the default; #kd-theme-handle toggles */
+#keyboard-dock.kd-theme-light {
+  --kd-keycap-bg: #f1efeb;
+  --kd-keycap-bg-alt: #dedbd4;
+  --kd-keycap-bg-hover: #e4e1db;
+  --kd-keycap-fg: #33322f;
+  --kd-cluster-bg: #fbfaf7fa;
+}
+
+/* light keycaps sit on a light canvas — a hairline ring plus a soft drop
+   shadow keeps the keys defined (the curved SVG space key gets no box
+   shadow; its button box is the sector's bounding rectangle) */
+#keyboard-dock.kd-theme-light .kd-key:not(.kd-arc-space),
+#keyboard-dock.kd-theme-light .kd-fn-option {
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.07),
+    0 1px 2px rgba(0, 0, 0, 0.18);
 }
 
 #keyboard-dock.kd-collapsed {
@@ -710,8 +736,8 @@ kerning-handle.negative {
   height: 44px;
   border: none;
   border-radius: 6px;
-  background-color: #2d2d30;
-  color: #e8e6e1;
+  background-color: var(--kd-keycap-bg);
+  color: var(--kd-keycap-fg);
   font-family: engramfont-ui-regular, sans-serif;
   font-size: 15px;
   cursor: pointer;
@@ -725,7 +751,7 @@ kerning-handle.negative {
 }
 
 .kd-key:hover {
-  background-color: #3a3a3e;
+  background-color: var(--kd-keycap-bg-hover);
 }
 
 .kd-key:focus-visible {
@@ -734,8 +760,8 @@ kerning-handle.negative {
 }
 
 .kd-key.kd-active {
-  background-color: #e8e6e1;
-  color: #262629;
+  background-color: var(--kd-keycap-fg);
+  color: var(--kd-keycap-bg);
 }
 
 .kd-key.kd-disabled {
@@ -808,8 +834,8 @@ kerning-handle.negative {
   height: 44px;
   border: none;
   border-radius: 6px;
-  background-color: #2d2d30;
-  color: #e8e6e1;
+  background-color: var(--kd-keycap-bg);
+  color: var(--kd-keycap-fg);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -818,12 +844,18 @@ kerning-handle.negative {
 }
 
 .kd-fn-option:hover {
-  background-color: #3a3a3e;
+  background-color: var(--kd-keycap-bg-hover);
 }
 
 .kd-fn-option.kd-active {
-  background-color: #e8e6e1;
-  color: #262629;
+  background-color: var(--kd-keycap-fg);
+  color: var(--kd-keycap-bg);
+}
+
+/* the arc spacebar's SVG keycap follows the theme via variables */
+.kd-space-path {
+  fill: var(--kd-keycap-bg);
+  stroke: var(--kd-keycap-bg);
 }
 
 .kd-style-orange {
@@ -858,7 +890,7 @@ kerning-handle.negative {
 }
 
 .kd-style-dark.kd-key {
-  background-color: #3c3c40;
+  background-color: var(--kd-keycap-bg-alt);
 }
 
 /* sliders (capsule look) */
@@ -898,7 +930,7 @@ kerning-handle.negative {
 
 #keyboard-dock.kd-straight .kd-cluster {
   pointer-events: auto;
-  background-color: #262629fa;
+  background-color: var(--kd-cluster-bg);
   border-radius: 12px;
   padding: 12px;
   box-shadow: 0 4px 18px #0006;
@@ -952,8 +984,8 @@ kerning-handle.negative {
   height: 56px;
   border-radius: 50%;
   border: none;
-  background-color: #262629fa;
-  color: #e8e6e1;
+  background-color: var(--kd-cluster-bg);
+  color: var(--kd-keycap-fg);
   font-size: 22px;
   cursor: pointer;
   z-index: 25;
@@ -997,13 +1029,29 @@ kerning-handle.negative {
   cursor: pointer;
 }
 
+/* day/night keyboard theme toggle (EngramFont original) */
+#kd-theme-handle {
+  position: absolute;
+  top: -12px;
+  right: 70px;
+  border: none;
+  border-radius: 1em;
+  background-color: #3c3c40;
+  color: #e8e6e1;
+  font-size: 11px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
 /* split mode: park the handles in the valley gap between the two floating
    halves (the dock itself is a zero-height overlay there, so anchor them to
    the viewport) */
 #keyboard-dock.kd-straight #kd-layout-handle,
 #keyboard-dock.kd-straight #kd-collapse-handle,
+#keyboard-dock.kd-straight #kd-theme-handle,
 #keyboard-dock.kd-arc #kd-layout-handle,
-#keyboard-dock.kd-arc #kd-collapse-handle {
+#keyboard-dock.kd-arc #kd-collapse-handle,
+#keyboard-dock.kd-arc #kd-theme-handle {
   position: fixed;
   bottom: 1em;
   top: auto;
@@ -1020,4 +1068,9 @@ kerning-handle.negative {
 #keyboard-dock.kd-straight #kd-collapse-handle,
 #keyboard-dock.kd-arc #kd-collapse-handle {
   left: calc(50% + 44px);
+}
+
+#keyboard-dock.kd-straight #kd-theme-handle,
+#keyboard-dock.kd-arc #kd-theme-handle {
+  left: calc(50% + 88px);
 }

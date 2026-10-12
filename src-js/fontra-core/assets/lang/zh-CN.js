@@ -234,6 +234,7 @@ export const strings = {
   "editor.pointer-tool": "指针工具",
   "editor.pointer-tool-scale": "指针工具（手柄同步缩放模式）",
   "editor.pointer-tools": "指针工具",
+  "dock.theme.toggle": "切换键盘白天/黑夜主题",
   "editor.power-ruler-tool": "测量尺工具",
   "editor.shape-tool": "图形工具",
   "editor.shape-tool-ellipse": "椭圆工具",

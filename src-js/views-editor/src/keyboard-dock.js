@@ -608,21 +608,24 @@ export class KeyboardDock {
   }
 
   renderArcKeys() {
-    // curved split board (reference: curved ortho boards) — each row is an
-    // arc of the same radius whose peak sits at the seam; the per-row arc
-    // center is below the peak, so rows arch up towards the middle (like the
-    // reference photos) while stacking top-down in the normal row order.
-    // Keys rotate along the tangent; the QWERTY seam (5|6, T/Y, G/H, B/N)
-    // splits the halves with a small angular gap.
+    // K860-style valley split (reference photo): each half's rows are arcs
+    // whose high point is the OUTER edge, sagging down towards the central
+    // valley — the per-row arc center sits above the outer end. Outer edges
+    // of all rows stack flush (Backspace/Enter/right-Shift right edges align
+    // like the real board), and because the bottom rows are longer they sag
+    // deeper, forming the V-shaped valley at the seam. Keys rotate along the
+    // tangent, tilting into the valley.
     const arc = this.arcElement;
     arc.replaceChildren();
 
     const keyGap = 6;
     const keyHeight = 44;
     const rowHeight = keyHeight + 8;
-    const radius = 1400; // curvature of every row
-    const seamHalfAngle = (2.5 * Math.PI) / 180; // 2.5 deg each side of the seam
+    const radius = 1600; // sag of the rows into the valley
+    const sidePad = 14;
     const topPad = 16;
+    const bottomPad = 14;
+    const seamGap = 70; // horizontal gap between the halves
 
     const keyWidthPx = (span) => 52 * span + (span - 1) * keyGap;
     const spanOf = (keyElement) =>
@@ -639,52 +642,57 @@ export class KeyboardDock {
     });
 
     const placements = [];
+    let leftMaxX = 0;
+    let rightExtent = 0;
+    let maxY = 0;
+
     for (const [rowIndex, { left, right }] of halves.entries()) {
-      const peakY = topPad + rowIndex * rowHeight;
-      // left half: keys ordered seam -> outer = reverse of array order,
-      // angles negative (left of the peak)
-      let cursor = -seamHalfAngle;
-      for (const keyElement of [...left].reverse()) {
-        const width = keyWidthPx(spanOf(keyElement));
-        const delta = (width + keyGap) / radius;
-        const angle = cursor - delta / 2;
-        cursor -= delta;
-        placements.push({ keyElement, angle, width, peakY });
-      }
-      cursor = seamHalfAngle;
-      for (const keyElement of right) {
+      const outerY = topPad + rowIndex * rowHeight;
+
+      // LEFT half: array order = outer -> seam; the arc descends to the
+      // right (keys rotate clockwise, tilting into the valley)
+      let cursor = 0;
+      for (const keyElement of left) {
         const width = keyWidthPx(spanOf(keyElement));
         const delta = (width + keyGap) / radius;
         const angle = cursor + delta / 2;
         cursor += delta;
-        placements.push({ keyElement, angle, width, peakY });
+        const x = radius * Math.sin(angle);
+        const y = outerY + radius * (1 - Math.cos(angle));
+        leftMaxX = Math.max(leftMaxX, x + width / 2);
+        maxY = Math.max(maxY, y + keyHeight / 2);
+        placements.push({ keyElement, x, y, rot: angle, width });
+      }
+
+      // RIGHT half: mirrored — the arc descends to the left (rotation
+      // -angle); every row's outer end sits at the same right edge
+      cursor = 0;
+      for (const keyElement of [...right].reverse()) {
+        const width = keyWidthPx(spanOf(keyElement));
+        const delta = (width + keyGap) / radius;
+        const angle = cursor + delta / 2;
+        cursor += delta;
+        const x = -radius * Math.sin(angle);
+        const y = outerY + radius * (1 - Math.cos(angle));
+        rightExtent = Math.max(rightExtent, -x + width / 2);
+        maxY = Math.max(maxY, y + keyHeight / 2);
+        placements.push({ keyElement, x, y, rot: -angle, width });
       }
     }
 
-    // project onto screen coordinates and normalize into the container
-    let minX = Infinity,
-      maxX = -Infinity,
-      maxY = -Infinity;
-    const points = placements.map(({ keyElement, angle, width, peakY }) => {
-      const x = radius * Math.sin(angle);
-      const y = peakY + radius * (1 - Math.cos(angle));
-      minX = Math.min(minX, x - width / 2);
-      maxX = Math.max(maxX, x + width / 2);
-      maxY = Math.max(maxY, y + keyHeight / 2);
-      return { keyElement, x, y, angle, width };
-    });
-    const sidePad = 14;
-    const bottomPad = 14;
-    const width = maxX - minX + sidePad * 2;
+    const width = leftMaxX + seamGap + rightExtent + sidePad * 2;
     const height = maxY + bottomPad;
     arc.style.width = `${Math.round(width)}px`;
     arc.style.height = `${Math.round(height)}px`;
 
-    for (const { keyElement, x, y, angle, width } of points) {
+    for (const { keyElement, x, y, rot, width } of placements) {
+      const isRight = x < 0;
       keyElement.style.position = "absolute";
-      keyElement.style.left = `${Math.round(x - minX + sidePad - width / 2)}px`;
+      keyElement.style.left = `${Math.round(
+        sidePad + (isRight ? leftMaxX + seamGap + rightExtent + x : x) - width / 2
+      )}px`;
       keyElement.style.top = `${Math.round(y - keyHeight / 2)}px`;
-      keyElement.style.transform = `rotate(${((angle * 180) / Math.PI).toFixed(2)}deg)`;
+      keyElement.style.transform = `rotate(${((rot * 180) / Math.PI).toFixed(2)}deg)`;
       arc.appendChild(keyElement);
     }
   }

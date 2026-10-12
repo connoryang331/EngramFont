@@ -172,7 +172,14 @@ test("E2E-6 split layout: two clusters anchored apart, persists", async ({
   expect(separation.gap).toBeGreaterThan(100);
   expect(separation.leftKeys).toBeGreaterThan(0);
   expect(separation.rightKeys).toBeGreaterThan(0);
-  expect(separation.leftKeys + separation.rightKeys).toBe(mergedKeys);
+  // split-ergo: each cluster has its own space key
+  expect(
+    await page.locator(".kd-cluster-left [data-special='space']").isVisible()
+  ).toBe(true);
+  expect(
+    await page.locator(".kd-cluster-right [data-special='space']").isVisible()
+  ).toBe(true);
+  expect(separation.leftKeys + separation.rightKeys).toBe(mergedKeys + 1);
   expect(
     await page.evaluate(() => localStorage.getItem("engramfont-dock-layout"))
   ).toBe("split");
@@ -191,6 +198,10 @@ test("E2E-6 split layout: two clusters anchored apart, persists", async ({
   await page.locator("#kd-layout-handle").click();
   await page.waitForTimeout(400);
   await expect(page.locator(".kd-cluster-right")).toBeHidden();
+  // merged mode: back to the single wide space key
+  await expect(
+    page.locator(".kd-cluster-left [data-special='space']")
+  ).toBeVisible();
 });
 
 test("E2E-7 custom key binding via context menu", async ({ page }) => {

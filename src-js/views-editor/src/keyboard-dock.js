@@ -572,10 +572,17 @@ export class KeyboardDock {
       .filter((toolDef) => toolDef.tool !== faceTool.tool)
       .reverse();
     // each option matches the parent key's visual size — arc keys render
-    // larger and the dock scale applies, so measure the key itself
+    // larger and the dock scale applies, so measure the key itself. A
+    // floating cap reads slightly smaller than an attached one (optical
+    // illusion) — render ~6% larger so both LOOK the same size
+    const illusionCompensation = 1.06;
     const zoom = parseFloat(getComputedStyle(keyElement).zoom) || 1;
-    const optWidth = Math.round(keyElement.offsetWidth * zoom);
-    const optHeight = Math.round(keyElement.offsetHeight * zoom);
+    const optWidth = Math.round(
+      keyElement.offsetWidth * zoom * illusionCompensation
+    );
+    const optHeight = Math.round(
+      keyElement.offsetHeight * zoom * illusionCompensation
+    );
     const optionGap = 5;
     for (const toolDef of alternatives) {
       const option = withAriaLabel(

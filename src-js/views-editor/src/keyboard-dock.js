@@ -259,6 +259,13 @@ export class KeyboardDock {
     this.radius = Number.isFinite(storedRadius)
       ? Math.min(22, Math.max(0, storedRadius))
       : 6;
+    // key outline width
+    const storedOutlineWidth = parseFloat(
+      localStorage.getItem("engramfont-dock-outline-width")
+    );
+    this.outlineWidth = Number.isFinite(storedOutlineWidth)
+      ? Math.min(3, Math.max(0.5, storedOutlineWidth))
+      : 1;
     // split layouts: distance between the keyboards and the browser edges
     const storedGap = parseFloat(localStorage.getItem("engramfont-dock-split-gap"));
     this.splitGap = Number.isFinite(storedGap)
@@ -895,6 +902,21 @@ export class KeyboardDock {
     this.applyRadius();
   }
 
+  // ---- key outline width (EngramFont original) ----
+
+  applyOutlineWidth() {
+    this.dockElement.style.setProperty(
+      "--kd-key-outline-width",
+      `${this.outlineWidth}px`
+    );
+  }
+
+  setOutlineWidth(value) {
+    this.outlineWidth = value;
+    localStorage.setItem("engramfont-dock-outline-width", String(value));
+    this.applyOutlineWidth();
+  }
+
   // ---- split gap + key font size (EngramFont original) ----
 
   applyFontSize() {
@@ -1090,6 +1112,32 @@ export class KeyboardDock {
         html.div({ class: "kd-settings-option kd-settings-scale-row" }, [
           radiusInput,
           radiusValue,
+        ]),
+      ])
+    );
+
+    // outline (border) width
+    const outlineValue = html.span({ class: "kd-settings-scale-value" }, [
+      `${this.outlineWidth}px`,
+    ]);
+    const outlineInput = html.input({
+      type: "range",
+      min: "0.5",
+      max: "3",
+      step: "0.5",
+    });
+    outlineInput.value = String(this.outlineWidth);
+    outlineInput.addEventListener("input", () => {
+      const value = parseFloat(outlineInput.value);
+      outlineValue.textContent = `${value}px`;
+      this.setOutlineWidth(value);
+    });
+    content.appendChild(
+      html.div({ class: "kd-settings-section" }, [
+        html.div({ class: "kd-settings-section-title" }, ["Border width"]),
+        html.div({ class: "kd-settings-option kd-settings-scale-row" }, [
+          outlineInput,
+          outlineValue,
         ]),
       ])
     );
@@ -1304,9 +1352,8 @@ export class KeyboardDock {
     // [thetaStart, thetaStart + angularSpan] on the centerline `radius`
     // (thetaStart = the key's position along the row's arc).
     const keyHeight = 44;
-    // the same-color round stroke IS the corner rounding: its outer half
-    // gives a visual corner radius of strokeW/2 — keep it equal to .kd-key's
-    // border-radius (6px) so the spacebar's corners match the other keys
+    // the stroke only pads the geometry bbox (and, via CSS, takes the border
+    // width setting); the outline's corner rounding is built into the path
     const strokeW = 12;
     const bandHalf = keyHeight / 2 - strokeW / 2; // path band; stroke pads it
     const ro = radius + bandHalf;
@@ -1327,7 +1374,61 @@ export class KeyboardDock {
     // sagging into the valley)
     const sweepOuter = mirror ? 0 : 1;
     const sweepInner = mirror ? 1 : 0;
-    const pathD = `M ${ax.toFixed(1)} ${ay.toFixed(1)} A ${ro} ${ro} 0 0 ${sweepOuter} ${bx.toFixed(1)} ${by.toFixed(1)} L ${cxx.toFixed(1)} ${cyy.toFixed(1)} A ${ri} ${ri} 0 0 ${sweepInner} ${dx.toFixed(1)} ${dy.toFixed(1)} Z`;
+
+    // the curved spacebar participates in the Radius / Squircle / Border
+    // width settings: the outline gets corner fillets sized by the radius
+    // setting, with the squircle exponent controlling how "full" each fillet
+    // is, and the stroke width follows the border width setting (via CSS)
+    const filletR = Math.max(
+      0,
+      Math.min(this.radius, bandHalf - 2, (ro * angularSpan) / 4)
+    );
+    const fullness = 0.55 + 0.05 * this.squircle;
+    const unit = (from, to) => {
+      const len = Math.hypot(to[0] - from[0], to[1] - from[1]);
+      return [(to[0] - from[0]) / len, (to[1] - from[1]) / len];
+    };
+    const toward = (point, other, dist) => {
+      const [ux, uy] = unit(point, other);
+      return [point[0] + ux * dist, point[1] + uy * dist];
+    };
+    const pull = (edge, cornerPoint) => [
+      edge[0] + fullness * (cornerPoint[0] - edge[0]),
+      edge[1] + fullness * (cornerPoint[1] - edge[1]),
+    ];
+    const fmt = (p) => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`;
+
+    let pathD;
+    if (filletR > 0.5) {
+      // cut filletR into each edge at every corner and join with a cubic
+      // whose handles sit on the edges — a round fillet at low squircle,
+      // a fuller (boxier) one as the exponent rises
+      const t0 = thetaStart;
+      const t1 = thetaStart + angularSpan;
+      const outStartArc = corner(ro, t0 + filletR / ro);
+      const outEndArc = corner(ro, t1 - filletR / ro);
+      const inEndArc = corner(ri, t1 - filletR / ri);
+      const inStartArc = corner(ri, t0 + filletR / ri);
+      const pOutStart = [ax, ay];
+      const pOutEnd = [bx, by];
+      const pInEnd = [cxx, cyy];
+      const pInStart = [dx, dy];
+      const eOutStart = toward(pOutStart, pInStart, filletR);
+      const eOutEnd = toward(pOutEnd, pInEnd, filletR);
+      const eInEnd = toward(pInEnd, pOutEnd, filletR);
+      const eInStart = toward(pInStart, pOutStart, filletR);
+      pathD =
+        `M ${fmt(outStartArc)} ` +
+        `A ${ro} ${ro} 0 0 ${sweepOuter} ${fmt(outEndArc)} ` +
+        `C ${fmt(pull(outEndArc, pOutEnd))} ${fmt(pull(eOutEnd, pOutEnd))} ${fmt(eOutEnd)} ` +
+        `L ${fmt(eInEnd)} ` +
+        `A ${ri} ${ri} 0 0 ${sweepInner} ${fmt(inStartArc)} ` +
+        `C ${fmt(pull(inStartArc, pInStart))} ${fmt(pull(eInStart, pInStart))} ${fmt(eInStart)} ` +
+        `L ${fmt(eOutStart)} ` +
+        `C ${fmt(pull(eOutStart, pOutStart))} ${fmt(pull(outStartArc, pOutStart))} ${fmt(outStartArc)} Z`;
+    } else {
+      pathD = `M ${ax.toFixed(1)} ${ay.toFixed(1)} A ${ro} ${ro} 0 0 ${sweepOuter} ${bx.toFixed(1)} ${by.toFixed(1)} L ${cxx.toFixed(1)} ${cyy.toFixed(1)} A ${ri} ${ri} 0 0 ${sweepInner} ${dx.toFixed(1)} ${dy.toFixed(1)} Z`;
+    }
 
     const minX = Math.min(ax, bx, cxx, dx) - strokeW / 2;
     const minY = Math.min(ay, by, cyy, dy) - strokeW / 2;

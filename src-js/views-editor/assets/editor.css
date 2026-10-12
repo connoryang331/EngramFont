@@ -756,7 +756,7 @@ kerning-handle.negative {
    fill, hairline outline only — that outline defines their keycap shape;
    the kd-style-* color chips carry no outline */
 .kd-char-key {
-  box-shadow: inset 0 0 0 1.5px var(--kd-key-outline);
+  box-shadow: inset 0 0 0 var(--kd-key-outline-width, 1px) var(--kd-key-outline);
 }
 
 /* night keys over a light canvas need *some* surface under the light
@@ -966,7 +966,7 @@ kerning-handle.negative {
    letter keys; the curved SVG sector strokes instead of filling (its button
    box is just the bounding rectangle, so it must not get a box ring) */
 .kd-key.kd-special-key[data-special="space"]:not(.kd-arc-space) {
-  box-shadow: inset 0 0 0 1.5px var(--kd-key-outline);
+  box-shadow: inset 0 0 0 var(--kd-key-outline-width, 1px) var(--kd-key-outline);
 }
 
 .kd-key.kd-special-key[data-special="space"]:hover {
@@ -977,7 +977,7 @@ kerning-handle.negative {
   fill: transparent;
   stroke: var(--kd-key-outline);
   /* same hairline weight as the other keys' rings */
-  stroke-width: 1.5;
+  stroke-width: var(--kd-key-outline-width, 1px);
 }
 
 /* transparent keys: a light halo keeps labels readable where canvas glyphs

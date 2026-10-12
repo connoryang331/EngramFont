@@ -136,6 +136,14 @@
   半径调大后形状变化立现（squircle 8 + radius 16 已验证）
 - E2E-11 补 Radius 断言（computed border-radius + 持久化）
 
+### R3-T3.22 · 描边宽度设置 + 弧形 spacebar 参与形状设置（2026-10-12）
+- 描边默认 1.5px→1px，新增 Border width 滑杆（0.5–3px 步进 0.5）：`--kd-key-outline-width`
+  同时驱动字母键内圈、rect space ring、弧形 SVG 描边
+- 弧形 spacebar 是 SVG 扇形路径，radius/squircle 的 CSS 属性对其无效——改为在路径几何里实现：
+  四角按 Radius 设置做圆角切角（clamp 到带宽/弧长），Squircle 指数控制切角的"饱满度"
+  （cubic 手柄长度 0.55+0.05×n），Border width 控制描边粗细——三项设置全部参与
+- E2E-11 补 Border width 断言
+
 ### R7-T7.4 · 背景图上下文编辑（2026-10-12）
 - Edit image 上下文 action（选中字形有背景图时启用）→ 解锁 + 选中 backgroundImage/0
 - 离开选中自动重锁（selection 监听）；全局 Unlock/Lock 菜单项已移除

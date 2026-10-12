@@ -503,6 +503,32 @@ test("E2E-11 keyboard settings dialog", async ({ page }) => {
     await page.evaluate(() => localStorage.getItem("engramfont-dock-radius"))
   ).toBe("16");
 
+  // border width slider (letter-key rings + the curved spacebar's stroke)
+  const outlineInput = page.locator(
+    '.kd-settings-section:has-text("Border width") input[type="range"]'
+  );
+  await outlineInput.evaluate((el) => {
+    el.value = "0.5";
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await expect(
+    page.locator(
+      '.kd-settings-section:has-text("Border width") .kd-settings-scale-value'
+    )
+  ).toHaveText("0.5px");
+  expect(
+    await page.evaluate(() =>
+      document
+        .querySelector("#keyboard-dock")
+        .style.getPropertyValue("--kd-key-outline-width")
+    )
+  ).toBe("0.5px");
+  expect(
+    await page.evaluate(
+      () => localStorage.getItem("engramfont-dock-outline-width")
+    )
+  ).toBe("0.5");
+
   // split gap slider: inline insets on the straight dock + persistence
   const gapInput = page.locator(
     '.kd-settings-section:has-text("Split gap") input[type="range"]'

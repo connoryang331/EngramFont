@@ -558,6 +558,16 @@ export class KeyboardDock {
       span: SPACE_SPAN_LEFT,
       locked: true,
     });
+    // split layouts: the right cluster's spacebar + move key were redundant —
+    // ONE wide move key replaces both (same total extent). In the straight
+    // layout its left end is clipped to a straight diagonal that starts at
+    // the n key's left edge (set in renderKeys)
+    this.moveKeyRight = this.buildKey({
+      special: "move",
+      style: "dark",
+      span: SPACE_SPAN_RIGHT + MOVE_SPAN_SPLIT,
+      locked: true,
+    });
     this.renderKeys();
 
     // collapse handle (the circle button re-appears once collapsed)
@@ -1618,17 +1628,16 @@ export class KeyboardDock {
     }
     const split = this.layout !== "merged";
 
-    // bottom-row spans differ per layout (merged: one 5u space; split: dual
-    // 3.5u/2.5u spaces with a 1.5u move between them)
+    // bottom-row spans differ per layout (merged: one 5u space + 1.25u move;
+    // split: left 3.8u space, right ONE wide move key — the spacebar sector
+    // doubles as the move key there, so the original space/move elements are
+    // only placed in merged)
     const [spaceKey, moveKey] = this.keyElements[4].slice(3, 5);
-    spaceKey.style.setProperty(
-      "--kd-span",
-      split ? SPACE_SPAN_RIGHT : SPACE_SPAN_MERGED
-    );
-    moveKey.style.setProperty(
-      "--kd-span",
-      split ? MOVE_SPAN_SPLIT : MOVE_SPAN_MERGED
-    );
+    spaceKey.style.setProperty("--kd-span", SPACE_SPAN_MERGED);
+    moveKey.style.setProperty("--kd-span", MOVE_SPAN_MERGED);
+    // the blue mode ("view") key runs a bit shorter in the split layouts
+    const modeKey = this.keyElements[2][this.keyElements[2].length - 1];
+    modeKey.style.setProperty("--kd-span", split ? 2 : 2.25);
 
     if (this.layout === "arc") {
       this.renderArcKeys();
@@ -1665,17 +1674,29 @@ export class KeyboardDock {
     if (this.layout === "straight") {
       // neat split: two framed clusters anchored to the canvas corners,
       // rows cut at the QWERTY seam (fixed 52px keys, no stretching).
-      // Split mode keeps dual thumb spaces: the left cluster gets its own
-      // (bordered like the right one), as in the arc layout
+      // Split mode keeps dual thumb keys: the left cluster gets its own
+      // space (bordered like the right one); the right cluster's spacebar
+      // + move key merge into ONE wide move key whose left end is a straight
+      // diagonal starting at the n key's left edge
       for (const [rowIndex, rowElements] of this.keyElements.entries()) {
         const cut = rowIndex === 4 ? SPLIT_ROW5_CUT : SPLIT_CUTS[rowIndex];
         const leftFragment = rowElements.slice(0, cut);
         if (rowIndex === 4) {
           leftFragment.push(this.spaceKeyLeft);
         }
+        const rightFragment = rowElements
+          .slice(cut)
+          .filter(
+            (keyElement) =>
+              keyElement.dataset.special !== "move" &&
+              keyElement.dataset.special !== "space"
+          );
+        if (rowIndex === 4) {
+          rightFragment.unshift(this.moveKeyRight);
+        }
         const fragments = [
           [this.clusterLeft, leftFragment],
-          [this.clusterRight, rowElements.slice(cut)],
+          [this.clusterRight, rightFragment],
         ];
         for (const [host, fragment] of fragments) {
           const rowElement = html.div({ class: "kd-row" }, []);
@@ -1686,6 +1707,14 @@ export class KeyboardDock {
           }
         }
       }
+      // the wide move key's left end: a straight diagonal whose top edge
+      // starts at the n-key's left edge (the bottom row is the longest, so
+      // a square end would poke out past it) — inset = row width difference
+      const unit = (spanValue) => 52 * spanValue + (spanValue - 1) * 6;
+      const row5Width = unit(4) + 4 * unit(1.25) + 4 * 6;
+      const row4Width = 5 * 52 + 4 * 6 + unit(2.75);
+      const slantInset = Math.round(row5Width - row4Width);
+      this.moveKeyRight.style.clipPath = `polygon(${slantInset}px 0, 100% 0, 100% 100%, 0 100%)`;
       this.clusterLeft.prepend(this.makeMiniKeyRow());
       this.clusterRight.classList.remove("kd-hidden");
       return;
@@ -1705,7 +1734,15 @@ export class KeyboardDock {
     this.clusterRight.classList.add("kd-hidden");
   }
 
-  buildSpaceArcButton(outerY, thetaStart, angularSpan, radius, frameX, mirror) {
+  buildSpaceArcButton(
+    outerY,
+    thetaStart,
+    angularSpan,
+    radius,
+    frameX,
+    mirror,
+    special = "space"
+  ) {
     // K860-style spacebar: ONE continuously curved keycap drawn as an SVG
     // annular sector (outer arc + inner arc; rounded joins via a same-color
     // round stroke under the fill — MDN Paths recipe). The sector spans
@@ -1810,11 +1847,11 @@ export class KeyboardDock {
       html.button(
         {
           class: "kd-key kd-special-key kd-style-dark kd-locked kd-arc-space",
-          "data-special": "space",
+          "data-special": special,
         },
         []
       ),
-      translate("dock.key.space")
+      translate(special === "move" ? "dock.key.move" : "dock.key.space")
     );
     button.style.width = `${Math.round(width)}px`;
     button.style.height = `${Math.round(height)}px`;
@@ -1830,9 +1867,17 @@ export class KeyboardDock {
     )} ${height.toFixed(1)}"><path class="kd-space-path" d="${pathD}" stroke-width="${
       this.outlineWidth
     }" stroke-linejoin="round" paint-order="stroke fill"/></svg>`;
+    if (special === "move") {
+      // must come AFTER the innerHTML assignment above (it wipes children)
+      button.appendChild(html.div({ class: "kd-key-main" }, ["move"]));
+    }
     button.addEventListener("pointerdown", (event) => {
       event.preventDefault();
-      this.appendSpace();
+      if (special === "move") {
+        this.togglePanMode(button);
+      } else {
+        this.appendSpace();
+      }
     });
     return { button, bbox: { minX, minY, maxX, maxY } };
   }
@@ -1877,7 +1922,11 @@ export class KeyboardDock {
       if (rowIndex === 4) {
         left.push(this.spaceKeyLeft);
       }
-      const right = rowElements.slice(cut);
+      // split layouts: the right cluster's spacebar sector doubles as the
+      // move key (widened) — the standalone move key is dropped
+      const right = rowElements
+        .slice(cut)
+        .filter((keyElement) => keyElement.dataset.special !== "move");
       return { left, right };
     });
 
@@ -1944,16 +1993,18 @@ export class KeyboardDock {
             ? -2
             : 0;
         if (keyElement.dataset.special === "space") {
-          // wide space: ONE continuously curved SVG annular-sector keycap
-          // (the +2 compensates the thicker corner stroke, as on the left)
-          const angularSpan = keyWidthPx(SPACE_SPAN_RIGHT) / radius;
+          // wide space sector doubling as the move key: covers the old space
+          // + move extent (the +2 compensates the thicker corner stroke)
+          const angularSpan =
+            keyWidthPx(SPACE_SPAN_RIGHT + MOVE_SPAN_SPLIT) / radius;
           const { button, bbox } = this.buildSpaceArcButton(
             outerY,
             cursor + (keyGap * 1.5 + 2) / radius,
             angularSpan,
             radius,
             rightFrameX,
-            true
+            true,
+            "move"
           );
           rightMaxY = Math.max(rightMaxY, bbox.maxY);
           rightPlacements.push({

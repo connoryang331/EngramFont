@@ -448,7 +448,10 @@ export class KeyboardDock {
     this.closeFnKeyOptions();
     const selected = this.editorController.selectedToolIdentifier;
     const options = html.div({ class: "kd-fn-options" }, []);
-    for (const toolDef of fnDef.tools) {
+    // the flyout pops up ABOVE the key, so the array order renders
+    // bottom-up: tools[0] (the face / default tool) ends up adjacent to the
+    // key face, further tools stack above it
+    for (const toolDef of [...fnDef.tools].reverse()) {
       const option = withAriaLabel(
         html.button(
           {

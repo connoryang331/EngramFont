@@ -317,7 +317,13 @@ test("E2E-9 pointer-tools key mirrors the native multi-tool", async ({ page }) =
   await key.click({ button: "right" });
   const scaleOption = page.locator('.kd-fn-option[data-tool="pointer-tool-scale"]');
   await expect(scaleOption).toBeVisible();
-  await expect(page.locator('.kd-fn-option[data-tool="pointer-tool"]')).toBeVisible();
+  const pointerOption = page.locator('.kd-fn-option[data-tool="pointer-tool"]');
+  await expect(pointerOption).toBeVisible();
+  // the flyout pops up above the key: scaling on top, pointer tool below
+  // (adjacent to the key face, which shows the same pointer tool)
+  expect((await scaleOption.boundingBox()).y).toBeLessThan(
+    (await pointerOption.boundingBox()).y
+  );
   await scaleOption.click();
   await expect(frontSubTool).toHaveAttribute("data-tool", "pointer-tool-scale");
   await expect(key.locator(".kd-fn-icon")).toHaveAttribute(

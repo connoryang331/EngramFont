@@ -45,7 +45,8 @@
 ### R3-T3.9 · 功能键替换：单键位多工具（2026-10-12）
 - 方向转变：物理键盘拟真不适合本项目，保留键盘布局，把物理按键逐个替换成字体功能键（`DOCK_FN_KEYS` 注册表，逐键替换）
 - 首个：按键「6」= 一个键位替换为 Fontra 原生 pointer tools 多工具键——交互与原生工具栏完全一致：
-  面图标=当前子工具；快点击=重选当前工具；长按 500ms 或右键=展开子工具选项（pointer / pointer (scaling)）；
+  面图标=当前子工具；快点击=重选当前工具；长按 500ms 或右键=向上展开子工具选项
+  （数组顺序自下而上渲染：scaling 在上、pointer 在下紧贴键帽面）；
   选中后子工具前置（setSelectedTool(id, true)，原生同路径）；点外部 mousedown 或 Escape 收起
 - 原生接线：`editorController.setSelectedTool`（与工具栏按钮/快捷键同路径）；原生工具栏切换时 dock 键
   经 MutationObserver(#edit-tools) 同步高亮与面图标；proof 态按功能键先回 edit 模式

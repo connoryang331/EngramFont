@@ -816,8 +816,12 @@ test("E2E-18 sidebar panel keys toggle their panels", async ({ page }) => {
     await expect(tab).not.toHaveClass(/selected/);
     await expect(panelKey).not.toHaveClass(/kd-active/);
   }
-  // opening a panel from the NATIVE tab lights the dock key too
-  await page.locator('.sidebar-tab[data-sidebar-name="glyph-search"]').click();
+  // opening a panel OUTSIDE the dock (native path through the wrapped
+  // editorController.toggleSidebar — tab strip, actions) lights the key too;
+  // the left-edge tab strip itself is hidden (the dock keys replaced it)
+  await page.evaluate(() =>
+    window.editorController.toggleSidebar("glyph-search", true)
+  );
   await expect(
     page.locator('.kd-fn-key[data-panel="glyph-search"]')
   ).toHaveClass(/kd-active/);

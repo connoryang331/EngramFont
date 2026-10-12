@@ -265,6 +265,13 @@
   5=Text Entry）：DOCK_FN_KEYS 新增 panel 型条目（复用面板 iconPath 与 sidebar.* 标题键），
   buildPanelKey 按下即 editorController.toggleSidebar；激活态读 sidebar-tab 的 selected，
   包装 editorController.toggleSidebar 使原生侧栏标签点击同样点亮 dock 键；E2E-18
+- R4.T4.14：左侧栏不再挤占画布列（原 grid 子元素把 dock 挤偏），改为悬浮面板：
+  position:fixed 锚在 dock 右半上方（bottom/right 由 keyboard-dock.syncDockExtentVars
+  发布的 --kd-dock-clearance/--kd-dock-right-inset 决定，随布局/缩放/折叠/窗口缩放同步；
+  取四个 cluster 可见矩形并集——arc 模式 dock 元素是零高覆盖层），宽度过渡从右缘向左生长
+  = 从右滑出（内容 float:right 右贴 + overflow:hidden 裁剪）；左侧边缘 tab 条隐藏
+  （dock 键 2-5 已全面替代），右侧栏行为不变；E2E-18 原生路径断言改走
+  editorController.toggleSidebar（tab 条已隐藏）
 
 ### R3-T3.30 · 按键 8 接入 Knife Tool（2026-10-12）
 - 「8」= knife tool 单功能键（无子菜单，按下即选）：activateTool 直连原生

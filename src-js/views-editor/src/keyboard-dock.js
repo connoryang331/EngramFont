@@ -459,6 +459,44 @@ export class KeyboardDock {
     this.applyCollapsed();
     addCanvasModeListener(() => this.updateModeUI());
     this.updateModeUI();
+
+    // the left sidebar panels float ABOVE the dock (see editor.css): keep
+    // the anchoring CSS vars in sync with the dock's viewport extent
+    this.syncDockExtentVars();
+    new ResizeObserver(() => this.syncDockExtentVars()).observe(
+      this.dockElement
+    );
+    window.addEventListener("resize", () => this.syncDockExtentVars());
+  }
+
+  syncDockExtentVars() {
+    // publish where the dock sits so the floating sidebar can anchor to it:
+    // clearance = gap between the viewport bottom and the keys' top edge,
+    // right inset = gap between the viewport right edge and the keys.
+    // The dock element itself is a zero-height overlay in arc mode — union
+    // the visible cluster rects for the real key extent
+    const rects = [
+      this.clusterLeft,
+      this.clusterRight,
+      this.halfLeft,
+      this.halfRight,
+    ]
+      .map((element) => element.getBoundingClientRect())
+      .filter((rect) => rect.width || rect.height);
+    if (!rects.length) {
+      return; // collapsed: keep the last anchor
+    }
+    const top = Math.min(...rects.map((rect) => rect.top));
+    const right = Math.max(...rects.map((rect) => rect.right));
+    const rootStyle = document.documentElement.style;
+    rootStyle.setProperty(
+      "--kd-dock-clearance",
+      `${Math.round(window.innerHeight - top + 10)}px`
+    );
+    rootStyle.setProperty(
+      "--kd-dock-right-inset",
+      `${Math.round(window.innerWidth - right)}px`
+    );
   }
 
   buildDom() {
@@ -1109,6 +1147,7 @@ export class KeyboardDock {
     this.dockElement.classList.toggle("kd-collapsed", this.collapsed);
     // the circle button shows only while the dock is collapsed
     this.collapseButton.classList.toggle("kd-collapsed", this.collapsed);
+    this.syncDockExtentVars();
   }
 
   // ---- day/night keyboard theme (EngramFont original) ----
@@ -1139,6 +1178,7 @@ export class KeyboardDock {
     ]) {
       container.style.zoom = String(this.scale);
     }
+    this.syncDockExtentVars();
   }
 
   setScale(value) {
@@ -1526,6 +1566,9 @@ export class KeyboardDock {
   renderKeys() {
     // (re)distribute the key elements into the cluster containers;
     // appendChild re-parents, so all listeners on the keys survive
+    // (the sync runs after the branch below so the floating sidebar's
+    // anchoring vars track the new layout)
+    requestAnimationFrame(() => this.syncDockExtentVars());
     this.clusterLeft.replaceChildren();
     this.clusterRight.replaceChildren();
     this.halfLeft.replaceChildren();

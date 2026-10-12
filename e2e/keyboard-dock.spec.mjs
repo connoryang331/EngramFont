@@ -197,10 +197,10 @@ test("E2E-6 layouts switch via the settings dialog", async ({
     };
   });
   expect(arc.gap).toBeGreaterThan(100);
-  // 61 flow keys + 2 curved SVG space keys (one per half) + 6 half-height
-  // menu keys above the number row (arc-placed, rotated); the SVG spaces
-  // are not tangent-rotated (they ARE the arc)
-  expect(arc.keys).toBe(69);
+  // 61 flow keys + 2 curved SVG space keys (one per half) + 7 half-height
+  // menu keys along the arc above the number row (all rotated); the SVG
+  // spaces are not tangent-rotated (they ARE the arc)
+  expect(arc.keys).toBe(70);
   expect(arc.rotated).toBe(arc.keys - 2);
   expect(arc.level).toBeLessThanOrEqual(2);
   await setLayout("straight");

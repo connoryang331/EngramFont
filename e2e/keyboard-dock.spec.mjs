@@ -153,29 +153,39 @@ test("E2E-6 curved split layout: arced halves, persists", async ({ page }) => {
   await page.locator("#kd-layout-handle").click();
   await page.waitForTimeout(600);
 
-  // split: curved arc board with all keys, halves separated at the seam
-  await expect(page.locator(".kd-arc")).toBeVisible();
-  const seam = await page.evaluate(() => {
-    const five = document
-      .querySelector(".kd-arc [data-key='5']")
+  // split: two separate floating half keyboards, horizontally apart
+  await expect(page.locator(".kd-half-left")).toBeVisible();
+  await expect(page.locator(".kd-half-right")).toBeVisible();
+  const separation = await page.evaluate(() => {
+    const left = document
+      .querySelector(".kd-half-left")
       .getBoundingClientRect();
-    const six = document
-      .querySelector(".kd-arc [data-key='6']")
+    const right = document
+      .querySelector(".kd-half-right")
       .getBoundingClientRect();
-    const keys = document.querySelectorAll(".kd-arc .kd-key").length;
+    const keys = document.querySelectorAll(".kd-half .kd-key").length;
     const rotated = [
-      ...document.querySelectorAll(".kd-arc .kd-key"),
+      ...document.querySelectorAll(".kd-half .kd-key"),
     ].filter((k) => (k.style.transform || "").includes("rotate")).length;
-    return { gap: Math.round(six.left - five.right), keys, rotated };
+    return {
+      gap: Math.round(right.left - left.right),
+      leftKeys: document.querySelectorAll(".kd-half-left .kd-key").length,
+      rightKeys: document.querySelectorAll(".kd-half-right .kd-key").length,
+      keys,
+      rotated,
+      level: Math.abs(left.bottom - right.bottom),
+    };
   });
-  expect(seam.gap).toBeGreaterThan(60); // visible seam gap between the halves
-  expect(seam.keys).toBe(mergedKeys + 1); // + the second space key
-  expect(seam.rotated).toBe(seam.keys); // every key rotates along its arc
+  expect(separation.gap).toBeGreaterThan(100); // two detached keyboards
+  expect(separation.leftKeys).toBeGreaterThan(0);
+  expect(separation.rightKeys).toBeGreaterThan(0);
+  expect(separation.keys).toBe(mergedKeys + 1); // + the second space key
+  expect(separation.rotated).toBe(separation.keys); // arcs: keys rotate
+  // both halves bottom-aligned -> corresponding rows sit level
+  expect(separation.level).toBeLessThanOrEqual(2);
   // split-ergo: each half has its own space key
-  const spaceCount = await page
-    .locator(".kd-arc [data-special='space']")
-    .count();
-  expect(spaceCount).toBe(2);
+  expect(await page.locator(".kd-half-left [data-special='space']").count()).toBe(1);
+  expect(await page.locator(".kd-half-right [data-special='space']").count()).toBe(1);
   expect(
     await page.evaluate(() => localStorage.getItem("engramfont-dock-layout"))
   ).toBe("split");
@@ -183,17 +193,17 @@ test("E2E-6 curved split layout: arced halves, persists", async ({ page }) => {
   // keys remain functional in the arc layout (DEL resets the text);
   // force: the rotated key's bbox center falls outside the rotated rect,
   // so the default hit-test would see the canvas underneath
-  await page.locator(".kd-arc [data-special='del']").click({ force: true });
+  await page.locator(".kd-half-right [data-special='del']").click({ force: true });
   await page.waitForTimeout(600);
 
   // persists across reload; merge restores the single block
   await page.reload();
   await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
   await page.waitForTimeout(1500);
-  await expect(page.locator(".kd-arc")).toBeVisible();
+  await expect(page.locator(".kd-half-left")).toBeVisible();
   await page.locator("#kd-layout-handle").click();
   await page.waitForTimeout(400);
-  await expect(page.locator(".kd-arc")).toBeHidden();
+  await expect(page.locator(".kd-half-left")).toBeHidden();
   // merged mode: back to the single wide space key
   await expect(
     page.locator(".kd-cluster-left [data-special='space']")

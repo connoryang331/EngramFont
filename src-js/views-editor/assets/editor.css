@@ -817,22 +817,42 @@ kerning-handle.negative {
   pointer-events: none;
 }
 
-/* split layout (T3.7): one curved board — the dock keeps its frame and wraps
-   the arc container */
+/* split layout (T3.7): two separate floating half keyboards (no tray) —
+   each half is a transparent group of arc-placed keys anchored to a canvas
+   corner; both halves bottom-aligned so corresponding rows sit level */
 #keyboard-dock.kd-split {
-  width: max-content;
+  left: 0;
+  right: 0;
+  transform: none;
+  width: auto;
+  max-width: none;
+  height: 0;
+  background-color: transparent;
+  padding: 0;
+  box-shadow: none;
+  pointer-events: none;
 }
 
-.kd-arc {
-  position: relative;
+.kd-half {
+  position: absolute;
+  bottom: 0;
+  pointer-events: auto;
 }
 
-.kd-arc .kd-key {
+.kd-half-left {
+  left: 0.75em;
+}
+
+.kd-half-right {
+  right: 0.75em;
+}
+
+.kd-half .kd-key {
   position: absolute;
   margin: 0;
 }
 
-.kd-arc.kd-hidden {
+.kd-half.kd-hidden {
   display: none;
 }
 
@@ -888,4 +908,25 @@ kerning-handle.negative {
   font-size: 11px;
   padding: 2px 8px;
   cursor: pointer;
+}
+
+/* split mode: park the handles in the valley gap between the two floating
+   halves (the dock itself is a zero-height overlay there, so anchor them to
+   the viewport) */
+#keyboard-dock.kd-split #kd-layout-handle,
+#keyboard-dock.kd-split #kd-collapse-handle {
+  position: fixed;
+  bottom: 1em;
+  top: auto;
+  right: auto;
+  pointer-events: auto;
+}
+
+#keyboard-dock.kd-split #kd-layout-handle {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+#keyboard-dock.kd-split #kd-collapse-handle {
+  left: calc(50% + 44px);
 }

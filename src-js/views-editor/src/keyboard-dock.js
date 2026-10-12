@@ -204,14 +204,16 @@ export class KeyboardDock {
     container.appendChild(this.dockElement);
 
     // two cluster containers: merged mode holds one continuous keyboard in
-    // the left cluster; split mode lays the keys out along concentric arcs
-    // in .kd-arc (image-2 style curved split board)
+    // the left cluster; split mode renders two separate curved half
+    // keyboards (K860 style) floating over the canvas corners
     this.clusterLeft = html.div({ class: "kd-cluster kd-cluster-left" }, []);
     this.clusterRight = html.div({ class: "kd-cluster kd-cluster-right" }, []);
-    this.arcElement = html.div({ class: "kd-rows kd-arc" }, []);
+    this.halfLeft = html.div({ class: "kd-half kd-half-left" }, []);
+    this.halfRight = html.div({ class: "kd-half kd-half-right" }, []);
     this.dockElement.appendChild(this.clusterLeft);
     this.dockElement.appendChild(this.clusterRight);
-    this.dockElement.appendChild(this.arcElement);
+    this.dockElement.appendChild(this.halfLeft);
+    this.dockElement.appendChild(this.halfRight);
 
     this.sliderElements = {};
     this.keyElements = DOCK_ROWS.map((row) => row.map((keyDef) => this.buildKey(keyDef)));
@@ -556,7 +558,8 @@ export class KeyboardDock {
     // appendChild re-parents, so all listeners on the keys survive
     this.clusterLeft.replaceChildren();
     this.clusterRight.replaceChildren();
-    this.arcElement.replaceChildren();
+    this.halfLeft.replaceChildren();
+    this.halfRight.replaceChildren();
     const split = this.layout === "split";
 
     // bottom-row spans differ per layout (merged: one 5u space; split: dual
@@ -575,13 +578,15 @@ export class KeyboardDock {
       this.renderArcKeys();
       this.clusterLeft.classList.add("kd-hidden");
       this.clusterRight.classList.add("kd-hidden");
-      this.arcElement.classList.remove("kd-hidden");
+      this.halfLeft.classList.remove("kd-hidden");
+      this.halfRight.classList.remove("kd-hidden");
       return;
     }
 
-    // merged: left cluster visible, right cluster + arc hidden
+    // merged: left cluster visible, right cluster + halves hidden
     this.clusterLeft.classList.remove("kd-hidden");
-    this.arcElement.classList.add("kd-hidden");
+    this.halfLeft.classList.add("kd-hidden");
+    this.halfRight.classList.add("kd-hidden");
     // clear the arc layout's inline styles — they would break flow layout
     for (const rowElements of this.keyElements) {
       for (const keyElement of rowElements) {
@@ -604,7 +609,6 @@ export class KeyboardDock {
       }
     }
     this.clusterRight.classList.add("kd-hidden");
-    this.arcElement.classList.add("kd-hidden");
   }
 
   renderArcKeys() {
@@ -615,8 +619,10 @@ export class KeyboardDock {
     // like the real board), and because the bottom rows are longer they sag
     // deeper, forming the V-shaped valley at the seam. Keys rotate along the
     // tangent, tilting into the valley.
-    const arc = this.arcElement;
-    arc.replaceChildren();
+    const halfLeft = this.halfLeft;
+    const halfRight = this.halfRight;
+    halfLeft.replaceChildren();
+    halfRight.replaceChildren();
 
     const keyGap = 6;
     const keyHeight = 44;
@@ -641,10 +647,12 @@ export class KeyboardDock {
       return { left, right };
     });
 
-    const placements = [];
+    const leftPlacements = [];
+    const rightPlacements = [];
     let leftMaxX = 0;
-    let rightExtent = 0;
-    let maxY = 0;
+    let rightMaxX = 0;
+    let leftMaxY = 0;
+    let rightMaxY = 0;
 
     for (const [rowIndex, { left, right }] of halves.entries()) {
       const outerY = topPad + rowIndex * rowHeight;
@@ -660,40 +668,48 @@ export class KeyboardDock {
         const x = radius * Math.sin(angle);
         const y = outerY + radius * (1 - Math.cos(angle));
         leftMaxX = Math.max(leftMaxX, x + width / 2);
-        maxY = Math.max(maxY, y + keyHeight / 2);
-        placements.push({ keyElement, x, y, rot: angle, width });
+        leftMaxY = Math.max(leftMaxY, y + keyHeight / 2);
+        leftPlacements.push({ keyElement, x, y, rot: angle, width });
       }
 
       // RIGHT half: mirrored — the arc descends to the left (rotation
-      // -angle); every row's outer end sits at the same right edge
+      // -angle); rows are right-flush: the outer end of every row sits at
+      // the same right edge, like Backspace/Enter/right-Shift on a real board
       cursor = 0;
       for (const keyElement of [...right].reverse()) {
         const width = keyWidthPx(spanOf(keyElement));
         const delta = (width + keyGap) / radius;
         const angle = cursor + delta / 2;
         cursor += delta;
-        const x = -radius * Math.sin(angle);
+        const x = radius * Math.sin(angle);
         const y = outerY + radius * (1 - Math.cos(angle));
-        rightExtent = Math.max(rightExtent, -x + width / 2);
-        maxY = Math.max(maxY, y + keyHeight / 2);
-        placements.push({ keyElement, x, y, rot: -angle, width });
+        rightMaxX = Math.max(rightMaxX, x + width / 2);
+        rightMaxY = Math.max(rightMaxY, y + keyHeight / 2);
+        rightPlacements.push({ keyElement, x, y, rot: -angle, width });
       }
     }
 
-    const width = leftMaxX + seamGap + rightExtent + sidePad * 2;
-    const height = maxY + bottomPad;
-    arc.style.width = `${Math.round(width)}px`;
-    arc.style.height = `${Math.round(height)}px`;
+    halfLeft.style.width = `${Math.round(leftMaxX + sidePad * 2)}px`;
+    halfLeft.style.height = `${Math.round(leftMaxY + bottomPad)}px`;
+    halfRight.style.width = `${Math.round(rightMaxX + sidePad * 2)}px`;
+    halfRight.style.height = `${Math.round(rightMaxY + bottomPad)}px`;
 
-    for (const { keyElement, x, y, rot, width } of placements) {
-      const isRight = x < 0;
+    for (const { keyElement, x, y, rot, width } of leftPlacements) {
+      keyElement.style.position = "absolute";
+      keyElement.style.left = `${Math.round(sidePad + x - width / 2)}px`;
+      keyElement.style.top = `${Math.round(y - keyHeight / 2)}px`;
+      keyElement.style.transform = `rotate(${((rot * 180) / Math.PI).toFixed(2)}deg)`;
+      halfLeft.appendChild(keyElement);
+    }
+    // right half: mirrored x (the arc descends leftward), rows right-flush
+    for (const { keyElement, x, y, rot, width } of rightPlacements) {
       keyElement.style.position = "absolute";
       keyElement.style.left = `${Math.round(
-        sidePad + (isRight ? leftMaxX + seamGap + rightExtent + x : x) - width / 2
+        sidePad + (rightMaxX - x) - width / 2
       )}px`;
       keyElement.style.top = `${Math.round(y - keyHeight / 2)}px`;
       keyElement.style.transform = `rotate(${((rot * 180) / Math.PI).toFixed(2)}deg)`;
-      arc.appendChild(keyElement);
+      halfRight.appendChild(keyElement);
     }
   }
 

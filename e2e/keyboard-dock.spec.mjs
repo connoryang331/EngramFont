@@ -183,11 +183,6 @@ test("E2E-6 layout handle cycles arc -> straight -> merged", async ({
   expect(arc.gap).toBeGreaterThan(100);
   expect(arc.rotated).toBe(arc.keys);
   expect(arc.level).toBeLessThanOrEqual(2);
-  const mergedKeys =
-    (await page.locator(".kd-half-left .kd-key").count()) +
-    (await page.locator(".kd-half-right .kd-key").count()) -
-    1; // -1: the second space key
-
   await page.locator("#kd-layout-handle").click();
   await page.waitForTimeout(400);
 
@@ -225,9 +220,8 @@ test("E2E-6 layout handle cycles arc -> straight -> merged", async ({
   await expect(
     page.locator(".kd-cluster-left [data-special='space']")
   ).toBeVisible();
-  expect(
-    await page.locator(".kd-cluster-left .kd-key").count()
-  ).toBeGreaterThanOrEqual(mergedKeys);
+  // merged: single keyboard, single space key
+  expect(await page.locator(".kd-cluster-left .kd-key").count()).toBe(62);
 
   // persists across reload (merged stays merged)
   await page.reload();

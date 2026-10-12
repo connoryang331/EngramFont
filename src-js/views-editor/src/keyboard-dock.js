@@ -655,6 +655,41 @@ export class KeyboardDock {
     this.clusterRight.classList.add("kd-hidden");
   }
 
+  buildSpaceSegments(totalWidthPx) {
+    // arc layout: a wide space key rendered as one rigid rectangle looks
+    // like a straight chord; decompose it into per-unit segments placed
+    // along the arc so it bends like every other row
+    const count = Math.max(2, Math.round(totalWidthPx / 62));
+    const segWidth = totalWidthPx / count + 1; // 1px overlap hides the seams
+    const segments = [];
+    for (let i = 0; i < count; i++) {
+      const segment = withAriaLabel(
+        html.button(
+          {
+            class: "kd-key kd-special-key kd-style-dark kd-locked kd-space-segment",
+            "data-special": "space",
+          },
+          []
+        ),
+        translate("dock.key.space")
+      );
+      segment.style.width = `${segWidth.toFixed(1)}px`;
+      if (i === 0) {
+        segment.style.borderRadius = "6px 0 0 6px";
+      } else if (i === count - 1) {
+        segment.style.borderRadius = "0 6px 6px 0";
+      } else {
+        segment.style.borderRadius = "0";
+      }
+      segment.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+        this.appendSpace();
+      });
+      segments.push({ segment, width: segWidth });
+    }
+    return segments;
+  }
+
   renderArcKeys() {
     // K860-style valley split (reference photo): each half's rows are arcs
     // whose high point is the OUTER edge, sagging down towards the central
@@ -705,6 +740,21 @@ export class KeyboardDock {
       // right (keys rotate clockwise, tilting into the valley)
       let cursor = 0;
       for (const keyElement of left) {
+        if (keyElement.dataset.special === "space") {
+          // wide space: bend it along the arc via segments
+          const totalWidth = keyWidthPx(SPACE_SPAN_LEFT);
+          for (const { segment, width } of this.buildSpaceSegments(totalWidth)) {
+            const delta = width / radius;
+            const angle = cursor + delta / 2;
+            cursor += delta;
+            const x = radius * Math.sin(angle);
+            const y = outerY + radius * (1 - Math.cos(angle));
+            leftMaxX = Math.max(leftMaxX, x + width / 2);
+            leftMaxY = Math.max(leftMaxY, y + keyHeight / 2);
+            leftPlacements.push({ keyElement: segment, x, y, rot: angle, width });
+          }
+          continue;
+        }
         const width = keyWidthPx(spanOf(keyElement));
         const delta = (width + keyGap) / radius;
         const angle = cursor + delta / 2;
@@ -721,6 +771,20 @@ export class KeyboardDock {
       // the same right edge, like Backspace/Enter/right-Shift on a real board
       cursor = 0;
       for (const keyElement of [...right].reverse()) {
+        if (keyElement.dataset.special === "space") {
+          const totalWidth = keyWidthPx(SPACE_SPAN_RIGHT);
+          for (const { segment, width } of this.buildSpaceSegments(totalWidth)) {
+            const delta = width / radius;
+            const angle = cursor + delta / 2;
+            cursor += delta;
+            const x = radius * Math.sin(angle);
+            const y = outerY + radius * (1 - Math.cos(angle));
+            rightMaxX = Math.max(rightMaxX, x + width / 2);
+            rightMaxY = Math.max(rightMaxY, y + keyHeight / 2);
+            rightPlacements.push({ keyElement: segment, x, y, rot: -angle, width });
+          }
+          continue;
+        }
         const width = keyWidthPx(spanOf(keyElement));
         const delta = (width + keyGap) / radius;
         const angle = cursor + delta / 2;

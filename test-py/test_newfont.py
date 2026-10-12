@@ -32,8 +32,14 @@ def test_createLatinKernel(rootPath):
 
     glyph = asyncio.run(backend.getGlyph("A"))
     staticGlyph = glyph.layers[glyph.sources[0].layerName].glyph
-    assert staticGlyph.xAdvance == 560
-    assert len(staticGlyph.path.contourInfo) == 2  # outline + counter hole
+    # real Inter outlines (upem 1000): A has an outer contour + counter hole
+    # and a realistic advance
+    assert staticGlyph.xAdvance == 690
+    assert len(staticGlyph.path.contourInfo) == 2
+    # the 'A' outline reaches the cap height (~727 in Inter scaled to 1000)
+    ys = [point["y"] for contour in staticGlyph.path.unpackedContours()
+          for point in contour["points"]]
+    assert max(ys) > 700
 
 
 def test_duplicateName(rootPath):

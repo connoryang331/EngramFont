@@ -223,6 +223,15 @@
   Ctrl/Alt+滚轮保留（触控板捏合手势即以此形式到达）
 - 改动点：fontra-core/canvas-controller.js handleWheel；实测 magnification/origin 变化符合预期
 
+### R4-T4.5 · 模板字体改用真实字形（2026-10-12）
+- 用户反馈：新建字体的 62 个字形全是同一块占位形状（overview 里全显示成"0"）
+- make-template.py 重写：从真实字体文件（.e2e-fonts 的 Inter TTF，OFL）提取轮廓，
+  Qu2CuPen 转 cubic、缩放到 upem 1000，批量填满 A-Z a-z 0-9 正确字形
+- 排障记录：验证时读 A.json 被 Windows 大小写不敏感匹配到 a.json（小写 a）造成"错乱"假象；
+  实际存储用 Fontra 的 ^ 码大小写消歧（A^1.json / a.json 并存），一直正确
+- test_newfont.py 断言更新（advance 690、帽高 >700）；E2E-1 字形数 62 断言不变
+- 注意：旧模板创建的既有字体不会 retro 修复，新建字体即得真实字形
+
 ### R3-T3.34g · 隐藏原生工具栏（2026-10-12）
 - 全部工具已上 dock（6/7/8/9/0/-/=），原生 #edit-tools display:none（DOM 保留：工具选择、
   face 前置、dock 同步观察器照常工作）；#zoom-tools 缩放按钮保留

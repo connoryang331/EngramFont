@@ -808,6 +808,12 @@ export class KeyboardDock {
       cursor = 0;
       const rightFrameX = sidePad + rightMaxX; // screen x of the outer ends
       for (const keyElement of [...right].reverse()) {
+        // user-tuned: the blue placeholder sits ~2px low on the arc here
+        const nudgeY =
+          keyElement.dataset.special === "placeholder" &&
+          keyElement.classList.contains("kd-style-blue")
+            ? -2
+            : 0;
         if (keyElement.dataset.special === "space") {
           // wide space: ONE continuously curved SVG annular-sector keycap
           const angularSpan = keyWidthPx(SPACE_SPAN_RIGHT) / radius;
@@ -835,7 +841,7 @@ export class KeyboardDock {
         const angle = cursor + delta / 2;
         cursor += delta;
         const x = radius * Math.sin(angle);
-        const y = outerY + radius * (1 - Math.cos(angle));
+        const y = outerY + radius * (1 - Math.cos(angle)) + nudgeY;
         rightMaxX = Math.max(rightMaxX, x + width / 2);
         rightMaxY = Math.max(rightMaxY, y + keyHeight / 2);
         rightPlacements.push({

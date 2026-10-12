@@ -668,10 +668,23 @@ kerning-handle.negative {
   display: none;
 }
 
-/* clusters: transparent boxes in merged mode (the dock carries the frame) */
+/* clusters: transparent boxes in merged mode (the dock carries the frame);
+   rows keep natural width — the left cluster is flush at the outer (left)
+   edge, the right cluster flush at the outer (right) edge, and the row
+   stagger from the wide modifiers shows at the seam, like real boards */
 .kd-cluster {
   position: static;
+  display: flex;
+  flex-direction: column;
   transition: all 280ms ease;
+}
+
+.kd-cluster-left {
+  align-items: flex-start;
+}
+
+.kd-cluster-right {
+  align-items: flex-end;
 }
 
 .kd-cluster.kd-hidden {
@@ -681,6 +694,7 @@ kerning-handle.negative {
 .kd-row {
   display: flex;
   gap: 6px;
+  width: max-content;
   margin-bottom: 8px;
 }
 

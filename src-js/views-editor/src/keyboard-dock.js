@@ -19,70 +19,81 @@ import {
 } from "./canvas-mode.js";
 
 // shift variants for the number/punctuation rows (upper = shifted char)
+
+// Row widths follow real ANSI geometry (each row totals 15 units): the wide
+// modifiers sit at their physical positions — purple=Tab 1.5u, yellow=Caps
+// 1.75u, red=left Shift 2.25u, green=right Shift 2.75u, DEL=Backspace 2u,
+// blue=Enter 2.25u, \ = 1.5u — which produces the authentic row stagger
+// (Q/A/Z step diagonally, not vertically aligned).
+const U_CTRL = 1.25; // ctrl / win / alt / placeholder width
+
 const DOCK_ROWS = [
-  // row1: digits + DEL (orange, 2 keys wide)
-  [
-    { key: "`", shift: "~" }, { key: "1", shift: "!" }, { key: "2", shift: "@" },
-    { key: "3", shift: "#" }, { key: "4", shift: "$" }, { key: "5", shift: "%" },
-    { key: "6", shift: "^" }, { key: "7", shift: "&" }, { key: "8", shift: "*" },
-    { key: "9", shift: "(" }, { key: "0", shift: ")" }, { key: "-", shift: "_" },
-    { key: "=", shift: "+" },
-    { special: "del", style: "orange", span: 2, locked: true },
-  ],
-  // row2: purple (anchors / metric-lines) + q-row
-  [
-    { special: "purple", style: "purple", span: 2 },
-    { key: "q" }, { key: "w" }, { key: "e" }, { key: "r" }, { key: "t" },
-    { key: "y" }, { key: "u" }, { key: "i" }, { key: "o" }, { key: "p" },
-    { key: "[", shift: "{" },
-    { key: "]", shift: "}" },
-    { key: "\\", shift: "|" },
-  ],
-  // row3: yellow capsule slider + a-row + mode key (blue, 2 keys wide)
-  [
-    { special: "slider", style: "yellow", span: 2, slider: "yellow" },
-    { key: "a" }, { key: "s" }, { key: "d" }, { key: "f" }, { key: "g" },
-    { key: "h" }, { key: "j" }, { key: "k" }, { key: "l" },
-    { key: ";", shift: ":" },
-    { key: "'", shift: '"' },
-    { special: "mode", style: "blue", span: 2, locked: true },
-  ],
-  // row4: red slider + z-row + green slider
-  [
-    { special: "slider", style: "red", span: 2, slider: "red" },
-    { key: "z" }, { key: "x" }, { key: "c" }, { key: "v" }, { key: "b" },
-    { key: "n" }, { key: "m" },
-    { key: ",", shift: "<" },
-    { key: ".", shift: ">" },
-    { key: "/", shift: "?" },
-    { special: "slider", style: "green", span: 2, slider: "green" },
-  ],
-  // row5: ctrl / empty / alt / space / move / 4 placeholder toggles
-  // (space key: required by T3.3; verified keymap's row5 has no explicit
-  // space, so it takes a wide slot between alt and move)
-  [
-    { key: "ctrl", special: "ctrl", style: "dark" },
-    { special: "empty", style: "dark", disabled: true },
-    { key: "alt", special: "alt", style: "dark" },
-    { special: "space", style: "dark", span: 4, locked: true },
-    { special: "move", style: "dark", span: 4 },
-    { special: "placeholder", style: "red" },
-    { special: "placeholder", style: "yellow" },
-    { special: "placeholder", style: "blue" },
-    { special: "placeholder", style: "beige" },
-  ],
+// row1: digits + Backspace (DEL, 2u)
+[
+  { key: "`", shift: "~" }, { key: "1", shift: "!" }, { key: "2", shift: "@" },
+  { key: "3", shift: "#" }, { key: "4", shift: "$" }, { key: "5", shift: "%" },
+  { key: "6", shift: "^" }, { key: "7", shift: "&" }, { key: "8", shift: "*" },
+  { key: "9", shift: "(" }, { key: "0", shift: ")" }, { key: "-", shift: "_" },
+  { key: "=", shift: "+" },
+  { special: "del", style: "orange", span: 2, locked: true },
+],
+// row2: Tab (purple) + q-row + \ (1.5u)
+[
+  { special: "purple", style: "purple", span: 1.5 },
+  { key: "q" }, { key: "w" }, { key: "e" }, { key: "r" }, { key: "t" },
+  { key: "y" }, { key: "u" }, { key: "i" }, { key: "o" }, { key: "p" },
+  { key: "[", shift: "{" },
+  { key: "]", shift: "}" },
+  { key: "\\", shift: "|", span: 1.5 },
+],
+// row3: Caps (yellow) + a-row + Enter (blue, 2.25u)
+[
+  { special: "slider", style: "yellow", span: 1.75, slider: "yellow" },
+  { key: "a" }, { key: "s" }, { key: "d" }, { key: "f" }, { key: "g" },
+  { key: "h" }, { key: "j" }, { key: "k" }, { key: "l" },
+  { key: ";", shift: ":" },
+  { key: "'", shift: '"' },
+  { special: "mode", style: "blue", span: 2.25, locked: true },
+],
+// row4: left Shift (red) + z-row + right Shift (green)
+[
+  { special: "slider", style: "red", span: 2.25, slider: "red" },
+  { key: "z" }, { key: "x" }, { key: "c" }, { key: "v" }, { key: "b" },
+  { key: "n" }, { key: "m" },
+  { key: ",", shift: "<" },
+  { key: ".", shift: ">" },
+  { key: "/", shift: "?" },
+  { special: "slider", style: "green", span: 2.75, slider: "green" },
+],
+// row5: ctrl / win / alt / space / move / 4 placeholder toggles (1.25u each)
+[
+  { key: "ctrl", special: "ctrl", style: "dark", span: U_CTRL },
+  { special: "empty", style: "dark", disabled: true, span: U_CTRL },
+  { key: "alt", special: "alt", style: "dark", span: U_CTRL },
+  { special: "space", style: "dark", locked: true },
+  { special: "move", style: "dark" },
+  { special: "placeholder", style: "red", span: U_CTRL },
+  { special: "placeholder", style: "yellow", span: U_CTRL },
+  { special: "placeholder", style: "blue", span: U_CTRL },
+  { special: "placeholder", style: "beige", span: U_CTRL },
+],
 ];
 
 // T3.7 split layout: per-row key index where the row is cut into the
-// bottom-left and bottom-right clusters. Cuts are balanced so each cluster's
-// rows have matching unit widths (left: 6 units per row, right: 9, row4: 8)
-// — keys keep their fixed 52px width, no stretching, no blank edges.
-const SPLIT_CUTS = [6, 5, 5, 5, 3];
+// bottom-left and bottom-right clusters, at the authentic QWERTY seam
+// (5/6, T/Y, G/H, B/N). The wide modifiers give each half the real row
+// stagger; rows are outer-edge flush and step at the seam like real
+// split-ergo boards.
+const SPLIT_CUTS = [6, 6, 6, 6, 3];
 
 // split mode: the left cluster gets its own space key (split-ergo style dual
 // thumb keys); merged mode keeps the single wide space in the row.
-// In split the right space/move narrow to 2/3 units to fit the 9-unit rows.
 const SPLIT_ROW5_CUT = 3;
+const SPACE_SPAN_MERGED = 5;
+const SPACE_SPAN_LEFT = 3.5;
+const SPACE_SPAN_RIGHT = 2.5;
+const MOVE_SPAN_MERGED = 1.25;
+const MOVE_SPAN_SPLIT = 1.5;
 
 // proof-mode slider specs (v5 context keymap)
 const PROOF_SLIDERS = {
@@ -205,7 +216,7 @@ export class KeyboardDock {
     this.spaceKeyLeft = this.buildKey({
       special: "space",
       style: "dark",
-      span: 2,
+      span: SPACE_SPAN_LEFT,
       locked: true,
     });
     this.renderKeys();
@@ -545,11 +556,17 @@ export class KeyboardDock {
     this.clusterRight.replaceChildren();
     const split = this.layout === "split";
 
-    // bottom-row spans differ per layout (merged: space 4 / move 4;
-    // split: space 2 / move 3 to match the 9-unit letter rows)
+    // bottom-row spans differ per layout (merged: one 5u space; split: dual
+    // 3.5u/2.5u spaces with a 1.5u move between them)
     const [spaceKey, moveKey] = this.keyElements[4].slice(3, 5);
-    spaceKey.style.setProperty("--kd-span", split ? 2 : 4);
-    moveKey.style.setProperty("--kd-span", split ? 3 : 4);
+    spaceKey.style.setProperty(
+      "--kd-span",
+      split ? SPACE_SPAN_RIGHT : SPACE_SPAN_MERGED
+    );
+    moveKey.style.setProperty(
+      "--kd-span",
+      split ? MOVE_SPAN_SPLIT : MOVE_SPAN_MERGED
+    );
 
     for (const [rowIndex, rowElements] of this.keyElements.entries()) {
       let fragments;

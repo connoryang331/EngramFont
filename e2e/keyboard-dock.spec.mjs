@@ -142,24 +142,55 @@ test("E2E-5 move key toggles pan (hand) tool", async ({ page }) => {
   expect(handStillSelected).toBe(false);
 });
 
-test("E2E-6 split layout toggles and persists", async ({ page }) => {
+test("E2E-6 split layout: two clusters anchored apart, persists", async ({
+  page,
+}) => {
   await openEditor(page);
+
+  // merged: single keyboard block, right cluster hidden
+  await expect(page.locator(".kd-cluster-right")).toBeHidden();
+  const mergedKeys = await page.locator(".kd-cluster-left .kd-key").count();
+  expect(mergedKeys).toBeGreaterThanOrEqual(28);
+
   await page.locator("#kd-layout-handle").click();
-  await page.waitForTimeout(400);
-  await expect(page.locator("#keyboard-dock.kd-split")).toHaveCount(1);
+  await page.waitForTimeout(600);
+
+  // split: both clusters visible with keys, horizontally separated
+  const separation = await page.evaluate(() => {
+    const left = document
+      .querySelector(".kd-cluster-left")
+      .getBoundingClientRect();
+    const right = document
+      .querySelector(".kd-cluster-right")
+      .getBoundingClientRect();
+    return {
+      gap: right.left - left.right,
+      leftKeys: document.querySelectorAll(".kd-cluster-left .kd-key").length,
+      rightKeys: document.querySelectorAll(".kd-cluster-right .kd-key").length,
+    };
+  });
+  expect(separation.gap).toBeGreaterThan(100);
+  expect(separation.leftKeys).toBeGreaterThan(0);
+  expect(separation.rightKeys).toBeGreaterThan(0);
+  expect(separation.leftKeys + separation.rightKeys).toBe(mergedKeys);
   expect(
     await page.evaluate(() => localStorage.getItem("engramfont-dock-layout"))
   ).toBe("split");
-  // keys remain functional in split layout
-  await page.locator('[data-key="g"]').click();
-  await page.waitForTimeout(300);
+
+  // keys remain functional in split layout (DEL resets the text)
+  await page
+    .locator(".kd-cluster-right [data-special='del']")
+    .click();
+  await page.waitForTimeout(600);
+
+  // persists across reload; merge restores the single block
   await page.reload();
   await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
   await page.waitForTimeout(1500);
-  await expect(page.locator("#keyboard-dock.kd-split")).toHaveCount(1);
+  await expect(page.locator(".kd-cluster-right")).toBeVisible();
   await page.locator("#kd-layout-handle").click();
-  await page.waitForTimeout(300);
-  await expect(page.locator("#keyboard-dock.kd-split")).toHaveCount(0);
+  await page.waitForTimeout(400);
+  await expect(page.locator(".kd-cluster-right")).toBeHidden();
 });
 
 test("E2E-7 custom key binding via context menu", async ({ page }) => {

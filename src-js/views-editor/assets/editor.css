@@ -654,7 +654,8 @@ kerning-handle.negative {
   bottom: 0.75em;
   left: 50%;
   transform: translateX(-50%);
-  width: min(920px, 92%);
+  width: max-content;
+  max-width: 96%;
   z-index: 25;
   background-color: #262629fa;
   border-radius: 12px;
@@ -664,6 +665,16 @@ kerning-handle.negative {
 }
 
 #keyboard-dock.kd-collapsed {
+  display: none;
+}
+
+/* clusters: transparent boxes in merged mode (the dock carries the frame) */
+.kd-cluster {
+  position: static;
+  transition: all 280ms ease;
+}
+
+.kd-cluster.kd-hidden {
   display: none;
 }
 
@@ -679,8 +690,9 @@ kerning-handle.negative {
 
 .kd-key {
   --kd-span: 1;
-  flex: var(--kd-span) 1 0;
-  min-width: 0;
+  --kd-gap: 6px;
+  flex: none;
+  width: calc(52px * var(--kd-span) + (var(--kd-span) - 1) * var(--kd-gap));
   height: 44px;
   border: none;
   border-radius: 6px;
@@ -791,24 +803,35 @@ kerning-handle.negative {
   pointer-events: none;
 }
 
-/* split layout (T3.7): left cluster bottom-left, right cluster bottom-right */
+/* split layout (T3.7): the dock becomes a transparent full-width flex row and
+   the two clusters sit at the bottom corners of the canvas */
 #keyboard-dock.kd-split {
-  width: 46%;
-  left: 1%;
+  left: 0;
+  right: 0;
   transform: none;
+  width: auto;
+  max-width: none;
   background-color: transparent;
   padding: 0;
   box-shadow: none;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: flex-end;
+  pointer-events: none;
 }
 
-#keyboard-dock.kd-split .kd-rows {
+#keyboard-dock.kd-split .kd-cluster {
+  pointer-events: auto;
   background-color: #262629fa;
   border-radius: 12px;
   padding: 12px;
   box-shadow: 0 4px 18px #0006;
+}
+
+/* the layout/collapse handles must stay clickable in split mode */
+#keyboard-dock.kd-split #kd-layout-handle,
+#keyboard-dock.kd-split #kd-collapse-handle {
+  pointer-events: auto;
 }
 
 /* collapse button */

@@ -73,6 +73,11 @@ const DOCK_ROWS = [
   ],
 ];
 
+// T3.7 split layout: per-row key index where the row is cut into the
+// bottom-left and bottom-right clusters (SPEC §10: left = ~`1-5 / purple+q-t /
+// capsule+a-g / red+z-b / ctrl+alt, right = the rest)
+const SPLIT_CUTS = [6, 6, 6, 6, 3];
+
 // proof-mode slider specs (v5 context keymap)
 const PROOF_SLIDERS = {
   yellow: {
@@ -181,18 +186,17 @@ export class KeyboardDock {
     this.dockElement = html.div({ id: "keyboard-dock" }, []);
     container.appendChild(this.dockElement);
 
-    this.rowsElement = html.div({ class: "kd-rows" }, []);
-    this.dockElement.appendChild(this.rowsElement);
+    // two cluster containers: in merged mode they hold one continuous
+    // keyboard (right cluster empty+hidden), in split mode they anchor to
+    // the bottom-left / bottom-right canvas corners
+    this.clusterLeft = html.div({ class: "kd-cluster kd-cluster-left" }, []);
+    this.clusterRight = html.div({ class: "kd-cluster kd-cluster-right" }, []);
+    this.dockElement.appendChild(this.clusterLeft);
+    this.dockElement.appendChild(this.clusterRight);
 
     this.sliderElements = {};
-    for (const [rowIndex, row] of DOCK_ROWS.entries()) {
-      const rowElement = html.div({ class: "kd-row" }, []);
-      rowElement.dataset.row = rowIndex;
-      this.rowsElement.appendChild(rowElement);
-      for (const keyDef of row) {
-        rowElement.appendChild(this.buildKey(keyDef));
-      }
-    }
+    this.keyElements = DOCK_ROWS.map((row) => row.map((keyDef) => this.buildKey(keyDef)));
+    this.renderKeys();
 
     // split/merge handle (EngramFont original, T3.7)
     const layoutHandle = withAriaLabel(
@@ -522,6 +526,34 @@ export class KeyboardDock {
 
   // ---- split/merge layout (EngramFont original, T3.7) ----
 
+  renderKeys() {
+    // (re)distribute the key elements into the cluster containers;
+    // appendChild re-parents, so all listeners on the keys survive
+    this.clusterLeft.replaceChildren();
+    this.clusterRight.replaceChildren();
+    const split = this.layout === "split";
+
+    for (const [rowIndex, rowElements] of this.keyElements.entries()) {
+      const fragments = split
+        ? [
+            rowElements.slice(0, SPLIT_CUTS[rowIndex]),
+            rowElements.slice(SPLIT_CUTS[rowIndex]),
+          ]
+        : [rowElements];
+      for (const [fragmentIndex, fragment] of fragments.entries()) {
+        const host =
+          split && fragmentIndex === 1 ? this.clusterRight : this.clusterLeft;
+        const rowElement = html.div({ class: "kd-row" }, []);
+        rowElement.dataset.row = rowIndex;
+        host.appendChild(rowElement);
+        for (const keyElement of fragment) {
+          rowElement.appendChild(keyElement);
+        }
+      }
+    }
+    this.clusterRight.classList.toggle("kd-hidden", !split);
+  }
+
   applyLayout() {
     this.dockElement.classList.toggle("kd-split", this.layout === "split");
   }
@@ -529,7 +561,9 @@ export class KeyboardDock {
   toggleLayout() {
     this.layout = this.layout === "merged" ? "split" : "merged";
     localStorage.setItem("engramfont-dock-layout", this.layout);
+    this.renderKeys();
     this.applyLayout();
+    this.updateModeUI();
   }
 
   // ---- custom key bindings (EngramFont original, T3.8) ----

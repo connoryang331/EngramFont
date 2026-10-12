@@ -7,7 +7,7 @@
 
 import * as html from "@fontra/core/html-utils.js";
 import { translate } from "@fontra/core/localization.js";
-import { dialog, message } from "@fontra/web-components/modal-dialog.js";
+import { dialog, dialogSetup, message } from "@fontra/web-components/modal-dialog.js";
 import "@fontra/web-components/inline-svg.js";
 import { centeredRect, rectCenter } from "@fontra/core/rectangle.ts";
 import { makeUPlusStringFromCodePoint } from "@fontra/core/utils.ts";
@@ -140,6 +140,14 @@ const DOCK_BINDABLE_ACTIONS = [
   { id: "canvas-mode-proof" },
   { id: "canvas-mode-edit" },
 ];
+
+// display names for bound actions in the settings dialog (English-only UI)
+const BINDING_ACTION_LABELS = {
+  "zoom-100": "Zoom to 100%",
+  "zoom-fit": "Zoom to fit",
+  "canvas-mode-proof": "Switch to proof mode",
+  "canvas-mode-edit": "Switch to edit mode",
+};
 
 // physical keys replaced by font-function keys ("one key at a time"): each
 // entry wires a key to NATIVE Fontra editor functions. A group of tools
@@ -314,6 +322,21 @@ export class KeyboardDock {
     );
     this.themeHandle.addEventListener("click", () => this.toggleTheme());
     this.dockElement.appendChild(this.themeHandle);
+
+    // keyboard settings handle (EngramFont original): pops the settings
+    // dialog up in the middle of the screen (English-only UI by design)
+    this.settingsHandle = withAriaLabel(
+      html.button(
+        {
+          id: "kd-settings-handle",
+          title: "Keyboard settings",
+        },
+        ["⚙︎"]
+      ),
+      "Keyboard settings"
+    );
+    this.settingsHandle.addEventListener("click", () => this.showSettingsDialog());
+    this.dockElement.appendChild(this.settingsHandle);
 
     // collapse/expand button (stays visible when the dock is collapsed)
     this.collapseButton = withAriaLabel(
@@ -812,10 +835,143 @@ export class KeyboardDock {
     this.themeHandle.textContent = this.theme === "dark" ? "☀" : "☾";
   }
 
-  toggleTheme() {
-    this.theme = this.theme === "light" ? "dark" : "light";
-    localStorage.setItem("engramfont-dock-theme", this.theme);
+  setTheme(value) {
+    this.theme = value;
+    localStorage.setItem("engramfont-dock-theme", value);
     this.applyTheme();
+  }
+
+  toggleTheme() {
+    this.setTheme(this.theme === "light" ? "dark" : "light");
+  }
+
+  // ---- keyboard settings dialog (EngramFont original) ----
+  // English-only by design: no localization keys for this UI
+
+  async showSettingsDialog() {
+    const content = html.div({ class: "kd-settings" }, []);
+
+    // layout (applies live)
+    const layoutSection = html.div({ class: "kd-settings-section" }, []);
+    layoutSection.appendChild(
+      html.div({ class: "kd-settings-section-title" }, ["Layout"])
+    );
+    for (const value of dockLayouts) {
+      const input = html.input({ type: "radio", name: "kd-layout", value });
+      input.checked = this.layout === value;
+      input.addEventListener("change", () => this.setLayout(value));
+      layoutSection.appendChild(
+        html.label({ class: "kd-settings-option" }, [
+          input,
+          translate(`dock.layout.${value}`),
+        ])
+      );
+    }
+    content.appendChild(layoutSection);
+
+    // day/night theme (applies live)
+    const themeSection = html.div({ class: "kd-settings-section" }, []);
+    themeSection.appendChild(
+      html.div({ class: "kd-settings-section-title" }, ["Theme"])
+    );
+    for (const [value, label] of [
+      ["light", "Day"],
+      ["dark", "Night"],
+    ]) {
+      const input = html.input({ type: "radio", name: "kd-theme", value });
+      input.checked = this.theme === value;
+      input.addEventListener("change", () => this.setTheme(value));
+      themeSection.appendChild(
+        html.label({ class: "kd-settings-option" }, [input, label])
+      );
+    }
+    content.appendChild(themeSection);
+
+    // visibility
+    const showInput = html.input({ type: "checkbox" });
+    showInput.checked = !this.collapsed;
+    showInput.addEventListener("change", () => {
+      const wantCollapsed = !showInput.checked;
+      if (wantCollapsed !== this.collapsed) {
+        this.toggleCollapsed();
+      }
+    });
+    content.appendChild(
+      html.div({ class: "kd-settings-section" }, [
+        html.div({ class: "kd-settings-section-title" }, ["Visibility"]),
+        html.label({ class: "kd-settings-option" }, [
+          showInput,
+          "Show keyboard",
+        ]),
+      ])
+    );
+
+    // custom key bindings
+    const bindingsSection = html.div({ class: "kd-settings-section" }, []);
+    bindingsSection.appendChild(
+      html.div({ class: "kd-settings-section-title" }, ["Custom key bindings"])
+    );
+    const boundEntries = Object.entries(this.bindings);
+    const emptyNote = () =>
+      html.div({ class: "kd-settings-bindings-empty" }, [
+        "No custom bindings — right-click a key to add one",
+      ]);
+    if (!boundEntries.length) {
+      bindingsSection.appendChild(emptyNote());
+    }
+    for (const [keyId, actionId] of boundEntries) {
+      const row = html.div({ class: "kd-settings-binding-row" }, []);
+      row.appendChild(html.span({ class: "kd-settings-binding-key" }, [keyId]));
+      row.appendChild(
+        html.span({ class: "kd-settings-binding-action" }, [
+          BINDING_ACTION_LABELS[actionId] || actionId,
+        ])
+      );
+      const removeButton = html.button(
+        { class: "kd-settings-binding-remove", title: "Remove this binding" },
+        ["✕"]
+      );
+      removeButton.addEventListener("click", () => {
+        delete this.bindings[keyId];
+        this.saveBindings();
+        row.remove();
+        const keyElement = this.dockElement.querySelector(
+          `[data-key="${CSS.escape(keyId)}"], [data-special="${CSS.escape(keyId)}"]`
+        );
+        keyElement?.classList.remove("kd-bound");
+      });
+      row.appendChild(removeButton);
+      bindingsSection.appendChild(row);
+    }
+    if (boundEntries.length) {
+      const resetAll = html.button(
+        { class: "kd-settings-bindings-reset" },
+        ["Reset all"]
+      );
+      resetAll.addEventListener("click", () => {
+        this.bindings = {};
+        this.saveBindings();
+        for (const element of this.dockElement.querySelectorAll(".kd-bound")) {
+          element.classList.remove("kd-bound");
+        }
+        bindingsSection
+          .querySelectorAll(".kd-settings-binding-row, .kd-settings-bindings-reset")
+          .forEach((element) => element.remove());
+        bindingsSection.appendChild(emptyNote());
+      });
+      bindingsSection.appendChild(resetAll);
+    }
+    content.appendChild(bindingsSection);
+
+    const settingsDialog = await dialogSetup("Keyboard settings", null, [
+      {
+        title: "Done",
+        resultValue: "done",
+        isDefaultButton: true,
+      },
+    ]);
+    settingsDialog.setContent(content);
+    await settingsDialog.run();
   }
 
   // ---- split/merge layout (EngramFont original, T3.7) ----
@@ -1153,8 +1309,12 @@ export class KeyboardDock {
 
   toggleLayout() {
     const index = dockLayouts.indexOf(this.layout);
-    this.layout = dockLayouts[(index + 1) % dockLayouts.length];
-    localStorage.setItem("engramfont-dock-layout", this.layout);
+    this.setLayout(dockLayouts[(index + 1) % dockLayouts.length]);
+  }
+
+  setLayout(value) {
+    this.layout = value;
+    localStorage.setItem("engramfont-dock-layout", value);
     this.renderKeys();
     this.applyLayout();
     this.updateModeUI();

@@ -71,6 +71,14 @@
 - 无内容的彩色功能键（紫 Tab/彩色占位/empty）保留底色，否则透明后不可见
 - E2E-10 更新：断言键帽透明 + 悬停显现两主题的悬停色
 
+### R3-T3.12 · 键盘设置弹窗（2026-10-12）
+- 底部手柄行重排：[⇔ 布局] [– 折叠] [⚙ 设置·正中] [☾ 主题]；merged 模式右上级联 10/40/70/100
+- ⚙ 弹出「Keyboard settings」居中模态（Fontra 原生 dialogSetup），四节：
+  Layout（arc/straight/merged 单选，即选即生效）、Theme（Day/Night）、Visibility（Show keyboard）、
+  Custom key bindings（逐条列出 键位→动作 + ✕ 单独移除 + Reset all 清空，同步清 .kd-bound 标记）
+- setLayout/setTheme 从 toggle 中拆出（弹窗与手柄共用）；英文硬编码（用户要求不做本地化）
+- E2E-11：弹窗打开、布局/主题单选即时生效并持久化、绑定列表/重置、Done 关闭
+
 ### R7-T7.4 · 背景图上下文编辑（2026-10-12）
 - Edit image 上下文 action（选中字形有背景图时启用）→ 解锁 + 选中 backgroundImage/0
 - 离开选中自动重锁（selection 监听）；全局 Unlock/Lock 菜单项已移除

@@ -391,3 +391,44 @@ test("E2E-10 keyboard day/night theme toggle", async ({ page }) => {
   await expect(dock).toHaveClass(/kd-theme-light/);
   await expect(key).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
 });
+
+test("E2E-11 keyboard settings dialog", async ({ page }) => {
+  await openEditor(page, "HHHH");
+  // seed a custom binding so the dialog has something to list
+  await page.evaluate(() =>
+    localStorage.setItem("engramfont-key-bindings", JSON.stringify({ q: "zoom-fit" }))
+  );
+  await page.reload();
+  await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
+  await page.waitForTimeout(2000);
+
+  // the gear handle pops the settings dialog up, centered
+  await page.locator("#kd-settings-handle").click();
+  const dialogBox = page.locator("modal-dialog .dialog-box");
+  await expect(dialogBox).toBeVisible();
+
+  // layout radios apply live
+  await page.locator('input[name="kd-layout"][value="merged"]').check();
+  await expect(page.locator("#keyboard-dock")).not.toHaveClass(/kd-arc|kd-straight/);
+  await page.locator('input[name="kd-layout"][value="straight"]').check();
+  await expect(page.locator("#keyboard-dock")).toHaveClass(/kd-straight/);
+
+  // theme radios apply live and persist
+  await page.locator('input[name="kd-theme"][value="dark"]').check();
+  await expect(page.locator("#keyboard-dock")).toHaveClass(/kd-theme-dark/);
+  expect(
+    await page.evaluate(() => localStorage.getItem("engramfont-dock-theme"))
+  ).toBe("dark");
+
+  // the seeded binding is listed; reset-all clears it everywhere
+  await expect(page.locator(".kd-settings-binding-row")).toHaveCount(1);
+  await page.locator(".kd-settings-bindings-reset").click();
+  await expect(page.locator(".kd-settings-binding-row")).toHaveCount(0);
+  expect(
+    await page.evaluate(() => localStorage.getItem("engramfont-key-bindings"))
+  ).toBe("{}");
+
+  // done closes the dialog (dialog buttons are input.button elements)
+  await dialogBox.locator("input.button").last().click();
+  await expect(dialogBox).not.toBeVisible();
+});

@@ -867,6 +867,77 @@ kerning-handle.negative {
   color: var(--kd-keycap-bg);
 }
 
+/* keyboard settings dialog (English-only UI, EngramFont original) */
+.kd-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1em;
+  min-width: 320px;
+  font-size: 0.95rem;
+}
+
+.kd-settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45em;
+}
+
+.kd-settings-section-title {
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.kd-settings-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  cursor: pointer;
+}
+
+.kd-settings-bindings-empty {
+  opacity: 0.6;
+}
+
+.kd-settings-binding-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+}
+
+.kd-settings-binding-key {
+  min-width: 2.2em;
+  text-align: center;
+  border: 1px solid #8886;
+  border-radius: 4px;
+  padding: 0.05em 0.4em;
+  font-family: engramfont-ui-regular, sans-serif;
+}
+
+.kd-settings-binding-remove {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.55;
+  padding: 0 0.3em;
+}
+
+.kd-settings-binding-remove:hover {
+  opacity: 1;
+}
+
+.kd-settings-bindings-reset {
+  align-self: flex-start;
+  margin-top: 0.2em;
+  border: 1px solid #8886;
+  background: transparent;
+  color: inherit;
+  border-radius: 1em;
+  padding: 0.15em 0.9em;
+  cursor: pointer;
+}
+
 /* the arc spacebar's SVG keycap follows the theme via variables */
 /* space keys: outline-only in the transparent style — the rectangular space
    gets an inset ring; the curved SVG sector strokes instead of filling (its
@@ -1089,6 +1160,21 @@ kerning-handle.negative {
 #kd-theme-handle {
   position: absolute;
   top: -12px;
+  right: 100px;
+  border: none;
+  border-radius: 1em;
+  background-color: #3c3c40;
+  color: #e8e6e1;
+  font-size: 11px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+/* keyboard settings (EngramFont original): the gear sits in the middle of
+   the handle row */
+#kd-settings-handle {
+  position: absolute;
+  top: -12px;
   right: 70px;
   border: none;
   border-radius: 1em;
@@ -1104,9 +1190,11 @@ kerning-handle.negative {
    the viewport) */
 #keyboard-dock.kd-straight #kd-layout-handle,
 #keyboard-dock.kd-straight #kd-collapse-handle,
+#keyboard-dock.kd-straight #kd-settings-handle,
 #keyboard-dock.kd-straight #kd-theme-handle,
 #keyboard-dock.kd-arc #kd-layout-handle,
 #keyboard-dock.kd-arc #kd-collapse-handle,
+#keyboard-dock.kd-arc #kd-settings-handle,
 #keyboard-dock.kd-arc #kd-theme-handle {
   position: fixed;
   bottom: 1em;
@@ -1115,18 +1203,28 @@ kerning-handle.negative {
   pointer-events: auto;
 }
 
+/* bottom handle row, evenly spaced around the middle: layout, collapse,
+   SETTINGS (center), theme */
 #keyboard-dock.kd-straight #kd-layout-handle,
 #keyboard-dock.kd-arc #kd-layout-handle {
-  left: 50%;
+  left: calc(50% - 80px);
   transform: translateX(-50%);
 }
 
 #keyboard-dock.kd-straight #kd-collapse-handle,
 #keyboard-dock.kd-arc #kd-collapse-handle {
-  left: calc(50% + 44px);
+  left: calc(50% - 40px);
+  transform: translateX(-50%);
+}
+
+#keyboard-dock.kd-straight #kd-settings-handle,
+#keyboard-dock.kd-arc #kd-settings-handle {
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 #keyboard-dock.kd-straight #kd-theme-handle,
 #keyboard-dock.kd-arc #kd-theme-handle {
-  left: calc(50% + 88px);
+  left: calc(50% + 40px);
+  transform: translateX(-50%);
 }

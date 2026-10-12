@@ -105,9 +105,12 @@ body {
   width: 100%;
 }
 
+/* hidden: the menubar lives here, but the dock's mini menu keys open its
+   menus (showMenu renders at document level); the grid row collapses */
 .top-bar-container {
   grid-column: 1 / 4;
   grid-row: 1;
+  display: none;
 }
 
 .sidebar-container,
@@ -794,7 +797,7 @@ menu-bar {
 }
 
 .kd-mini-key-wide {
-  width: 68px;
+  width: 56px;
   font-size: 11px;
 }
 

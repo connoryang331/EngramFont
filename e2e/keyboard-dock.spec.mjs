@@ -321,15 +321,11 @@ test("E2E-9 pointer-tools key mirrors the native multi-tool", async ({ page }) =
   // right click reveals the options; choosing the scaling sub-tool promotes
   // it (native toolbar front child) and it becomes the key's face
   await key.click({ button: "right" });
+  // the flyout only offers the ALTERNATIVE sub-tool (the key face already
+  // shows the current one): exactly one option — scaling
   const scaleOption = page.locator('.kd-fn-option[data-tool="pointer-tool-scale"]');
-  await expect(scaleOption).toBeVisible();
-  const pointerOption = page.locator('.kd-fn-option[data-tool="pointer-tool"]');
-  await expect(pointerOption).toBeVisible();
-  // the flyout pops up above the key: scaling on top, pointer tool below
-  // (adjacent to the key face, which shows the same pointer tool)
-  expect((await scaleOption.boundingBox()).y).toBeLessThan(
-    (await pointerOption.boundingBox()).y
-  );
+  await expect(scaleOption).toHaveCount(1);
+  await expect(page.locator('.kd-fn-option[data-tool="pointer-tool"]')).toHaveCount(0);
   await scaleOption.click();
   await expect(frontSubTool).toHaveAttribute("data-tool", "pointer-tool-scale");
   await expect(key.locator(".kd-fn-icon")).toHaveAttribute(
@@ -596,8 +592,8 @@ test("E2E-12 pen tools key mirrors the native multi-tool", async ({ page }) => {
   // right click reveals the pen sub-tools; picking quadratic promotes it
   await key.click({ button: "right" });
   const quadOption = page.locator('.kd-fn-option[data-tool="pen-tool-quad"]');
-  await expect(quadOption).toBeVisible();
-  await expect(page.locator('.kd-fn-option[data-tool="pen-tool-cubic"]')).toBeVisible();
+  await expect(quadOption).toHaveCount(1);
+  await expect(page.locator('.kd-fn-option[data-tool="pen-tool-cubic"]')).toHaveCount(0);
   await quadOption.click();
   await expect(frontSubTool).toHaveAttribute("data-tool", "pen-tool-quad");
   await expect(key.locator(".kd-fn-icon")).toHaveAttribute(

@@ -667,3 +667,42 @@ test("E2E-13 knife tool key selects the native knife", async ({ page }) => {
   await expect(key).not.toHaveClass(/kd-active/);
   await expect(pointerKey).toHaveClass(/kd-active/);
 });
+
+test("E2E-14 shape tools key mirrors the native multi-tool", async ({ page }) => {
+  // key "9" is the shape tools multi-tool: rectangle (face) + ellipse
+  await openEditor(page, "HHHH");
+  const key = page.locator('.kd-fn-key[data-fn*="shape-tool"]');
+  await expect(key).toHaveCount(1);
+  await expect(key.locator(".kd-fn-icon")).toHaveAttribute(
+    "src",
+    "/images/rectangletool.svg"
+  );
+
+  const multiTool = page.locator(
+    '#edit-tools .multi-tool[data-tool="shape-tool"]'
+  );
+  const frontSubTool = multiTool.locator(".subtool-button").first();
+
+  // the flyout offers only the ellipse (the face already shows rectangle)
+  await key.click({ button: "right" });
+  const ellipseOption = page.locator('.kd-fn-option[data-tool="shape-tool-ellipse"]');
+  await expect(ellipseOption).toHaveCount(1);
+  await expect(page.locator('.kd-fn-option[data-tool="shape-tool-rectangle"]')).toHaveCount(0);
+  await ellipseOption.click();
+
+  // native promotion + dock face swap + activation
+  await expect(frontSubTool).toHaveAttribute("data-tool", "shape-tool-ellipse");
+  await expect(key.locator(".kd-fn-icon")).toHaveAttribute(
+    "src",
+    "/images/ovaltool.svg"
+  );
+  await expect(key).toHaveClass(/kd-active/);
+  await expect(page.locator(".kd-fn-options")).toHaveCount(0);
+
+  // switching away natively deactivates; quick click restores the ellipse
+  await page.locator('#edit-tools > .tool-button[data-tool="hand-tool"]').click();
+  await expect(key).not.toHaveClass(/kd-active/);
+  await key.click();
+  await expect(frontSubTool).toHaveAttribute("data-tool", "shape-tool-ellipse");
+  await expect(key).toHaveClass(/kd-active/);
+});

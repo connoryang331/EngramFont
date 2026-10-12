@@ -203,6 +203,24 @@ const DOCK_FN_KEYS = {
       },
     ],
   },
+  // key "9" mirrors the native shape tools multi-tool (rectangle / ellipse)
+  9: {
+    titleKey: "editor.shape-tool",
+    tools: [
+      {
+        tool: "shape-tool-rectangle",
+        icon: "/images/rectangletool.svg",
+        titleKey: "editor.shape-tool-rectangle",
+        isSubtool: true,
+      },
+      {
+        tool: "shape-tool-ellipse",
+        icon: "/images/ovaltool.svg",
+        titleKey: "editor.shape-tool-ellipse",
+        isSubtool: true,
+      },
+    ],
+  },
 };
 
 function clamp01(value) {

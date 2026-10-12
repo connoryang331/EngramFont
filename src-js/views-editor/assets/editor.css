@@ -765,6 +765,67 @@ kerning-handle.negative {
   line-height: 1;
 }
 
+/* function keys (native Fontra tools on dock keys): the icon follows the
+   key's foreground color, so the kd-active light background flips it too */
+.kd-fn-icon {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+.kd-fn-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* multi-tool function key: corner marker for the sub-tool options, mirroring
+   the native .multi-tool triangle */
+.kd-fn-key.kd-fn-multi::after {
+  content: "";
+  position: absolute;
+  right: 4px;
+  bottom: 3px;
+  border-top: 5px solid currentColor;
+  border-right: 5px solid transparent;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* the sub-tool options revealed by hold / right click on a multi-tool key;
+   re-enables pointer events (the dock container itself is click-through) */
+.kd-fn-options {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.kd-fn-option {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 6px;
+  background-color: #2d2d30;
+  color: #e8e6e1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.kd-fn-option:hover {
+  background-color: #3a3a3e;
+}
+
+.kd-fn-option.kd-active {
+  background-color: #e8e6e1;
+  color: #262629;
+}
+
 .kd-style-orange {
   background-color: #ff8741;
   color: #262629;

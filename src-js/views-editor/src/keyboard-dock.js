@@ -8,6 +8,7 @@
 import * as html from "@fontra/core/html-utils.js";
 import { translate } from "@fontra/core/localization.js";
 import { dialog, message } from "@fontra/web-components/modal-dialog.js";
+import "@fontra/web-components/inline-svg.js";
 import { centeredRect, rectCenter } from "@fontra/core/rectangle.ts";
 import { makeUPlusStringFromCodePoint } from "@fontra/core/utils.ts";
 import { showMenu } from "@fontra/web-components/menu-panel.js";
@@ -140,6 +141,32 @@ const DOCK_BINDABLE_ACTIONS = [
   { id: "canvas-mode-edit" },
 ];
 
+// physical keys replaced by font-function keys ("one key at a time"): each
+// entry wires a key to NATIVE Fontra editor functions. A group of tools
+// mirrors Fontra's native multi-tool button on ONE key position: the face
+// icon is the current sub-tool, a quick click (re)selects it, and a long
+// press / right click reveals the sub-tool options — same interaction as
+// the native toolbar (which expands on hold/right-click and promotes the
+// chosen sub-tool to the front).
+const DOCK_FN_KEYS = {
+  6: {
+    titleKey: "editor.pointer-tools",
+    tools: [
+      {
+        tool: "pointer-tool",
+        icon: "/images/pointer.svg",
+        titleKey: "editor.pointer-tool",
+      },
+      {
+        tool: "pointer-tool-scale",
+        icon: "/images/pointerscale.svg",
+        titleKey: "editor.pointer-tool-scale",
+        isSubtool: true,
+      },
+    ],
+  },
+};
+
 function clamp01(value) {
   return Math.min(1, Math.max(0, value));
 }
@@ -202,6 +229,8 @@ export class KeyboardDock {
     );
     this.altActive = false;
     this.ctrlActive = false;
+    // function-key elements -> their DOCK_FN_KEYS definition
+    this.fnKeyDefs = new Map();
 
     this.buildDom();
     this.applyLayout();
@@ -278,11 +307,30 @@ export class KeyboardDock {
     );
     this.collapseButton.addEventListener("click", () => this.toggleCollapsed());
     container.appendChild(this.collapseButton);
+
+    // keep the function keys' active state in sync with tool switches made
+    // from Fontra's own toolbar or keyboard shortcuts (#edit-tools is the
+    // native toolbar; every tool change toggles "selected" classes there)
+    const nativeToolbar = document.querySelector("#edit-tools");
+    if (nativeToolbar) {
+      this.fnToolObserver = new MutationObserver(() => this.updateFnKeyStates());
+      this.fnToolObserver.observe(nativeToolbar, {
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["class"],
+      });
+    }
+    // the native tool setup ran before this dock was constructed, so the
+    // observer above missed the initial selection — refresh once now
+    this.updateFnKeyStates();
   }
 
   buildKey(keyDef) {
-    const element =
-      keyDef.key !== undefined && !keyDef.special
+    const fnDef =
+      keyDef.key !== undefined && !keyDef.special ? DOCK_FN_KEYS[keyDef.key] : undefined;
+    const element = fnDef
+      ? this.buildFnKey(keyDef, fnDef)
+      : keyDef.key !== undefined && !keyDef.special
         ? this.buildCharacterKey(keyDef)
         : this.buildSpecialKey(keyDef);
     if (keyDef.span > 1) {
@@ -335,6 +383,169 @@ export class KeyboardDock {
       this.showBindingMenu(event, keyDef, element)
     );
     return element;
+  }
+
+  buildFnKey(keyDef, fnDef) {
+    // one key position mirroring Fontra's native multi-tool button (e.g. the
+    // pointer tools): the face icon is the current sub-tool, a quick click
+    // (re)selects it, and a long press / right click reveals the sub-tool
+    // options — same interaction as the native toolbar
+    const element = withAriaLabel(
+      html.button(
+        {
+          class: "kd-key kd-char-key kd-fn-key kd-fn-multi",
+          "data-fn": fnDef.tools.map((toolDef) => toolDef.tool).join(" "),
+          title: translate(fnDef.titleKey),
+        },
+        []
+      ),
+      translate(fnDef.titleKey)
+    );
+    element.appendChild(
+      html.createDomElement("inline-svg", {
+        class: "kd-fn-icon",
+        src: fnDef.tools[0].icon,
+      })
+    );
+    this.fnKeyDefs.set(element, fnDef);
+    element.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      // native showSubTools: a 500ms hold reveals the sub-tools
+      this._fnPressTimer = setTimeout(() => {
+        this._fnPressTimer = null;
+        this.showFnKeyOptions(fnDef, element);
+      }, 500);
+    });
+    element.addEventListener("pointerup", () => {
+      if (!this._fnPressTimer) {
+        return; // options already open (or press ended elsewhere): no select
+      }
+      clearTimeout(this._fnPressTimer);
+      this._fnPressTimer = null;
+      if (this._fnFlyout) {
+        return;
+      }
+      // native mouseup on the visible face: (re)select the current sub-tool
+      const selected = this.editorController.selectedToolIdentifier;
+      const face = fnDef.tools.find((toolDef) => toolDef.tool === selected);
+      this.activateTool((face || fnDef.tools[0]).tool, face?.isSubtool);
+    });
+    element.addEventListener("pointerleave", () => {
+      if (this._fnPressTimer) {
+        clearTimeout(this._fnPressTimer);
+        this._fnPressTimer = null;
+      }
+    });
+    element.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+      // native: right click reveals the sub-tools immediately
+      this.showFnKeyOptions(fnDef, element);
+    });
+    return element;
+  }
+
+  showFnKeyOptions(fnDef, keyElement) {
+    this.closeFnKeyOptions();
+    const selected = this.editorController.selectedToolIdentifier;
+    const options = html.div({ class: "kd-fn-options" }, []);
+    for (const toolDef of fnDef.tools) {
+      const option = withAriaLabel(
+        html.button(
+          {
+            class: "kd-fn-option",
+            "data-tool": toolDef.tool,
+            title: translate(toolDef.titleKey),
+          },
+          []
+        ),
+        translate(toolDef.titleKey)
+      );
+      if (toolDef.tool === selected) {
+        option.classList.add("kd-active");
+      }
+      option.appendChild(
+        html.createDomElement("inline-svg", {
+          class: "kd-fn-icon",
+          src: toolDef.icon,
+        })
+      );
+      // the window closer closes on any mousedown — the option's own press
+      // must not bubble into it (native stops the mousedown propagation too)
+      option.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+      });
+      option.addEventListener("mousedown", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+      });
+      option.addEventListener("pointerup", (event) => {
+        event.preventDefault();
+        this.activateTool(toolDef.tool, toolDef.isSubtool);
+        this.closeFnKeyOptions();
+      });
+      options.appendChild(option);
+    }
+    this.dockElement.appendChild(options);
+    this._fnFlyout = options;
+    // pop the options up above the key (drop below when there's no room)
+    options.style.position = "fixed";
+    const rect = keyElement.getBoundingClientRect();
+    const flyWidth = options.offsetWidth;
+    const flyHeight = options.offsetHeight;
+    let left = rect.left + rect.width / 2 - flyWidth / 2;
+    left = Math.max(6, Math.min(left, window.innerWidth - flyWidth - 6));
+    const top =
+      rect.top - flyHeight - 8 >= 6 ? rect.top - flyHeight - 8 : rect.bottom + 8;
+    options.style.left = `${Math.round(left)}px`;
+    options.style.top = `${Math.round(top)}px`;
+    // native collapseSubtoolsAndCleanUp: any mousedown or Escape closes
+    this._fnFlyoutCloser = (event) => {
+      if (event.type === "mousedown" || event.key === "Escape") {
+        this.closeFnKeyOptions();
+      }
+    };
+    window.addEventListener("mousedown", this._fnFlyoutCloser);
+    window.addEventListener("keydown", this._fnFlyoutCloser);
+  }
+
+  closeFnKeyOptions() {
+    if (this._fnFlyout) {
+      this._fnFlyout.remove();
+      this._fnFlyout = null;
+    }
+    if (this._fnFlyoutCloser) {
+      window.removeEventListener("mousedown", this._fnFlyoutCloser);
+      window.removeEventListener("keydown", this._fnFlyoutCloser);
+      this._fnFlyoutCloser = null;
+    }
+  }
+
+  activateTool(toolIdentifier, isSubtool = false) {
+    // reproduce the native toolbar behavior: the tools only exist in edit
+    // mode, and the canvas takes focus after the switch (like the native
+    // tool-button clicks do)
+    if (isProofMode()) {
+      setCanvasMode("edit");
+    }
+    this.editorController.setSelectedTool(toolIdentifier, isSubtool);
+    this.editorController.canvasController.canvas.focus();
+    this.updateFnKeyStates();
+  }
+
+  updateFnKeyStates() {
+    const selected = this.editorController.selectedToolIdentifier;
+    for (const [element, fnDef] of this.fnKeyDefs) {
+      const current = fnDef.tools.find((toolDef) => toolDef.tool === selected);
+      element.classList.toggle("kd-active", !!current);
+      // the face follows the selected group member, wherever it was chosen
+      // (dock key, native toolbar, keyboard shortcut)
+      if (current) {
+        const icon = element.querySelector(".kd-fn-icon");
+        if (icon && icon.getAttribute("src") !== current.icon) {
+          icon.setAttribute("src", current.icon);
+        }
+      }
+    }
   }
 
   buildSpecialKey(keyDef) {
@@ -547,6 +758,8 @@ export class KeyboardDock {
     for (const [sliderKey, element] of Object.entries(this.sliderElements)) {
       this.updateSliderThumb(element, sliderKey);
     }
+    // belt & braces: tool keys reflect the current selection on mode switches
+    this.updateFnKeyStates();
   }
 
   // ---- collapse/expand ----
@@ -662,7 +875,10 @@ export class KeyboardDock {
     // [thetaStart, thetaStart + angularSpan] on the centerline `radius`
     // (thetaStart = the key's position along the row's arc).
     const keyHeight = 44;
-    const strokeW = 8;
+    // the same-color round stroke IS the corner rounding: its outer half
+    // gives a visual corner radius of strokeW/2 — keep it equal to .kd-key's
+    // border-radius (6px) so the spacebar's corners match the other keys
+    const strokeW = 12;
     const bandHalf = keyHeight / 2 - strokeW / 2; // path band; stroke pads it
     const ro = radius + bandHalf;
     const ri = radius - bandHalf;
@@ -770,11 +986,13 @@ export class KeyboardDock {
       let leftFrameX = sidePad; // screen x of every row's outer end
       for (const keyElement of left) {
         if (keyElement.dataset.special === "space") {
-          // wide space: ONE continuously curved SVG annular-sector keycap
+          // wide space: ONE continuously curved SVG annular-sector keycap;
+          // the +2 keeps the alt gap: the thicker corner stroke spreads the
+          // keycap 2px further along the arc than the old 8px stroke did
           const angularSpan = keyWidthPx(SPACE_SPAN_LEFT) / radius;
           const { button, bbox } = this.buildSpaceArcButton(
             outerY,
-            cursor + (keyGap * 1.5) / radius,
+            cursor + (keyGap * 1.5 + 2) / radius,
             angularSpan,
             radius,
             leftFrameX,
@@ -816,10 +1034,11 @@ export class KeyboardDock {
             : 0;
         if (keyElement.dataset.special === "space") {
           // wide space: ONE continuously curved SVG annular-sector keycap
+          // (the +2 compensates the thicker corner stroke, as on the left)
           const angularSpan = keyWidthPx(SPACE_SPAN_RIGHT) / radius;
           const { button, bbox } = this.buildSpaceArcButton(
             outerY,
-            cursor + (keyGap * 1.5) / radius,
+            cursor + (keyGap * 1.5 + 2) / radius,
             angularSpan,
             radius,
             rightFrameX,

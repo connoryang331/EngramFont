@@ -287,3 +287,67 @@ test("E2E-8 proof sliders adjust spacing/line-height", async ({ page }) => {
     .evaluate((el) => parseFloat(el.style.left));
   expect(editThumbLeft).toBe(50);
 });
+test("E2E-9 pointer-tools key mirrors the native multi-tool", async ({ page }) => {
+  // key "6" is ONE key position replaced by the pointer-tools multi-tool:
+  // native interaction — quick click (re)selects the face sub-tool, long
+  // press / right click reveals the sub-tool options
+  await openEditor(page, "HHHH");
+  const key = page.locator(".kd-fn-key");
+  await expect(key).toHaveCount(1);
+  // key "7" is a plain character key again
+  await expect(page.locator('.kd-fn-key[data-fn="pointer-tool-scale"]')).toHaveCount(0);
+
+  const multiTool = page.locator('#edit-tools .multi-tool[data-tool="pointer-tools"]');
+  const frontSubTool = multiTool.locator(".subtool-button").first();
+
+  // startup: pointer-tool is the current face -> active + pointer icon
+  await expect(key).toHaveClass(/kd-active/);
+  await expect(key.locator(".kd-fn-icon")).toHaveAttribute(
+    "src",
+    "/images/pointer.svg"
+  );
+
+  // quick click -> (re)selects the face tool via the native path
+  await key.click();
+  await expect(multiTool).toHaveClass(/selected/);
+  await expect(frontSubTool).toHaveAttribute("data-tool", "pointer-tool");
+
+  // right click reveals the options; choosing the scaling sub-tool promotes
+  // it (native toolbar front child) and it becomes the key's face
+  await key.click({ button: "right" });
+  const scaleOption = page.locator('.kd-fn-option[data-tool="pointer-tool-scale"]');
+  await expect(scaleOption).toBeVisible();
+  await expect(page.locator('.kd-fn-option[data-tool="pointer-tool"]')).toBeVisible();
+  await scaleOption.click();
+  await expect(frontSubTool).toHaveAttribute("data-tool", "pointer-tool-scale");
+  await expect(key.locator(".kd-fn-icon")).toHaveAttribute(
+    "src",
+    "/images/pointerscale.svg"
+  );
+  await expect(key).toHaveClass(/kd-active/);
+  await expect(page.locator(".kd-fn-options")).toHaveCount(0);
+
+  // a 500ms hold also reveals the options; a mousedown outside closes them
+  const box = await key.boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await expect(page.locator(".kd-fn-options")).toBeVisible();
+  await page.mouse.up();
+  await page.mouse.click(400, 300);
+  await expect(page.locator(".kd-fn-options")).toHaveCount(0);
+
+  // switching away via the native toolbar: the key dims; a quick click
+  // re-selects the face tool (still the scaling pointer)
+  await page.locator('#edit-tools > .tool-button[data-tool="hand-tool"]').click();
+  await expect(key).not.toHaveClass(/kd-active/);
+  await key.click();
+  await expect(frontSubTool).toHaveAttribute("data-tool", "pointer-tool-scale");
+  await expect(key).toHaveClass(/kd-active/);
+
+  // in proof mode a function key first returns to edit mode
+  await page.locator('[data-special="mode"]').click();
+  await expect(page.locator("#proof-toolbar")).toBeVisible();
+  await key.click();
+  await expect(page.locator("#proof-toolbar")).toBeHidden();
+  await expect(key).toHaveClass(/kd-active/);
+});

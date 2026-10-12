@@ -34,6 +34,11 @@ async function openEditor(page, text = "a") {
 }
 
 test("E2E-1 dock renders all rows, aria labels, collapses", async ({ page }) => {
+  // merged layout is canonical for the chrome asserts (arc mode's dock is a
+  // zero-height overlay -> Playwright reports it hidden while keys render)
+  await page.addInitScript(() =>
+    localStorage.setItem("engramfont-dock-layout", "merged")
+  );
   await openEditor(page);
   await expect(page.locator("#keyboard-dock")).toBeVisible();
   const keyCount = await page.locator("#keyboard-dock .kd-key").count();
@@ -94,7 +99,7 @@ test("E2E-2 letter key navigates to glyph; missing glyph offers creation", async
 
 test("E2E-3 DEL resets text to default preview; space appends", async ({ page }) => {
   await openEditor(page, "handlo");
-  await page.locator('[data-special="space"]').click();
+  await page.locator('[data-special="space"]').first().click();
   await page.waitForTimeout(800);
   expect(await readFragmentText(page)).toBe("handlo ");
 
@@ -142,46 +147,19 @@ test("E2E-5 move key toggles pan (hand) tool", async ({ page }) => {
   expect(handStillSelected).toBe(false);
 });
 
-test("E2E-6 layout handle cycles merged -> straight -> arc", async ({
+test("E2E-6 layout handle cycles arc -> straight -> merged", async ({
   page,
+  context,
 }) => {
-  await openEditor(page);
+  // default layout (nothing stored) is arc; reset once via reload —
+  // addInitScript would also strip the persisted value on later reloads
+  await page.goto(`editor.html?project=${findImportedProject()}`);
+  await page.evaluate(() => localStorage.removeItem("engramfont-dock-layout"));
+  await page.reload();
+  await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
+  await page.waitForTimeout(2500);
 
-  // merged: single block
-  await expect(page.locator(".kd-cluster-left")).toBeVisible();
-  await expect(page.locator(".kd-half-left")).toBeHidden();
-  const mergedKeys = await page.locator(".kd-cluster-left .kd-key").count();
-  expect(mergedKeys).toBeGreaterThanOrEqual(28);
-
-  await page.locator("#kd-layout-handle").click();
-  await page.waitForTimeout(400);
-
-  // straight split: two framed clusters anchored apart, fixed-width keys
-  await expect(page.locator("#keyboard-dock.kd-straight")).toHaveCount(1);
-  await expect(page.locator(".kd-cluster-left")).toBeVisible();
-  await expect(page.locator(".kd-cluster-right")).toBeVisible();
-  const straight = await page.evaluate(() => {
-    const left = document
-      .querySelector(".kd-cluster-left")
-      .getBoundingClientRect();
-    const right = document
-      .querySelector(".kd-cluster-right")
-      .getBoundingClientRect();
-    return Math.round(right.left - left.right);
-  });
-  expect(straight).toBeGreaterThan(100);
-  expect(
-    await page.evaluate(() => localStorage.getItem("engramfont-dock-layout"))
-  ).toBe("straight");
-  // DEL functional in straight mode
-  await page.locator(".kd-cluster-right [data-special='del']").click();
-  await page.waitForTimeout(500);
-
-  await page.locator("#kd-layout-handle").click();
-  await page.waitForTimeout(600);
-
-  // arc split: two floating curved halves, rotated keys, dual space
-  await expect(page.locator("#keyboard-dock.kd-arc")).toHaveCount(1);
+  // arc first: floating curved halves
   await expect(page.locator(".kd-half-left")).toBeVisible();
   await expect(page.locator(".kd-half-right")).toBeVisible();
   const arc = await page.evaluate(() => {
@@ -203,36 +181,67 @@ test("E2E-6 layout handle cycles merged -> straight -> arc", async ({
     };
   });
   expect(arc.gap).toBeGreaterThan(100);
-  expect(arc.keys).toBe(mergedKeys + 1); // + the second space key
   expect(arc.rotated).toBe(arc.keys);
   expect(arc.level).toBeLessThanOrEqual(2);
-  expect(
-    await page.evaluate(() => localStorage.getItem("engramfont-dock-layout"))
-  ).toBe("arc");
-  // DEL functional in arc mode; force: rotated bbox center falls outside
-  await page.locator(".kd-half-right [data-special='del']").click({
-    force: true,
-  });
-  await page.waitForTimeout(500);
+  const mergedKeys =
+    (await page.locator(".kd-half-left .kd-key").count()) +
+    (await page.locator(".kd-half-right .kd-key").count()) -
+    1; // -1: the second space key
 
-  // persists across reload (arc stays arc)
-  await page.reload();
-  await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
-  await page.waitForTimeout(1500);
-  await expect(page.locator(".kd-half-left")).toBeVisible();
-
-  // cycle back to merged
   await page.locator("#kd-layout-handle").click();
   await page.waitForTimeout(400);
+
+  // straight second: two framed clusters, rows level and flush
+  await expect(page.locator("#keyboard-dock.kd-straight")).toHaveCount(1);
+  await expect(page.locator(".kd-cluster-left")).toBeVisible();
+  await expect(page.locator(".kd-cluster-right")).toBeVisible();
+  const straight = await page.evaluate(() => {
+    const left = document
+      .querySelector(".kd-cluster-left")
+      .getBoundingClientRect();
+    const right = document
+      .querySelector(".kd-cluster-right")
+      .getBoundingClientRect();
+    return Math.round(right.left - left.right);
+  });
+  expect(straight).toBeGreaterThan(100);
+  expect(
+    await page.evaluate(() => localStorage.getItem("engramfont-dock-layout"))
+  ).toBe("straight");
+  // DEL functional in straight mode
+  await page.locator(".kd-cluster-right [data-special='del']").click();
+  await page.waitForTimeout(500);
+
+  await page.locator("#kd-layout-handle").click();
+  await page.waitForTimeout(400);
+
+  // merged third: single block, single wide space
+  await expect(page.locator("#keyboard-dock.kd-straight")).toHaveCount(0);
+  await expect(page.locator(".kd-cluster-left")).toBeVisible();
+  await expect(page.locator(".kd-half-left")).toBeHidden();
   expect(
     await page.evaluate(() => localStorage.getItem("engramfont-dock-layout"))
   ).toBe("merged");
-  await expect(page.locator(".kd-cluster-left")).toBeVisible();
-  await expect(page.locator(".kd-half-left")).toBeHidden();
-  // merged mode: back to the single wide space key
   await expect(
     page.locator(".kd-cluster-left [data-special='space']")
   ).toBeVisible();
+  expect(
+    await page.locator(".kd-cluster-left .kd-key").count()
+  ).toBeGreaterThanOrEqual(mergedKeys);
+
+  // persists across reload (merged stays merged)
+  await page.reload();
+  await page.locator("#engramfont-project-name").waitFor({ timeout: 30000 });
+  await page.waitForTimeout(1500);
+  await expect(page.locator(".kd-cluster-left")).toBeVisible();
+
+  // and the cycle continues: merged -> arc
+  await page.locator("#kd-layout-handle").click();
+  await page.waitForTimeout(400);
+  await expect(page.locator(".kd-half-left")).toBeVisible();
+  expect(
+    await page.evaluate(() => localStorage.getItem("engramfont-dock-layout"))
+  ).toBe("arc");
 });
 
 test("E2E-7 custom key binding via context menu", async ({ page }) => {

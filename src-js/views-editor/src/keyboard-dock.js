@@ -179,9 +179,11 @@ export function defaultPreviewText(fontController) {
   return text;
 }
 
-// keyboard layouts cycled by the handle: merged block -> straight split
-// (neat rows) -> curved split (K860 arcs) -> merged
-export const dockLayouts = ["merged", "straight", "arc"];
+// keyboard layouts cycled by the handle: curved split (K860 arcs) ->
+// straight split (neat rows) -> merged block -> arc
+export const dockLayouts = ["arc", "straight", "merged"];
+
+export const defaultDockLayout = "arc";
 
 export class KeyboardDock {
   constructor(editorController) {
@@ -194,7 +196,7 @@ export class KeyboardDock {
       ? storedLayout
       : storedLayout === "split"
         ? "straight"
-        : "merged";
+        : defaultDockLayout;
     this.bindings = JSON.parse(
       localStorage.getItem("engramfont-key-bindings") || "{}"
     );

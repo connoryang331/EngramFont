@@ -542,10 +542,9 @@ export class KeyboardDock {
       if (this._fnFlyout) {
         return;
       }
-      // native mouseup on the visible face: (re)select the current sub-tool
-      const selected = this.editorController.selectedToolIdentifier;
-      const face = fnDef.tools.find((toolDef) => toolDef.tool === selected);
-      this.activateTool((face || fnDef.tools[0]).tool, face?.isSubtool);
+      // native mouseup on the visible face: (re)select the remembered face
+      const face = fnDef.faceTool || fnDef.tools[0];
+      this.activateTool(face.tool, face.isSubtool);
     });
     element.addEventListener("pointerleave", () => {
       if (this._fnPressTimer) {
@@ -563,13 +562,14 @@ export class KeyboardDock {
 
   showFnKeyOptions(fnDef, keyElement) {
     this.closeFnKeyOptions();
-    const selected = this.editorController.selectedToolIdentifier;
     const options = html.div({ class: "kd-fn-options" }, []);
-    // the key face already shows the current sub-tool — the flyout only
-    // offers the ALTERNATIVES (a two-tool group pops up exactly one option);
-    // rendered bottom-up so lower entries sit next to the key face
+    // the key face already shows the group's current sub-tool (fnDef.faceTool,
+    // remembered across outside-group selections) — the flyout only offers
+    // the ALTERNATIVES relative to that face; rendered bottom-up so lower
+    // entries sit next to the key face
+    const faceTool = fnDef.faceTool || fnDef.tools[0];
     const alternatives = [...fnDef.tools]
-      .filter((toolDef) => toolDef.tool !== selected)
+      .filter((toolDef) => toolDef.tool !== faceTool.tool)
       .reverse();
     for (const toolDef of alternatives) {
       const option = withAriaLabel(
@@ -583,9 +583,6 @@ export class KeyboardDock {
         ),
         translate(toolDef.titleKey)
       );
-      if (toolDef.tool === selected) {
-        option.classList.add("kd-active");
-      }
       option.appendChild(
         html.createDomElement("inline-svg", {
           class: "kd-fn-icon",
@@ -661,8 +658,10 @@ export class KeyboardDock {
       const current = fnDef.tools.find((toolDef) => toolDef.tool === selected);
       element.classList.toggle("kd-active", !!current);
       // the face follows the selected group member, wherever it was chosen
-      // (dock key, native toolbar, keyboard shortcut)
+      // (dock key, native toolbar, keyboard shortcut); remembered on the
+      // group so flyout/face logic survives selections outside the group
       if (current) {
+        fnDef.faceTool = current;
         const icon = element.querySelector(".kd-fn-icon");
         if (icon && icon.getAttribute("src") !== current.icon) {
           icon.setAttribute("src", current.icon);

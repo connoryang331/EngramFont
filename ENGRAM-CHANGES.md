@@ -186,6 +186,13 @@
   （每次赋值即刷新 dock 功能键，覆盖原生工具栏/快捷键/clean view 全部路径）
 - E2E-12 补 cubic/quad 往返前置断言 + 跨组原生切换断言
 
+### R3-T3.32 · 弹层选项相对"键面"过滤（2026-10-12）
+- 用户流程暴露残留 bug：全局选中在组外时（先点 pen 键前选中还在 pointer 组），长按弹出会列出
+  两组全部工具（2 项）；且右键序列里 pointerup 先于 contextmenu 会用 tools[0] 悄悄改选
+- 修复：每组记住自己的面工具（fnDef.faceTool，updateFnKeyStates 在每次选中落在组内时更新），
+  弹出选项 = 组内工具过滤掉 faceTool；快点击重选也用 faceTool——弹层恒为"恰好一个可选项"，
+  不受全局选中落在哪个组影响；顺带修掉过滤重构后的死引用（selected 未定义）页面错误
+
 ### R3-T3.30 · 按键 8 接入 Knife Tool（2026-10-12）
 - 「8」= knife tool 单功能键（无子菜单，按下即选）：activateTool 直连原生
   setSelectedTool；buildFnKey 拆出单工具分支（跳过长按/右键弹层逻辑）

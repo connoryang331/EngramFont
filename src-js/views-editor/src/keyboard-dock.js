@@ -371,6 +371,17 @@ export class KeyboardDock {
     this.ctrlActive = false;
     // function-key elements -> their DOCK_FN_KEYS definition
     this.fnKeyDefs = new Map();
+    // half-height menu keys above the number row (left -> right): each opens
+    // its menubar menu
+    this.miniMenus = ["Help", "Glyph", "Font", "View", "Edit", "File"];
+    this.miniKeys = this.miniMenus.map((title) => {
+      const key = withAriaLabel(
+        html.button({ class: "kd-key kd-char-key kd-mini-key" }, [title]),
+        title
+      );
+      key.addEventListener("click", () => this.openMenuBarMenu(title));
+      return key;
+    });
 
     // authoritative sync: editor.js assigns selectedToolIdentifier as a plain
     // property on every tool change (native toolbar, shortcuts, this dock,
@@ -727,6 +738,27 @@ export class KeyboardDock {
       window.removeEventListener("keydown", this._fnFlyoutCloser);
       this._fnFlyoutCloser = null;
     }
+  }
+
+  // ---- menu keys: open the matching menubar menu ----
+
+  openMenuBarMenu(title) {
+    // the menu items live in the menu-bar's shadow DOM; dispatch a mousedown
+    // on the matching item so the MenuBar's own toggle logic runs
+    const menuBar = document.querySelector("menu-bar");
+    if (!menuBar?.shadowRoot) {
+      return;
+    }
+    for (const item of menuBar.shadowRoot.querySelectorAll(".menu-item")) {
+      if (item.textContent.trim().toLowerCase() === title.toLowerCase()) {
+        item.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+        return;
+      }
+    }
+  }
+
+  makeMiniKeyRow() {
+    return html.div({ class: "kd-row kd-mini-row" }, [...this.miniKeys]);
   }
 
   activateTool(toolIdentifier, isSubtool = false) {
@@ -1454,6 +1486,12 @@ export class KeyboardDock {
     this.spaceKeyLeft.style.left = "";
     this.spaceKeyLeft.style.top = "";
     this.spaceKeyLeft.style.transform = "";
+    for (const key of this.miniKeys) {
+      key.style.position = "";
+      key.style.left = "";
+      key.style.top = "";
+      key.style.transform = "";
+    }
 
     if (this.layout === "straight") {
       // neat split: two framed clusters anchored to the canvas corners,
@@ -1479,11 +1517,13 @@ export class KeyboardDock {
           }
         }
       }
+      this.clusterLeft.prepend(this.makeMiniKeyRow());
       this.clusterRight.classList.remove("kd-hidden");
       return;
     }
 
-    // merged: one continuous keyboard in the left cluster
+    // merged: one continuous keyboard in the left cluster, with the mini
+    // menu row above the number row
     for (const [rowIndex, rowElements] of this.keyElements.entries()) {
       const rowElement = html.div({ class: "kd-row" }, []);
       rowElement.dataset.row = rowIndex;
@@ -1492,6 +1532,7 @@ export class KeyboardDock {
         rowElement.appendChild(keyElement);
       }
     }
+    this.clusterLeft.prepend(this.makeMiniKeyRow());
     this.clusterRight.classList.add("kd-hidden");
   }
 
@@ -1647,7 +1688,13 @@ export class KeyboardDock {
     // the inner side padding IS the split gap: it keeps the arc's visual
     // browser-edge distance equal to the straight layout's
     const sidePad = this.splitGap;
-    const topPad = 16;
+    // the half-height menu row sits above the number row, left-aligned
+    const miniKeyHeight = 22;
+    const miniKeyWidth = 42;
+    // outerY is the row CENTER line: the number-row caps start at
+    // topPad - keyHeight/2, and the mini menu row rides one row-height
+    // above that on the same arc
+    const topPad = miniKeyHeight + keyGap + keyHeight;
     const bottomPad = 14;
     const seamGap = 70; // horizontal gap between the halves
 
@@ -1667,6 +1714,7 @@ export class KeyboardDock {
 
     const leftPlacements = [];
     const rightPlacements = [];
+    const row1Angles = []; // number-row key angles: the menu keys mirror them
     let leftMaxX = 0;
     let rightMaxX = 0;
     let leftMaxY = 0;
@@ -1713,6 +1761,9 @@ export class KeyboardDock {
         leftMaxX = Math.max(leftMaxX, x + width / 2);
         leftMaxY = Math.max(leftMaxY, y + keyHeight / 2);
         leftPlacements.push({ keyElement, x, y, rot: angle, width });
+        if (rowIndex === 0) {
+          row1Angles.push(angle);
+        }
       }
 
       // RIGHT half: mirrored — the arc descends to the left (rotation
@@ -1768,6 +1819,25 @@ export class KeyboardDock {
         });
       }
     }
+
+    // half-height menu keys: each sits directly above its number-row key,
+    // following the same arc (one row up, same angles -> same tangent tilt)
+    // one keyGap above the number-row caps (number tops = topPad - keyHeight/2)
+    const miniOuterY =
+      topPad - keyHeight / 2 - keyGap - miniKeyHeight / 2;
+    this.miniKeys.forEach((key, index) => {
+      const angle = row1Angles[index];
+      if (angle === undefined) {
+        return;
+      }
+      const mx = radius * Math.sin(angle);
+      const my = miniOuterY + radius * (1 - Math.cos(angle));
+      key.style.position = "absolute";
+      key.style.left = `${Math.round(sidePad + mx - miniKeyWidth / 2)}px`;
+      key.style.top = `${Math.round(my - miniKeyHeight / 2)}px`;
+      key.style.transform = `rotate(${((angle * 180) / Math.PI).toFixed(2)}deg)`;
+      halfLeft.appendChild(key);
+    });
 
     halfLeft.style.width = `${Math.round(leftMaxX + sidePad * 2)}px`;
     halfLeft.style.height = `${Math.round(leftMaxY + bottomPad)}px`;

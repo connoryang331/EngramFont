@@ -237,6 +237,14 @@
   face 前置、dock 同步观察器照常工作）；#zoom-tools 缩放按钮保留
 - 相关 E2E 同步：keyboard-dock 各用例的"切走"步骤改用 knife dock 键；import E2E-1 改用
   dock 0 键选 sidebearing（先选工具再折叠 dock）；proof E2E-1 去掉工具栏可见性断言
+
+### R4-T4.6 · 半高菜单键（2026-10-12）
+- 数字行上方新增 6 个半高（22px）菜单键：Help / Glyph / Font / View / Edit / File（左→右），
+  点击经 menu-bar shadow DOM 的 mousedown 派发打开对应菜单（菜单面板在 shadow 里，断言/检测需走 shadowRoot）
+- 三种布局：merged/straight 于左簇数字行上方前置一排（左对齐）；arc 沿数字键正上方的同一弧线
+  排列（同角度、同切线倾斜、间距=一个键距）
+- mini 键同样跟随设置面板：Radius（min(radius, 11) 封顶半高）、Squircle、Border width、主题透明样式
+- E2E-1 加 mini 键断言；E2E-6 键数断言 63→69（弧）/62→68（合并）
 - 追加隐藏：缩放按钮组（.tools-overlay 整个药丸容器）与右上角 proof 模式切换按钮
   （#canvas-mode-button，R5 过渡件）——模式切换走 dock 的 mode 键；proof E2E 改用 mode 键切换
 

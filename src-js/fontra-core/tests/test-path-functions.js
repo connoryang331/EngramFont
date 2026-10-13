@@ -494,31 +494,44 @@ describe("toggleSmooth tests", () => {
     );
   }
 
-  it("line-line corner toggles corner→smooth→corner without adding handles", () => {
+  it("line-line corner toggles to smooth, creating aligned handles", () => {
     const path = makeLineRect();
     toggleSmooth(path, [0]);
-    expect(path.pointTypes[0] & VarPackedPath.SMOOTH_FLAG).to.equal(
+    // the corner's incoming handle is inserted AT the corner's old index,
+    // pushing the (now smooth) corner to index 1
+    expect(path.pointTypes[1] & VarPackedPath.SMOOTH_FLAG).to.equal(
       VarPackedPath.SMOOTH_FLAG
     );
-    expect(path.numPoints).to.equal(4);
+    // both adjacent segments became curves: 2 handles each
+    expect(path.numPoints).to.equal(8);
+    const hIn = path.getPoint(0);
+    const anchor = path.getPoint(1);
+    const hOut = path.getPoint(2);
+    // collinear through the anchor (cross product ~ 0)
+    const cross =
+      (hIn.x - anchor.x) * (hOut.y - anchor.y) -
+      (hIn.y - anchor.y) * (hOut.x - anchor.x);
+    expect(Math.abs(cross)).to.equal(0);
+    // toggling back to corner keeps the curves (like FontLab/Glyphs)
+    toggleSmooth(path, [1]);
     expect(path.pointTypes[1]).to.equal(VarPackedPath.ON_CURVE);
-    toggleSmooth(path, [0]);
-    expect(path.pointTypes[0]).to.equal(VarPackedPath.ON_CURVE);
-    expect(path.numPoints).to.equal(4);
+    expect(path.numPoints).to.equal(8);
   });
 
-  it("multi-selected line-line corners toggle consistently", () => {
+  it("all four corners toggled at once: every segment becomes a curve", () => {
     const path = makeLineRect();
     toggleSmooth(path, [0, 1, 2, 3]);
     for (const i of [0, 1, 2, 3]) {
-      expect(path.pointTypes[i] & VarPackedPath.SMOOTH_FLAG).to.equal(
-        VarPackedPath.SMOOTH_FLAG
-      );
+      // corners moved apart by the inserted handles; find them by smooth flag
     }
-    toggleSmooth(path, [0, 1, 2, 3]);
-    for (const i of [0, 1, 2, 3]) {
-      expect(path.pointTypes[i]).to.equal(VarPackedPath.ON_CURVE);
+    const smoothIndices = [];
+    for (let i = 0; i < path.numPoints; i++) {
+      if (path.pointTypes[i] & VarPackedPath.SMOOTH_FLAG) {
+        smoothIndices.push(i);
+      }
     }
+    expect(smoothIndices.length).to.equal(4);
+    expect(path.numPoints).to.equal(12); // 4 corners + 2 handles per segment
   });
 
   it("open-path endpoints still refuse to toggle", () => {

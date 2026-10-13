@@ -807,6 +807,10 @@ function* rangesToContours(path, startPoint, ranges) {
 }
 
 export function toggleSmooth(path, pointIndices, newPointType) {
+  // pass 1: collect the toggleable points (open-path endpoints have nothing
+  // to smooth against; off-curve nodes never toggle) and determine the
+  // target type from the first of them
+  const items = [];
   for (const pointIndex of pointIndices) {
     const pointType = path.pointTypes[pointIndex];
     const [prevIndex, prevPoint, nextIndex, nextPoint] = neighborPoints(
@@ -817,17 +821,13 @@ export function toggleSmooth(path, pointIndices, newPointType) {
       (!prevPoint || !nextPoint) &&
       pointType !== VarPackedPath.SMOOTH_FLAG
     ) {
-      // open-path endpoints have nothing to smooth against (unless they are
-      // already smooth and are being toggled back to corner). A corner whose
-      // neighbors are both LINE segments still toggles its smooth flag —
-      // like FontLab/Glyphs, where double-click switches the node type even
-      // without handles (no outline change until the segments become curves)
       continue;
     }
     if (
       pointType === VarPackedPath.ON_CURVE ||
       pointType === VarPackedPath.SMOOTH_FLAG
     ) {
+      items.push({ pointIndex, prevIndex, prevPoint, nextIndex, nextPoint });
       if (newPointType === undefined) {
         // Compute new point type based on the primary editing layer
         newPointType =
@@ -835,27 +835,122 @@ export function toggleSmooth(path, pointIndices, newPointType) {
             ? VarPackedPath.SMOOTH_FLAG
             : VarPackedPath.ON_CURVE;
       }
-      path.pointTypes[pointIndex] = newPointType;
-      if (newPointType === VarPackedPath.SMOOTH_FLAG) {
-        const anchorPoint = path.getPoint(pointIndex);
-        if (prevPoint?.type && nextPoint?.type) {
-          // Fix-up both incoming and outgoing handles
-          const [newPrevPoint, newNextPoint] = alignHandles(
-            prevPoint,
-            anchorPoint,
-            nextPoint
-          );
-          path.setPointPosition(prevIndex, newPrevPoint.x, newPrevPoint.y);
-          path.setPointPosition(nextIndex, newNextPoint.x, newNextPoint.y);
-        } else if (prevPoint?.type) {
-          // Fix-up incoming handle
-          const newPrevPoint = alignHandle(nextPoint, anchorPoint, prevPoint);
-          path.setPointPosition(prevIndex, newPrevPoint.x, newPrevPoint.y);
-        } else if (nextPoint?.type) {
-          // Fix-up outgoing handle
-          const newNextPoint = alignHandle(prevPoint, anchorPoint, nextPoint);
-          path.setPointPosition(nextIndex, newNextPoint.x, newNextPoint.y);
-        }
+    }
+  }
+  if (newPointType === undefined) {
+    return newPointType;
+  }
+
+  // pass 2: toggle the flags; align existing handles when becoming smooth.
+  // Corners whose neighbors are both LINE segments (no handles) are
+  // remembered: like FontLab/Glyphs, double-click switches the node type
+  // even without handles — and to make "smooth" actually mean something the
+  // handles are created in pass 3
+  const smoothCorners = [];
+  for (const item of items) {
+    path.pointTypes[item.pointIndex] = newPointType;
+    if (newPointType !== VarPackedPath.SMOOTH_FLAG) {
+      continue;
+    }
+    const anchorPoint = path.getPoint(item.pointIndex);
+    if (item.prevPoint?.type && item.nextPoint?.type) {
+      // Fix-up both incoming and outgoing handles
+      const [newPrevPoint, newNextPoint] = alignHandles(
+        item.prevPoint,
+        anchorPoint,
+        item.nextPoint
+      );
+      path.setPointPosition(item.prevIndex, newPrevPoint.x, newPrevPoint.y);
+      path.setPointPosition(item.nextIndex, newNextPoint.x, newNextPoint.y);
+    } else if (item.prevPoint?.type) {
+      // Fix-up incoming handle
+      const newPrevPoint = alignHandle(
+        item.nextPoint,
+        anchorPoint,
+        item.prevPoint
+      );
+      path.setPointPosition(item.prevIndex, newPrevPoint.x, newPrevPoint.y);
+    } else if (item.nextPoint?.type) {
+      // Fix-up outgoing handle
+      const newNextPoint = alignHandle(
+        item.prevPoint,
+        anchorPoint,
+        item.nextPoint
+      );
+      path.setPointPosition(item.nextIndex, newNextPoint.x, newNextPoint.y);
+    } else if (
+      path.getNumPointsOfContour(
+        path.getContourAndPointIndex(item.pointIndex)[0]
+      ) >= 3
+    ) {
+      smoothCorners.push(item);
+    }
+  }
+
+  // pass 3: line-line corners becoming smooth get handles on both adjacent
+  // segments (each touched line becomes a proper cubic with a handle near
+  // each end; the corner's two handles are collinear through the node). The
+  // far-end handle of a segment is skipped when the far corner is being
+  // smoothed in the same operation — that corner contributes its own handle.
+  // Processed in descending index order (with an insertion-offset lookup) so
+  // not-yet-processed corners keep their original indices
+  if (newPointType === VarPackedPath.SMOOTH_FLAG && smoothCorners.length) {
+    const smoothSet = new Set(smoothCorners.map((item) => item.pointIndex));
+    const insertedPositions = [];
+    const offsetFor = (originalIndex) =>
+      insertedPositions.filter((position) => position <= originalIndex).length;
+    const fraction = 1 / 3;
+    const interpolate = (from, to, t) => ({
+      x: from.x + t * (to.x - from.x),
+      y: from.y + t * (to.y - from.y),
+    });
+    const offCurve = (vector) => ({
+      x: Math.round(vector.x),
+      y: Math.round(vector.y),
+      type: "cubic",
+    });
+    for (const item of [...smoothCorners].sort(
+      (a, b) => b.pointIndex - a.pointIndex
+    )) {
+      const pointIndex = item.pointIndex + offsetFor(item.pointIndex);
+      const anchorPoint = path.getPoint(pointIndex);
+      const [contourIndex, relIndex] =
+        path.getContourAndPointIndex(pointIndex);
+      const [, prevPoint, nextIndex, nextPoint] = neighborPoints(
+        path,
+        pointIndex
+      );
+      if (!prevPoint || !nextPoint) {
+        continue;
+      }
+      const [newPrevPoint, newNextPoint] = alignHandles(
+        interpolate(anchorPoint, prevPoint, fraction),
+        anchorPoint,
+        interpolate(anchorPoint, nextPoint, fraction)
+      );
+      // insert in descending position order, so every position stays valid
+      // while we go
+      if (!smoothSet.has(item.nextIndex)) {
+        // far handle near the next point, staying on the original line
+        path.insertPoint(
+          contourIndex,
+          nextIndex,
+          offCurve(interpolate(nextPoint, anchorPoint, fraction))
+        );
+        insertedPositions.push(nextIndex);
+      }
+      path.insertPoint(contourIndex, relIndex + 1, offCurve(newNextPoint));
+      insertedPositions.push(item.pointIndex + 1);
+      path.insertPoint(contourIndex, relIndex, offCurve(newPrevPoint));
+      insertedPositions.push(item.pointIndex);
+      if (!smoothSet.has(item.prevIndex)) {
+        // far handle near the previous point, staying on the original line
+        path.insertPoint(
+          contourIndex,
+          item.prevIndex + offsetFor(item.prevIndex) + 1,
+          offCurve(interpolate(prevPoint, anchorPoint, fraction))
+        );
+        insertedPositions.push(item.prevIndex + 1);
       }
     }
   }

@@ -375,3 +375,6 @@
   角点降序插入手柄）；单测更新为手柄创建语义（角点索引因插入手柄而 +1、
   共线性断言、开放端点拒绝不变），fontra-core 全套 1216 通过
 - UI 实测：shape 工具画矩形 → 指针双击 → 四角圆化带手柄、原直边保留
+- 连带修复：弧形 space/move 扇区的 SVG/button 包围盒会拦截相邻按键（如 b 键）
+  的点击——button/svg 设 pointer-events:none、仅 .kd-space-path 设 pointer-events:all
+  （扇形形状本身可点、事件冒泡到按钮）；实测 b 键可点、空格扇形中心点击仍追加空格

@@ -1028,6 +1028,21 @@ menu-bar {
   stroke-width: var(--kd-key-outline-width, 1px);
 }
 
+/* the arc space/move sector: only the painted SECTOR shape may be clicked —
+   the button's and the SVG's bounding boxes must not swallow clicks aimed at
+   neighboring keys (e.g. the b key) that fall inside their empty corners */
+.kd-arc-space {
+  pointer-events: none;
+}
+
+.kd-arc-space svg {
+  pointer-events: none;
+}
+
+.kd-arc-space .kd-space-path {
+  pointer-events: all;
+}
+
 /* transparent keys: a light halo keeps labels readable where canvas glyphs
    pass underneath (kept subtle — a heavy halo washes out the thin font) */
 #keyboard-dock.kd-theme-light .kd-key .kd-key-main,

@@ -88,3 +88,56 @@
 ### 对照 dock 待办
 - [ ] dock 指针工具是否补齐：Tab 循环选点、双击选整条路径、
   Option 拖拽忽略手柄、Control 旋转选框（低优，按需）。
+
+## Backlog-B3 · FontLab Pointer（= Contour tool, A）最新文档参考（2026-10-13）
+
+来源：FontLab 8 Help（help.fontlab.com/fontlab/8）。注意：FontLab 8 的修订版
+manual 尚未发布，官方指路 FontLab 7 manual + FL8 教程；当前文档里
+**没有字面叫 "Pointer" 的工具**——节点选择/编辑的主力工具是 **Contour tool
+（A 键）**，工具箱另有五个开关：Power Nudge / Nudge / Harmonized drag /
+Slide / Lever（FL8 新增）。
+
+### 选择
+- 单击节点选中（变红）；**Shift** 单击加选；**Alt/Cmd** 单击去选；
+- 单击线段 = 子选该段（可在 Preferences 切换为整条）；
+- 整条轮廓：**双击轮廓**或 **Alt** 点轮廓旁空白（Shift 变体加/减选）；
+- marquee：空白处拖拽矩形；**Alt** 拖 = 自由套索；**Shift** 拖 = 加/减选；
+  手柄默认不进框选（Preferences 可改）；
+- 点空白取消选择；点漏了用 **PgUp/PgDn** 循环补选；
+- 临时唤起：按住 A（或 Cmd，按 Preferences）；松开回原工具。
+
+### 移动
+- 拖拽/多选拖拽；**Shift** 拖 = 水平/垂直约束；
+- 拖动中出现红色点状吸附建议；按住 **Ctrl** 临时禁用吸附；
+- **PgUp/PgDn** 循环选中正确节点；**`** 键 = 即时高质量打印预览。
+
+### Bézier 修饰键（拖两曲线交点的节点）
+- **Alt**（平滑关节）= 沿两侧控制点连线方向移动；尖角 = 只动节点不动控制点；
+- **Alt+Cmd**（平滑）= 保持曲率最优（四控制点联动）；
+- **Alt+Shift** = 节点沿段滑动，手柄重算保形；
+- **Shift**（点控制点前）= 控制向量方向不变；
+- **Shift** 双击（近水平/垂直对齐时）= 吸附对齐。
+
+### 双击行为
+- 双击节点 = Sharp ↔ Smooth（曲线+直线交点处 Sharp → Tangent）；
+- 尖角 + **Alt** = 归一化尖角（两侧手柄自然化）；
+- 尖角 + **Shift+Alt** = **Smart Corner**（非破坏圆角/墨阱，双击改半径，
+  右键永久化）；
+- 平滑 + **Alt** = 调和（两侧曲率相等 Harmonize）；
+- 平滑 + **Shift+Alt** = **Genius 节点**（移动手柄仍保持调和）；
+- 尖角节点的手柄双击 = 对齐到对面手柄角度；**Shift** 双击手柄 = 吸附水平/垂直。
+
+### 线段操作
+- 拖未选中的段任意处 = 变形（临时点吸附网格/参考线）；**Ctrl+Alt** 点线段 =
+  转曲线；点曲线段 = **Balance**（等比手柄）；**Alt** 拖选中段 = 复制该段；
+- 插入节点：**Ctrl+Alt** 点段；**Shift+Ctrl+Alt** = 极值点；
+- 删除：BkSp 删节点/手柄（轮廓保持闭合；Del 会打断轮廓——Preferences 可配）；
+  **Shift+Alt** 单击手柄 = 收回手柄（曲线转直线）；
+- **Power Nudge**（Shift+C / 拖动中按 C）：FontLab 自动判定"仆从"节点按比例跟随；
+- **Tunni Lines**（L）：曲线双手柄同步移动、平衡曲率张力；
+- **Lever**（FL8）：可拖出比指针距离更小的精确位移（Preferences > Distances）。
+
+### 对照 dock 待办
+- [ ] dock 指针工具可考虑对齐 FontLab 的特色：Alt 沿线滑动节点、
+  Shift+Alt 吸附对齐、Power Nudge 类"仆从节点"跟随、PgUp/PgDn 循环补选
+  （低优，按需）。

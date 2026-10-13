@@ -1630,14 +1630,21 @@ export class KeyboardDock {
     const split = this.layout !== "merged";
 
     // bottom-row spans differ per layout (merged: one 5u space + 1.25u move;
-    // split: left 3.8u space, right ONE wide move key — the spacebar sector
+    // split: left 3.3u space, right ONE move key — the spacebar sector
     // doubles as the move key there, so the original space/move elements are
     // only placed in merged)
     const [spaceKey, moveKey] = this.keyElements[4].slice(3, 5);
     spaceKey.style.setProperty("--kd-span", SPACE_SPAN_MERGED);
     moveKey.style.setProperty("--kd-span", MOVE_SPAN_MERGED);
-    // the blue mode ("view") key runs a bit shorter in the split layouts
+
+    // split layouts: the seam-side row ends form an inverted staircase —
+    // each row pulls in one 29px step from the row above (the DEL row is
+    // the longest at 516px, then 487 / 458 / 429 / 400): row2 already steps
+    // 29px via its 1.5u backslash (DEL 2u - \ 1.5u = 29), the mode and
+    // green end caps absorb the other steps
+    const greenKey = this.keyElements[3][this.keyElements[3].length - 1];
     const modeKey = this.keyElements[2][this.keyElements[2].length - 1];
+    greenKey.style.setProperty("--kd-span", split ? 2.5 : 2.75);
     modeKey.style.setProperty("--kd-span", split ? 2 : 2.25);
 
     if (this.layout === "arc") {
@@ -1996,13 +2003,12 @@ export class KeyboardDock {
             ? -2
             : 0;
         if (keyElement.dataset.special === "space") {
-          // move sector (the right cluster's former spacebar): its seam-side
-          // end stops at the n key's left edge — the n row's total arc length
-          // (5×1u + 2.75u, in px) minus the placeholder run and the alt gap.
-          // cursor and thetaStart are RADIANS here (px / radius)
-          const nRowArc = (5 * 52 + 5 * keyGap + keyWidthPx(2.75)) / radius;
+          // move sector: the bottom stair of the inverted staircase — its
+          // seam-side end stops one 29px step short of the n row's end
+          // (429 - 29 = 400px from the outer end). cursor is RADIANS here
+          const nRowArc = (5 * 52 + 5 * keyGap + keyWidthPx(2.5)) / radius;
           const moveStart = cursor + (keyGap * 1.5 + 2) / radius;
-          const angularSpan = nRowArc - moveStart;
+          const angularSpan = nRowArc - 29 / radius - moveStart;
           const { button, bbox } = this.buildSpaceArcButton(
             outerY,
             moveStart,

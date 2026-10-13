@@ -6,9 +6,11 @@ import {
   insertPoint,
   slicePaths,
   splitPathAtPointIndices,
+  toggleSmooth,
 } from "@fontra/core/path-functions.js";
 import { PathHitTester } from "@fontra/core/path-hit-tester.js";
 import { enumerate } from "@fontra/core/utils.ts";
+import VarArray from "@fontra/core/var-array.js";
 import { VarPackedPath } from "@fontra/core/var-path.js";
 
 import { parametrize } from "./test-support.js";
@@ -475,4 +477,55 @@ describe("Path Functions tests", () => {
       expect(path).to.deep.equal(testCase.expectedPath);
     }
   );
+});
+
+describe("toggleSmooth tests", () => {
+  function makeLineRect(isClosed = true) {
+    // rectangle: four on-curve corners, all segments are lines (no handles)
+    return new VarPackedPath(
+      new VarArray(0, 0, 0, 100, 100, 100, 100, 0),
+      [
+        VarPackedPath.ON_CURVE,
+        VarPackedPath.ON_CURVE,
+        VarPackedPath.ON_CURVE,
+        VarPackedPath.ON_CURVE,
+      ],
+      [{ endPoint: 3, isClosed }]
+    );
+  }
+
+  it("line-line corner toggles corner→smooth→corner without adding handles", () => {
+    const path = makeLineRect();
+    toggleSmooth(path, [0]);
+    expect(path.pointTypes[0] & VarPackedPath.SMOOTH_FLAG).to.equal(
+      VarPackedPath.SMOOTH_FLAG
+    );
+    expect(path.numPoints).to.equal(4);
+    expect(path.pointTypes[1]).to.equal(VarPackedPath.ON_CURVE);
+    toggleSmooth(path, [0]);
+    expect(path.pointTypes[0]).to.equal(VarPackedPath.ON_CURVE);
+    expect(path.numPoints).to.equal(4);
+  });
+
+  it("multi-selected line-line corners toggle consistently", () => {
+    const path = makeLineRect();
+    toggleSmooth(path, [0, 1, 2, 3]);
+    for (const i of [0, 1, 2, 3]) {
+      expect(path.pointTypes[i] & VarPackedPath.SMOOTH_FLAG).to.equal(
+        VarPackedPath.SMOOTH_FLAG
+      );
+    }
+    toggleSmooth(path, [0, 1, 2, 3]);
+    for (const i of [0, 1, 2, 3]) {
+      expect(path.pointTypes[i]).to.equal(VarPackedPath.ON_CURVE);
+    }
+  });
+
+  it("open-path endpoints still refuse to toggle", () => {
+    const path = makeLineRect(false);
+    toggleSmooth(path, [0]);
+    expect(path.pointTypes[0]).to.equal(VarPackedPath.ON_CURVE);
+    toggleSmooth(path, [3]);
+    expect(path.pointTypes[3]).to.equal(VarPackedPath.ON_CURVE);
+  });
 });

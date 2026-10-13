@@ -1103,11 +1103,35 @@ export class KeyboardDock {
     const editorController = this.editorController;
     const fontController = editorController.fontController;
     if (glyphName && glyphName in fontController.glyphMap) {
-      editorController.sceneSettings.selectedGlyph = {
+      // carry the positioned-glyph indices: several scene APIs
+      // (getSelectedPositionedGlyph etc.) index the selection by
+      // lineIndex/glyphIndex — without them the shape/metrics tools break
+      const newSelection = {
         ...editorController.sceneSettings.selectedGlyph,
         glyphName,
         isEditing: !isProofMode(),
       };
+      let positionedSelection;
+      editorController.sceneModel.positionedLines?.forEach(
+        (line, lineIndex) => {
+          if (positionedSelection) {
+            return;
+          }
+          line.glyphs.forEach((glyph, glyphIndex) => {
+            if (glyph.glyphName === glyphName) {
+              positionedSelection = { lineIndex, glyphIndex };
+            }
+          });
+        }
+      );
+      if (positionedSelection) {
+        newSelection.lineIndex = positionedSelection.lineIndex;
+        newSelection.glyphIndex = positionedSelection.glyphIndex;
+      } else {
+        delete newSelection.lineIndex;
+        delete newSelection.glyphIndex;
+      }
+      editorController.sceneSettings.selectedGlyph = newSelection;
     } else {
       await this.showDialogCreateGlyph(glyphName, character);
     }

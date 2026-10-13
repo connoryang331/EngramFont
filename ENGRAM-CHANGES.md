@@ -350,3 +350,16 @@
 - **保留不动**：`@fontra/*` 包别名与 workspace 目录名、Python 模块 `src/fontra/`、`.fontra` 文件扩展名、
   `fontra-icon.svg` 文件名、`FontraBackend` 类名（测试引用）——这些是构建/协议/存储命名空间，改动成本远大于品牌收益
 - 验证：editor 启动无错误、canvas 渲染、localStorage 109 个 `engramfont-*` 键 / 0 个旧键、serverInfo 显示 "EngramFont version"
+
+### R4-T4.21 · 双击节点 corner↔smooth 对齐 Glyphs/FontLab（2026-10-13）
+- **修复**：`toggleSmooth`（fontra-core/path-functions.js）原本在节点两侧都是直线段
+  （无 off-curve 手柄）时直接跳过——矩形角点双击无效果；现放开为纯旗标切换
+  （ON_CURVE ↔ SMOOTH_FLAG，无手柄、无轮廓变化），与 FontLab/Glyphs 的
+  "双击切节点类型"一致；开放路径端点仍拒绝；节点标记方块↔圆点为可见反馈
+- **单元测试**：src-js/fontra-core/tests/test-path-functions.js 新增 3 例
+  （单角往返 / 多选一致 / 开放端点拒绝），18/18 通过
+- **连带修复 dock navigateToGlyph**：设置的 selectedGlyph 缺
+  lineIndex/glyphIndex（getSelectedPositionedGlyph 索引取不到 → shape/metrics
+  工具在 dock 键导航后崩溃）；现按 glyphName 从 positionedLines 解析并携带索引
+  （找不到时清除陈旧索引）；实测 dock 键导航后 shape 工具可正常画矩形，
+  双击角点 smooth↔corner 往返（UI 验证：四角圆点/方块标记切换、轮廓不变）

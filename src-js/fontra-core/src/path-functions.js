@@ -814,9 +814,14 @@ export function toggleSmooth(path, pointIndices, newPointType) {
       pointIndex
     );
     if (
-      (!prevPoint || !nextPoint || (!prevPoint.type && !nextPoint.type)) &&
+      (!prevPoint || !nextPoint) &&
       pointType !== VarPackedPath.SMOOTH_FLAG
     ) {
+      // open-path endpoints have nothing to smooth against (unless they are
+      // already smooth and are being toggled back to corner). A corner whose
+      // neighbors are both LINE segments still toggles its smooth flag —
+      // like FontLab/Glyphs, where double-click switches the node type even
+      // without handles (no outline change until the segments become curves)
       continue;
     }
     if (

@@ -299,6 +299,12 @@
   视口钳制从未生效，超长子菜单（View→Glyph editor appearance）底边越界 176px；
   show() 取消隐藏后重新 place()，真实尺寸下右/下/openUp/顶部钳制全部生效
   （960×685 实测子菜单底边 683 < 685，末项完整可见）
+- R4.T4.20：悬浮侧栏点击空白自动关闭（免重复按面板键）：document mousedown 捕获，
+  打开的 sidebar-container 外的点击逐个 toggle 关闭；排除 dock / menu-panel /
+  menu-bar / modal-dialog 与面板内部点击；面板查找用容器内 .sidebar-content.selected
+  （tab 在独立 overlay 里，不在容器内）；playwright 配置改为 e2e 自管理服务器
+  （8801 端口、根 .e2e-fonts、reuseExistingServer）——与日常 8800 实例
+  （根 fontra-test-fonts）隔离，修复夹具根目录不匹配导致的批量测试失败
 
 ### R3-T3.30 · 按键 8 接入 Knife Tool（2026-10-12）
 - 「8」= knife tool 单功能键（无子菜单，按下即选）：activateTool 直连原生

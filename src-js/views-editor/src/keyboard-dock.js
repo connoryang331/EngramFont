@@ -475,6 +475,33 @@ export class KeyboardDock {
       return onOff;
     };
 
+    // click-away: with a floating sidebar open, any click outside of it
+    // (and outside the dock and menus) closes it — no need to press the
+    // same panel key again
+    this._sidebarClickAway = (event) => {
+      if (event.target.closest?.("#keyboard-dock, menu-panel, menu-bar, modal-dialog")) {
+        return;
+      }
+      const openContainers = [
+        ...document.querySelectorAll(".sidebar-container.visible"),
+      ];
+      if (!openContainers.length) {
+        return;
+      }
+      if (openContainers.some((container) => container.contains(event.target))) {
+        return;
+      }
+      for (const container of openContainers) {
+        // the open panel: the sidebar-content with .selected (the tabs live
+        // in the separate tab overlay, not in the container)
+        const content = container.querySelector(".sidebar-content.selected");
+        if (content?.dataset.sidebarName) {
+          this.editorController.toggleSidebar(content.dataset.sidebarName, false);
+        }
+      }
+    };
+    document.addEventListener("mousedown", this._sidebarClickAway, true);
+
     this.buildDom();
     this.applyLayout();
     this.applyTheme();

@@ -97,6 +97,17 @@ manual 尚未发布，官方指路 FontLab 7 manual + FL8 教程；当前文档�
 （A 键）**，工具箱另有五个开关：Power Nudge / Nudge / Harmonized drag /
 Slide / Lever（FL8 新增）。
 
+### 文档 URL（均已验证 200）
+- Contour tool 主页：https://help.fontlab.com/fontlab/7/manual/Contour-tool
+- Selecting Points：https://help.fontlab.com/fontlab/7/manual/Selecting-Points
+- Moving Points：https://help.fontlab.com/fontlab/7/manual/Moving-Points
+- Active Points vs Selected Points：https://help.fontlab.com/fontlab/7/manual/Active-Points-vs-Selected-Points
+- Editing an Existing Glyph：https://help.fontlab.com/fontlab/7/manual/Editing-an-Existing-Glyph
+- Using the Glyph Window：https://help.fontlab.com/fontlab/7/manual/Using-the-Glyph-Window
+- Preferences for Editing：https://help.fontlab.com/fontlab/7/manual/Preferences-for-Editing
+- FL8 What's New（Edit & refine 五开关）：https://help.fontlab.com/fontlab/8/whats-new/whats-new-03-edit-refine/
+- FL7 manual 总目录：https://help.fontlab.com/fontlab/7/manual/
+
 ### 选择
 - 单击节点选中（变红）；**Shift** 单击加选；**Alt/Cmd** 单击去选；
 - 单击线段 = 子选该段（可在 Preferences 切换为整条）；

@@ -496,38 +496,6 @@ export class KeyboardDock {
     window.addEventListener("resize", () => this.syncDockExtentVars());
   }
 
-  // straight-layout move key: a rounded rect whose left end is a straight
-  // diagonal (top edge inset 14px, bottom edge full) — every corner keeps
-  // the configured rounding, so the cut reads as a clean slanted edge
-  slantedMoveKeyClip(width, height) {
-    const r = Math.min(this.radius, height / 2 - 1);
-    const f = Math.max(0, Math.min(r, 8)); // fillet on the diagonal corners
-    const topX = 14;
-    const botX = 0;
-    const diagLen = Math.hypot(topX - botX, height);
-    const ux = (topX - botX) / diagLen; // diagonal unit, bottom -> top
-    const uy = -height / diagLen;
-    const line = (x, y) => `L ${x.toFixed(1)} ${y.toFixed(1)}`;
-    const arc = (x, y) =>
-      r > 0.5 ? `A ${r} ${r} 0 0 1 ${x.toFixed(1)} ${y.toFixed(1)}` : line(x, y);
-    const quad = (cx, cy, x, y) =>
-      f > 0.5
-        ? `Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)}`
-        : line(x, y);
-    return (
-      `path('M ${(topX + f).toFixed(1)} 0 ` +
-      line(width - r, 0) +
-      arc(width, r) +
-      line(width, height - r) +
-      arc(width - r, height) +
-      line(botX + f, height) +
-      quad(botX, height, botX + ux * f, height + uy * f) +
-      line(topX - ux * f, -uy * f) +
-      quad(topX, 0, topX + f, 0) +
-      " Z')"
-    );
-  }
-
   syncDockExtentVars() {
     // publish where the dock sits so the floating sidebars can anchor to it:
     // clearance = gap between the viewport bottom and the keys' top edge,
@@ -1740,13 +1708,6 @@ export class KeyboardDock {
           }
         }
       }
-      // the wide move key's left end: a straight diagonal chamfer with the
-      // same corner rounding as the rest of the cap (a plain polygon clip
-      // would leave sharp beaks where the diagonal meets the rounded corners)
-      this.moveKeyRight.style.clipPath = this.slantedMoveKeyClip(
-        52 * 2.75 + 1.75 * 6,
-        44
-      );
       this.clusterLeft.prepend(this.makeMiniKeyRow());
       this.clusterRight.classList.remove("kd-hidden");
       return;

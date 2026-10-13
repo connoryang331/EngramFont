@@ -289,6 +289,8 @@
   单位混用曾让扇区翻倍长）、左侧空格键同理止于 b 键右缘（3.8u→3.3u，放弃此前的
   楼梯外凸）；独立 move 键从 split 右簇移除（merged 不变：5u space + 1.25u move）；
   蓝色 view（mode）键 split 下 2.25u→2u；E2E-6 arc 计数 70→69
+- R4.T4.17c：straight 的 move 键去掉左端斜切（键变短后斜切读作缺口，多边形/圆角 path
+  两种裁剪都有瑕疵）——恢复普通圆角矩形，弧形扇区保留自然曲边
 
 ### R3-T3.30 · 按键 8 接入 Knife Tool（2026-10-12）
 - 「8」= knife tool 单功能键（无子菜单，按下即选）：activateTool 直连原生

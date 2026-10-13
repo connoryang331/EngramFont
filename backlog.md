@@ -49,3 +49,42 @@
   系统字体渲染的 Unicode 字符；
 - **FontLab**：其 "Mask" 是另一概念——手动放置的参考层（别的字形轮廓
   垫在编辑字形后面，存于字体文件），与本机制的"空字形自动占位"不同。
+
+## Backlog-B2 · Glyphs.app Pointer（Edit/Select Tool, V）交互参考（2026-10-13）
+
+来源：Glyphs Handbook — Edit View → Editing Paths（handbook.glyphsapp.com）。
+用途：dock 指针工具（6 键）交互对齐 Glyphs 的参考清单。
+
+### 选择
+- 拖拽 marquee 矩形框选；**Option** 拖拽忽略手柄、只选 on-curve 节点；
+- **Control** + 拖拽：选框旋转（斜体沿倾斜方向框选）；
+- 单击选节点/线段；**Shift** 单击扩展或缩减选择；
+- 双击线段附近 = 选中整条路径；
+- 手柄可单独选中（Shift 组建非连续多选）；
+- 单点选中后 **Tab / Shift-Tab**：路径上下一个/上一个点；
+- 反选 Cmd-Opt-Shift-I；全部取消 Cmd-Opt-A。
+
+### 移动
+- 鼠标或方向键；移动节点时挂连手柄跟随；
+- **Shift** 方向键 = 10 单位；**Command** 方向键 = 100 单位；
+- **Option** + 移动 = 只动选中点、手柄留在原地；
+- **Control+Option** 拖拽 = 弹性微调（周围未选手柄按比例跟随）。
+
+### 手柄
+- **Option** + 移动手柄 = 保角度只变长度；
+- 平滑节点 **Control+Option** + 移动手柄 = 长度角度镜像复制到对侧；
+- 拖线段 = 两端节点+手柄齐动；**Option** + 拖线段 = 只变手柄长度保角度。
+
+### 双击与转换
+- 双击节点或 **Return** = 角点 ↔ 平滑点（Option 保持轮廓不变形）；
+- **Option** + 单击直线段 = 直线 → 曲线（删手柄反向）；
+- **Opt-Shift-Return** / Shift+双击 = super-smooth（星形/raindrop）节点。
+
+### Edit View 其他
+- 文本模式 **Esc** 使光标右侧字形进入编辑；工具快捷键（V = Select）；
+- 双击字形进入编辑；Font View 中 Cmd-Down 打开选中字形组；
+- Info box 数字字段上下键增减（Shift 步进 10）。
+
+### 对照 dock 待办
+- [ ] dock 指针工具是否补齐：Tab 循环选点、双击选整条路径、
+  Option 拖拽忽略手柄、Control 旋转选框（低优，按需）。

@@ -152,3 +152,58 @@ Slide / Lever（FL8 新增）。
 - [ ] dock 指针工具可考虑对齐 FontLab 的特色：Alt 沿线滑动节点、
   Shift+Alt 吸附对齐、Power Nudge 类"仆从节点"跟随、PgUp/PgDn 循环补选
   （低优，按需）。
+
+## Backlog-B4 · Pointer 工具三家对比（Fontra vs Glyphs vs FontLab，2026-10-13）
+
+Fontra 侧依据本仓库源码（`edit-tools-pointer.js` + `edit-behavior.js`），
+Glyphs/FontLab 依据 B2/B3 文档研究。
+
+### 命名与键位
+| | Fontra | Glyphs.app | FontLab 8 |
+|---|---|---|---|
+| 名称 | Pointer tool | Select tool | **Contour tool** |
+| 快捷键 | V | V | A |
+| 文档 | 源码即文档（开源） | handbook.glyphsapp.com | FL7 manual（FL8 版 manual 未发布） |
+
+### 选择
+- 共同：单击选节点/手柄、Shift 加减选、空白拖拽 marquee、点空白取消；
+- **Fontra**：marquee 矩形；双击线段附近 = 选该轮廓**全部 on-curve 点**；
+  Alt+悬停线段 = 预览插点（转笔刀插入手柄）；选中后出现**缩放/旋转手柄**
+  （Shift 锁比例/步进角）；Tab 循环选点，**Alt+Tab 按轮廓跳**，Tab 还会跨类型
+  （点→组件→锚点→参考线）；
+- **Glyphs**：marquee（Option 忽略手柄、Control **旋转选框**——独有）；
+  双击线段 = 选整条路径（含手柄）；Tab 只在点间循环；
+- **FontLab**：marquee + **Alt 拖 = 自由套索**（独有）；双击轮廓 = 选整条
+  （含手柄）；点漏了 **PgUp/PgDn** 循环补选（独有）；Alt/Cmd 单击 = 去选。
+
+### 移动与修饰键哲学（最大差异点）
+- **Fontra**：拖拽中实时切换**四种行为**——default / **Shift** 约束
+  （水平/垂直/45°）/ **Alt** alternate（规则引擎按节点类型重算手柄）/
+  Shift+Alt；修饰键中途变化会**先回滚再套用新行为**；多层同时实时编辑记录 undo；
+  拖节点到开口端点 = **自动连接轮廓**（connectContours，独有）；
+- **Glyphs**：Option = 只动点不动手柄；Shift = 约束；Control+Option 拖 =
+  弹性微调；方向键步进 **Shift=10 / Cmd=100 单位**；
+- **FontLab**：Alt 家族语义最丰富（沿控制点连线滑、沿段滑、曲率最优联动）；
+  **Power Nudge**（仆从节点自动跟随）、**Lever**（比指针更小的精确位移）、
+  方向键步进同 Glyphs（Shift=10/Cmd=100）。
+
+### 双击语义
+- **Fontra**：节点上 = toggle smooth↔corner（多层一致）；组件上 = 进入组件
+  编辑；锚点/参考线上 = 打开对应编辑；未定义字形上 = 弹出建字形；
+- **Glyphs**：节点上 = smooth↔corner；**Opt-Shift-Return = super-smooth
+  （星形节点）**（独有）；Option+点直线段 = 转曲线；
+- **FontLab**：最重的双击语义——尖角 Alt = 归一化、Shift+Alt = **Smart
+  Corner**（非破坏圆角/墨阱）、平滑 Alt = **Harmonize**、Shift+Alt =
+  **Genius 节点**（独有）。
+
+### 删除/其他
+- FontLab：BkSp 删节点保持闭合 vs Del 打断轮廓（可配）、Shift+Alt 收手柄、
+  Alt 拖段复制、`` ` `` 即时预览——语义最细；
+- Fontra：BkSp/Del 删除选中（canvas 层处理）；` 无预览键；
+- Glyphs：节点删除走 Edit 菜单/快捷键。
+
+### 对 dock 的启示（按需）
+- [ ] Fontra 已有 Tab 循环（含 Alt 按轮廓）——比 Glyphs 强，保留；
+- [ ] 可考虑借鉴：Glyphs 的 Control 旋转选框、FontLab 的自由套索、
+  Power Nudge 类跟随、双击的 FontLab 式重语义（Harmonize/Smart Corner）——
+  均为低优增强。

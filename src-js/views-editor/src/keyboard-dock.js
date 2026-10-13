@@ -559,14 +559,12 @@ export class KeyboardDock {
       locked: true,
     });
     // split layouts: the right cluster's spacebar + move key were redundant —
-    // ONE move key replaces both. Its span (2.75u) is exactly the n row's
-    // remainder: the key's seam-side end lines up with the n key's left
-    // edge — it must not stick out past n. In the straight layout its left
-    // end is additionally chamfered to a straight diagonal (set in renderKeys)
+    // ONE move key replaces both. Its span (2u) is one 29px stair step short
+    // of the n row's end (row total 400px, same as the arc layout's sector)
     this.moveKeyRight = this.buildKey({
       special: "move",
       style: "dark",
-      span: 2.75,
+      span: 2,
       locked: true,
     });
     this.renderKeys();

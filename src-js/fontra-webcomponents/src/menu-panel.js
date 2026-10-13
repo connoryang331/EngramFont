@@ -181,6 +181,10 @@ export class MenuPanel extends SimpleElement {
   async show(options = { animated: false }) {
     this.hidden = false;
     this.style.display = null;
+    // re-place now that the panel has its real size — hidden-created panels
+    // (submenus) measured 0x0 in their first place() call, so the viewport
+    // clamps never ran for them and tall submenus spilled past the window
+    this.place();
     if (options.animated) {
       // hide immediately since animation is delayed
       this.style.opacity = 0;

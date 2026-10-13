@@ -295,6 +295,10 @@
   29px（DEL 行 516 → 487 → 458 → 429 → 400）：row2 靠 1.5u \\ 本来就正好差一级
   （DEL 2u − \\ 1.5u = 29，不动），green 2.75u→2.5u、mode 保持 2u、move 扇区末端
   再收一级（400 = n 行 429 − 29）；straight 的 moveKeyRight 同步 2.75u→2u（行末同为 400）
+- R4.T4.19：修复子菜单溢出视口 bug：hidden 创建的子菜单在 place() 时量到 0×0，
+  视口钳制从未生效，超长子菜单（View→Glyph editor appearance）底边越界 176px；
+  show() 取消隐藏后重新 place()，真实尺寸下右/下/openUp/顶部钳制全部生效
+  （960×685 实测子菜单底边 683 < 685，末项完整可见）
 
 ### R3-T3.30 · 按键 8 接入 Knife Tool（2026-10-12）
 - 「8」= knife tool 单功能键（无子菜单，按下即选）：activateTool 直连原生

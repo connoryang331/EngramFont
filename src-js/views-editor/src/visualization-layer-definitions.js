@@ -1329,7 +1329,7 @@ registerVisualizationLayerDefinition({
     }
 
     for (const pt of glyph.componentsPath.iterPoints()) {
-      fillNode(context, pt, cornerSize, smoothSize, handleSize, parameters);
+      strokeNode(context, pt, cornerSize, smoothSize, handleSize, parameters);
     }
   },
 });
@@ -1357,7 +1357,12 @@ registerVisualizationLayerDefinition({
   name: "Nodes",
   selectionFunc: glyphSelector("editing"),
   zIndex: 500,
-  screenParameters: { cornerSize: 8, smoothSize: 8, handleSize: 6.5 },
+  screenParameters: {
+    cornerSize: 8,
+    smoothSize: 8,
+    handleSize: 6.5,
+    strokeWidth: 1.5,
+  },
   colors: {
     smoothColor: "#7A4FE8",
     cornerColor: "#D99A1F",
@@ -1374,8 +1379,11 @@ registerVisualizationLayerDefinition({
     const smoothSize = parameters.smoothSize;
     const handleSize = parameters.handleSize;
 
+    // unselected nodes are HOLLOW: type-colored outline only (solid fill
+    // marks the active/selected nodes, see fontra.selected.nodes)
+    context.lineWidth = parameters.strokeWidth;
     for (const pt of glyph.path.iterPoints()) {
-      fillNode(context, pt, cornerSize, smoothSize, handleSize, parameters);
+      strokeNode(context, pt, cornerSize, smoothSize, handleSize, parameters);
     }
   },
 });
@@ -1434,15 +1442,10 @@ registerVisualizationLayerDefinition({
         underColors
       );
     }
-    // Selected nodes keep the high-contrast black/white fill
-    const selectedColors = {
-      corner: parameters.selectedColor,
-      smooth: parameters.selectedColor,
-      handle: parameters.selectedColor,
-    };
+    // Selected (active) nodes are SOLID, in their type colors
     context.fillStyle = parameters.selectedColor;
     for (const pt of iterPointsByIndex(glyph.path, selectedPointIndices)) {
-      fillNode(context, pt, cornerSize, smoothSize, handleSize, selectedColors);
+      fillNode(context, pt, cornerSize, smoothSize, handleSize, parameters);
     }
     // Hovered nodes get a type-colored ring
     context.lineWidth = parameters.strokeWidth;

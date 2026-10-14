@@ -388,3 +388,7 @@
   fontra.nodes / fontra.component.nodes（半透明版）/ fontra.selected.nodes
   （悬停环用类型色、选中保持黑白高对比）四个图层接入；
   组件手柄线改用手柄色
+- 配色细化：**未激活节点 = 空心**（类型色描边：紫罗兰圆/琥珀方/灰紫手柄圈），
+  **激活（选中）节点 = 实心**（类型色填充 + 白/黑光晕垫底）；fontra.nodes 改描边绘制
+  （新增 strokeWidth 1.5 屏幕参数）、component.nodes 同步空心、
+  fontra.selected.nodes 选中填充改用类型色（原黑白填充弃用）；悬停环保持类型色

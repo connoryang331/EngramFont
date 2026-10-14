@@ -392,3 +392,17 @@
   **激活（选中）节点 = 实心**（类型色填充 + 白/黑光晕垫底）；fontra.nodes 改描边绘制
   （新增 strokeWidth 1.5 屏幕参数）、component.nodes 同步空心、
   fontra.selected.nodes 选中填充改用类型色（原黑白填充弃用）；悬停环保持类型色
+
+### R4-T4.25 · 节点外观设置页（颜色 + 滚轮数值）（2026-10-13）
+- Application Settings → Theme settings 新增 **Node appearance** 卡片：
+  "Use custom node colors and sizes" 开关 + Smooth/Corner/Handle 三个颜色选择器 +
+  Corner/Smooth/Handle 三个数值输入（**滚轮增减、可直接键入**，带 min/max 钳制，非滑竿）
+- 持久化：挂载到 themeController 模型（synchronizeWithLocalStorage 自动落盘
+  engramfont-node* 键）；editor.js 构造时应用 + 监听六个键实时重建可视化图层
+- 实现：simple-settings.js 新增 color 与 number-wheel 两种 UI 类型；
+  visualization-layer-definitions.js 导出 applyNodeAppearanceSettings(model)
+  （勾选时覆盖三个节点图层的 colors/colorsDarkMode/screenParameters，
+  未勾选恢复内置亮暗默认）；修复一次全局替换误伤 fontra.selected.anchors
+  图层 hoveredColor 的问题
+- 验证：设置页交互（勾选/填色/输入 14/滚轮 8→9）全部持久化；编辑器同上下文
+  重开，运行时图层参数为自定义色，选中节点实心洋红渲染

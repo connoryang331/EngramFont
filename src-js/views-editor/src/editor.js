@@ -87,6 +87,7 @@ import {
 import { MIN_SIDEBAR_WIDTH, Sidebar } from "./sidebar.js";
 import {
   allGlyphsCleanVisualizationLayerDefinition,
+  applyNodeAppearanceSettings,
   visualizationLayerDefinitions,
 } from "./visualization-layer-definitions.js";
 import { VisualizationContext, VisualizationLayers } from "./visualization-layers.js";
@@ -150,6 +151,25 @@ export class EditorController extends ViewController {
       visualizationLayerDefinitions,
       this.isThemeDark
     );
+
+    // apply the user's node appearance settings (colors + sizes) and live-
+    // update when they change in the application settings
+    applyNodeAppearanceSettings(themeController.model);
+    for (const key of [
+      "nodeAppearanceCustom",
+      "nodeSmoothColor",
+      "nodeCornerColor",
+      "nodeHandleColor",
+      "nodeCornerSize",
+      "nodeSmoothSize",
+      "nodeHandleSize",
+    ]) {
+      themeController.addKeyListener(key, () => {
+        applyNodeAppearanceSettings(visualizationLayerDefinitions);
+        this.visualizationLayers.requestUpdate();
+        this.canvasController.requestUpdate();
+      });
+    }
 
     this.visualizationLayersSettings = newVisualizationLayersSettings(
       this.visualizationLayers

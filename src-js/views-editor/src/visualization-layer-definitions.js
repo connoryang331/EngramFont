@@ -437,20 +437,8 @@ registerVisualizationLayerDefinition({
     hoverStrokeOffset: 4,
     underlayOffset: 2,
   },
-  colors: {
-    selectedColor: "#000",
-    underColor: "#FFFA",
-    smoothColor: "#7A4FE8",
-    cornerColor: "#D99A1F",
-    handleColor: "#A0A0B0",
-  },
-  colorsDarkMode: {
-    selectedColor: "#FFF",
-    underColor: "#0008",
-    smoothColor: "#A78BFA",
-    cornerColor: "#E8B84A",
-    handleColor: "#7E8290",
-  },
+  colors: { hoveredColor: "#BBB", selectedColor: "#000", underColor: "#FFFA" },
+  colorsDarkMode: { hoveredColor: "#BBB", selectedColor: "#FFF", underColor: "#0008" },
   draw: ({ context, positionedGlyph, parameters, model, controller }) => {
     const glyph = positionedGlyph.glyph;
     const smoothSize = parameters.smoothSize;
@@ -1887,6 +1875,57 @@ export const allGlyphsCleanVisualizationLayerDefinition = {
     context.fill(positionedGlyph.glyph.flattenedPath2d);
   },
 };
+
+// ---- node appearance settings (R4.T4.25) ----
+
+const nodeAppearanceLayerIDs = new Set([
+  "fontra.nodes",
+  "fontra.selected.nodes",
+  "fontra.component.nodes",
+]);
+
+const nodeAppearanceDefaults = Object.fromEntries(
+  visualizationLayerDefinitions
+    .filter((layerDef) => nodeAppearanceLayerIDs.has(layerDef.identifier))
+    .map((layerDef) => [
+      layerDef.identifier,
+      {
+        colors: { ...layerDef.colors },
+        colorsDarkMode: { ...layerDef.colorsDarkMode },
+        screenParameters: { ...layerDef.screenParameters },
+      },
+    ])
+);
+
+// Apply the user's node appearance overrides (themeController model) to the
+// node layer definitions; with nodeAppearanceCustom off, restore the
+// built-in theme defaults
+export function applyNodeAppearanceSettings(model) {
+  for (const layerDef of visualizationLayerDefinitions) {
+    if (!nodeAppearanceLayerIDs.has(layerDef.identifier)) {
+      continue;
+    }
+    const defaults = nodeAppearanceDefaults[layerDef.identifier];
+    if (model.nodeAppearanceCustom) {
+      layerDef.colors = {
+        smoothColor: model.nodeSmoothColor,
+        cornerColor: model.nodeCornerColor,
+        handleColor: model.nodeHandleColor,
+      };
+      layerDef.colorsDarkMode = { ...layerDef.colors };
+      layerDef.screenParameters = {
+        ...defaults.screenParameters,
+        cornerSize: model.nodeCornerSize,
+        smoothSize: model.nodeSmoothSize,
+        handleSize: model.nodeHandleSize,
+      };
+    } else {
+      layerDef.colors = { ...defaults.colors };
+      layerDef.colorsDarkMode = { ...defaults.colorsDarkMode };
+      layerDef.screenParameters = { ...defaults.screenParameters };
+    }
+  }
+}
 
 // Drawing helpers
 

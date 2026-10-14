@@ -9,7 +9,17 @@ function setupThemeOverride(value) {
   }
 }
 
-export const themeController = new ObservableController({ theme: "automatic" });
+export const themeController = new ObservableController({
+  theme: "automatic",
+  // node appearance overrides (empty/false = use the built-in theme defaults)
+  nodeAppearanceCustom: false,
+  nodeSmoothColor: "#7A4FE8",
+  nodeCornerColor: "#D99A1F",
+  nodeHandleColor: "#A0A0B0",
+  nodeCornerSize: 8,
+  nodeSmoothSize: 8,
+  nodeHandleSize: 6.5,
+});
 
 themeController.synchronizeWithLocalStorage("engramfont-");
 

@@ -80,6 +80,61 @@ const uiTypes = {
     ]);
   },
 
+  color(settingsElement, description, controller) {
+    const id = `simple-settings.${description.key}`;
+
+    return div({}, [
+      input({
+        type: "color",
+        id: id,
+        value: controller.model[description.key] || description.default,
+        onchange: (event) =>
+          controller.setItem(description.key, event.target.value, settingsElement),
+        oninput: (event) =>
+          controller.setItem(description.key, event.target.value, settingsElement),
+      }),
+      label({ for: id }, [description.displayName]),
+    ]);
+  },
+
+  "number-wheel"(settingsElement, description, controller) {
+    const id = `simple-settings.${description.key}`;
+    const clamp = (value) => {
+      if (isNaN(value)) {
+        value = description.default ?? 0;
+      }
+      if (description.min !== undefined) {
+        value = Math.max(description.min, value);
+      }
+      if (description.max !== undefined) {
+        value = Math.min(description.max, value);
+      }
+      return value;
+    };
+    const write = (value) => {
+      value = clamp(value);
+      controller.setItem(description.key, value, settingsElement);
+      inputElement.value = value;
+    };
+    const inputElement = input({
+      type: "number",
+      id: id,
+      value: controller.model[description.key] || description.default,
+      min: description.min,
+      max: description.max,
+      step: description.step || 1,
+      onchange: (event) => write(parseFloat(event.target.value)),
+      onwheel: (event) => {
+        // scroll to increment/decrement (like FontLab's number fields)
+        event.preventDefault();
+        const step = description.step || 1;
+        const direction = event.deltaY < 0 ? 1 : -1;
+        write((parseFloat(event.target.value) || 0) + direction * step);
+      },
+    });
+    return div({}, [inputElement, label({ for: id }, [description.displayName])]);
+  },
+
   radio(settingsElement, description, controller) {
     const id = `simple-settings.${description.key}`;
 

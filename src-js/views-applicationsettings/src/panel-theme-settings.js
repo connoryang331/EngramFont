@@ -55,7 +55,47 @@ export class ThemeSettingsPanel extends MultiPanelBasePanel {
           },
         ],
       },
-      // TODO: There might come more in future, like font size, colors etc.
+      {
+        displayName: "Node appearance",
+        controller: themeController,
+        descriptions: [
+          {
+            key: "nodeAppearanceCustom",
+            ui: "checkbox",
+            displayName: "Use custom node colors and sizes",
+          },
+          { key: "nodeSmoothColor", ui: "color", displayName: "Smooth node", default: "#7A4FE8" },
+          { key: "nodeCornerColor", ui: "color", displayName: "Corner node", default: "#D99A1F" },
+          { key: "nodeHandleColor", ui: "color", displayName: "Handle", default: "#A0A0B0" },
+          {
+            key: "nodeCornerSize",
+            ui: "number-wheel",
+            displayName: "Corner node size (scroll or type)",
+            min: 4,
+            max: 24,
+            step: 1,
+            default: 8,
+          },
+          {
+            key: "nodeSmoothSize",
+            ui: "number-wheel",
+            displayName: "Smooth node size (scroll or type)",
+            min: 4,
+            max: 24,
+            step: 1,
+            default: 8,
+          },
+          {
+            key: "nodeHandleSize",
+            ui: "number-wheel",
+            displayName: "Handle size (scroll or type)",
+            min: 3,
+            max: 20,
+            step: 0.5,
+            default: 6.5,
+          },
+        ],
+      },
     ];
   }
 }

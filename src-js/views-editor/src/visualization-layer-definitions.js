@@ -437,8 +437,20 @@ registerVisualizationLayerDefinition({
     hoverStrokeOffset: 4,
     underlayOffset: 2,
   },
-  colors: { hoveredColor: "#BBB", selectedColor: "#000", underColor: "#FFFA" },
-  colorsDarkMode: { hoveredColor: "#BBB", selectedColor: "#FFF", underColor: "#0008" },
+  colors: {
+    selectedColor: "#000",
+    underColor: "#FFFA",
+    smoothColor: "#7A4FE8",
+    cornerColor: "#D99A1F",
+    handleColor: "#A0A0B0",
+  },
+  colorsDarkMode: {
+    selectedColor: "#FFF",
+    underColor: "#0008",
+    smoothColor: "#A78BFA",
+    cornerColor: "#E8B84A",
+    handleColor: "#7E8290",
+  },
   draw: ({ context, positionedGlyph, parameters, model, controller }) => {
     const glyph = positionedGlyph.glyph;
     const smoothSize = parameters.smoothSize;
@@ -1294,23 +1306,30 @@ registerVisualizationLayerDefinition({
     handleSize: 6.5,
     strokeWidth: 1,
   },
-  colors: { color: "#BBB5" },
-  colorsDarkMode: { color: "#8885" },
+  colors: {
+    smoothColor: "#7A4FE8B0",
+    cornerColor: "#D99A1FB0",
+    handleColor: "#A0A0B0B0",
+  },
+  colorsDarkMode: {
+    smoothColor: "#A78BFAB0",
+    cornerColor: "#E8B84AB0",
+    handleColor: "#7E8290B0",
+  },
   draw: ({ context, positionedGlyph, parameters, model, controller }) => {
     const glyph = positionedGlyph.glyph;
     const cornerSize = parameters.cornerSize;
     const smoothSize = parameters.smoothSize;
     const handleSize = parameters.handleSize;
 
-    context.strokeStyle = parameters.color;
+    context.strokeStyle = parameters.handleColor;
     context.lineWidth = parameters.strokeWidth;
     for (const [pt1, pt2] of glyph.componentsPath.iterHandles()) {
       strokeLine(context, pt1.x, pt1.y, pt2.x, pt2.y);
     }
 
-    context.fillStyle = parameters.color;
     for (const pt of glyph.componentsPath.iterPoints()) {
-      fillNode(context, pt, cornerSize, smoothSize, handleSize);
+      fillNode(context, pt, cornerSize, smoothSize, handleSize, parameters);
     }
   },
 });
@@ -1339,17 +1358,24 @@ registerVisualizationLayerDefinition({
   selectionFunc: glyphSelector("editing"),
   zIndex: 500,
   screenParameters: { cornerSize: 8, smoothSize: 8, handleSize: 6.5 },
-  colors: { color: "#BBB" },
-  colorsDarkMode: { color: "#BBB" },
+  colors: {
+    smoothColor: "#7A4FE8",
+    cornerColor: "#D99A1F",
+    handleColor: "#A0A0B0",
+  },
+  colorsDarkMode: {
+    smoothColor: "#A78BFA",
+    cornerColor: "#E8B84A",
+    handleColor: "#7E8290",
+  },
   draw: ({ context, positionedGlyph, parameters, model, controller }) => {
     const glyph = positionedGlyph.glyph;
     const cornerSize = parameters.cornerSize;
     const smoothSize = parameters.smoothSize;
     const handleSize = parameters.handleSize;
 
-    context.fillStyle = parameters.color;
     for (const pt of glyph.path.iterPoints()) {
-      fillNode(context, pt, cornerSize, smoothSize, handleSize);
+      fillNode(context, pt, cornerSize, smoothSize, handleSize, parameters);
     }
   },
 });
@@ -1367,8 +1393,20 @@ registerVisualizationLayerDefinition({
     hoverStrokeOffset: 4,
     underlayOffset: 2,
   },
-  colors: { hoveredColor: "#BBB", selectedColor: "#000", underColor: "#FFFA" },
-  colorsDarkMode: { hoveredColor: "#BBB", selectedColor: "#FFF", underColor: "#0008" },
+  colors: {
+    selectedColor: "#000",
+    underColor: "#FFFA",
+    smoothColor: "#7A4FE8",
+    cornerColor: "#D99A1F",
+    handleColor: "#A0A0B0",
+  },
+  colorsDarkMode: {
+    selectedColor: "#FFF",
+    underColor: "#0008",
+    smoothColor: "#A78BFA",
+    cornerColor: "#E8B84A",
+    handleColor: "#7E8290",
+  },
   draw: ({ context, positionedGlyph, parameters, model, controller }) => {
     const glyph = positionedGlyph.glyph;
     const cornerSize = parameters.cornerSize;
@@ -1380,6 +1418,11 @@ registerVisualizationLayerDefinition({
 
     // Under layer
     const underlayOffset = parameters.underlayOffset;
+    const underColors = {
+      corner: parameters.underColor,
+      smooth: parameters.underColor,
+      handle: parameters.underColor,
+    };
     context.fillStyle = parameters.underColor;
     for (const pt of iterPointsByIndex(glyph.path, selectedPointIndices)) {
       fillNode(
@@ -1387,16 +1430,21 @@ registerVisualizationLayerDefinition({
         pt,
         cornerSize + underlayOffset,
         smoothSize + underlayOffset,
-        handleSize + underlayOffset
+        handleSize + underlayOffset,
+        underColors
       );
     }
-    // Selected nodes
+    // Selected nodes keep the high-contrast black/white fill
+    const selectedColors = {
+      corner: parameters.selectedColor,
+      smooth: parameters.selectedColor,
+      handle: parameters.selectedColor,
+    };
     context.fillStyle = parameters.selectedColor;
     for (const pt of iterPointsByIndex(glyph.path, selectedPointIndices)) {
-      fillNode(context, pt, cornerSize, smoothSize, handleSize);
+      fillNode(context, pt, cornerSize, smoothSize, handleSize, selectedColors);
     }
-    // Hovered nodes
-    context.strokeStyle = parameters.hoveredColor;
+    // Hovered nodes get a type-colored ring
     context.lineWidth = parameters.strokeWidth;
     const hoverStrokeOffset = parameters.hoverStrokeOffset;
     for (const pt of iterPointsByIndex(glyph.path, hoveredPointIndices)) {
@@ -1405,7 +1453,8 @@ registerVisualizationLayerDefinition({
         pt,
         cornerSize + hoverStrokeOffset,
         smoothSize + hoverStrokeOffset,
-        handleSize + hoverStrokeOffset
+        handleSize + hoverStrokeOffset,
+        parameters
       );
     }
   },
@@ -1838,41 +1887,62 @@ export const allGlyphsCleanVisualizationLayerDefinition = {
 
 // Drawing helpers
 
-function fillNode(context, pt, cornerNodeSize, smoothNodeSize, handleNodeSize) {
+// Node type colors, designed to be DISTINCT from FontLab (blue/green/red
+// nodes) and Glyphs.app (white/black nodes): violet rounds for smooth
+// nodes, amber squares for corner nodes, neutral lavender for off-curve
+// handles — echoing the keyboard dock's violet/yellow chip palette
+const nodeTypeColors = {
+  light: { smooth: "#7A4FE8", corner: "#D99A1F", handle: "#A0A0B0" },
+  dark: { smooth: "#A78BFA", corner: "#E8B84A", handle: "#7E8290" },
+};
+
+function fillNode(context, pt, cornerNodeSize, smoothNodeSize, handleNodeSize, colors) {
   if (!pt.type && !pt.smooth) {
-    fillSquareNode(context, pt, cornerNodeSize);
+    fillSquareNode(context, pt, cornerNodeSize, colors?.cornerColor);
   } else if (!pt.type) {
-    fillRoundNode(context, pt, smoothNodeSize);
+    fillRoundNode(context, pt, smoothNodeSize, colors?.smoothColor);
   } else {
-    fillRoundNode(context, pt, handleNodeSize);
+    fillRoundNode(context, pt, handleNodeSize, colors?.handleColor);
   }
 }
 
-function strokeNode(context, pt, cornerNodeSize, smoothNodeSize, handleNodeSize) {
+function strokeNode(context, pt, cornerNodeSize, smoothNodeSize, handleNodeSize, colors) {
   if (!pt.type && !pt.smooth) {
-    strokeSquareNode(context, pt, cornerNodeSize);
+    strokeSquareNode(context, pt, cornerNodeSize, colors?.cornerColor);
   } else if (!pt.type) {
-    strokeRoundNode(context, pt, smoothNodeSize);
+    strokeRoundNode(context, pt, smoothNodeSize, colors?.smoothColor);
   } else {
-    strokeRoundNode(context, pt, handleNodeSize);
+    strokeRoundNode(context, pt, handleNodeSize, colors?.handleColor);
   }
 }
 
-function fillSquareNode(context, pt, nodeSize) {
+function fillSquareNode(context, pt, nodeSize, color) {
+  if (color !== undefined) {
+    context.fillStyle = color;
+  }
   context.fillRect(pt.x - nodeSize / 2, pt.y - nodeSize / 2, nodeSize, nodeSize);
 }
 
-export function fillRoundNode(context, pt, nodeSize) {
+export function fillRoundNode(context, pt, nodeSize, color) {
+  if (color !== undefined) {
+    context.fillStyle = color;
+  }
   context.beginPath();
   context.arc(pt.x, pt.y, nodeSize / 2, 0, 2 * Math.PI, false);
   context.fill();
 }
 
-export function strokeSquareNode(context, pt, nodeSize) {
+export function strokeSquareNode(context, pt, nodeSize, color) {
+  if (color !== undefined) {
+    context.strokeStyle = color;
+  }
   context.strokeRect(pt.x - nodeSize / 2, pt.y - nodeSize / 2, nodeSize, nodeSize);
 }
 
-export function strokeRoundNode(context, pt, nodeSize) {
+export function strokeRoundNode(context, pt, nodeSize, color) {
+  if (color !== undefined) {
+    context.strokeStyle = color;
+  }
   context.beginPath();
   context.arc(pt.x, pt.y, nodeSize / 2, 0, 2 * Math.PI, false);
   context.stroke();

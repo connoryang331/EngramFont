@@ -378,3 +378,13 @@
 - 连带修复：弧形 space/move 扇区的 SVG/button 包围盒会拦截相邻按键（如 b 键）
   的点击——button/svg 设 pointer-events:none、仅 .kd-space-path 设 pointer-events:all
   （扇形形状本身可点、事件冒泡到按钮）；实测 b 键可点、空格扇形中心点击仍追加空格
+
+### R4-T4.23 · 节点类型配色差异化（2026-10-13）
+- 设计独立的节点配色（区别于 FontLab 蓝绿红节点、Glyphs 白黑节点）：
+  **smooth = 紫罗兰圆点、corner = 琥珀黄方块、手柄 = 中性灰紫小点**，
+  呼应键盘 dock 的紫/黄芯片色板；亮/暗主题各一套
+  （light: #7A4FE8 / #D99A1F / #A0A0B0；dark: #A78BFA / #E8B84A / #7E8290）
+- 实现：fillNode/strokeNode 增加 colors 参数按节点类型取色；
+  fontra.nodes / fontra.component.nodes（半透明版）/ fontra.selected.nodes
+  （悬停环用类型色、选中保持黑白高对比）四个图层接入；
+  组件手柄线改用手柄色

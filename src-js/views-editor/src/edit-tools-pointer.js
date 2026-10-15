@@ -5,7 +5,12 @@ import {
   consolidateChanges,
 } from "@fontra/core/changes.js";
 import { translate } from "@fontra/core/localization.js";
-import { connectContours, toggleSmooth } from "@fontra/core/path-functions.js";
+import {
+  advanceNodeKind,
+  connectContours,
+  makeSquircle,
+  toggleSmooth,
+} from "@fontra/core/path-functions.js";
 import {
   centeredRect,
   normalizeRect,
@@ -297,8 +302,70 @@ export class PointerTool extends BaseTool {
         guidelineIndices.sort();
         sceneController.doubleClickedGuidelineIndices = guidelineIndices;
         sceneController._dispatchEvent("doubleClickedGuidelines");
-      } else if (pointIndices?.length && !sceneController.hoverPathHit) {
-        await this.handlePointsDoubleClick(pointIndices);
+      } else if (
+        (pointIndices?.length && !sceneController.hoverPathHit) ||
+        this.pointIndexUnderPointer(sceneController, instance, point) !== undefined
+      ) {
+        // The pointer is ON a node, so this double-click is a node-kind
+        // gesture: plain double-click walks the kind cycle (corner -> smooth
+        // -> squircle -> corner), Shift+double-click jumps straight to
+        // squircle and is a no-op when already there.
+        //
+        // The pointer test above is geometric on purpose. The upstream
+        // condition here was `pointIndices?.length && !sceneController.hoverPathHit`,
+        // but `hoverPathHit` is STICKY -- it stays set after any click on the
+        // path -- so double-clicking a node fell through to the "select the
+        // whole contour" branch below and the node never toggled. That is the
+        // bug where double-click and Shift+double-click appeared to do nothing.
+        //
+        // Which points to convert: the selected on-curve nodes (so a multi-point
+        // selection converts in one gesture, as upstream does) PLUS the node
+        // under the pointer. The pointed node has to be added back explicitly,
+        // because two things make it disagree with the selection:
+        //
+        //  - Shift means symmetricDifference, so the FIRST click of the
+        //    double-click removes the node under the pointer from the selection.
+        //    Acting on the remaining selection alone would convert the OTHER
+        //    selected nodes and silently skip the one that was clicked.
+        //  - A selection can hold only off-curve handle indices (the change
+        //    recorder remaps selection indices across a kind change). Handles
+        //    carry no node kind, so such a selection converts nothing at all:
+        //    an undo step gets recorded and the outline never changes -- the
+        //    gesture looks like it did nothing.
+        const pointerPoint = this.pointIndexUnderPointer(
+          sceneController,
+          instance,
+          point
+        );
+        const selectionNodes = (pointIndices ?? []).filter(
+          (pointIndex) =>
+            (instance.path.pointTypes[pointIndex] &
+              VarPackedPath.POINT_TYPE_MASK) === VarPackedPath.ON_CURVE
+        );
+        let targetPoints;
+        if (event.shiftKey) {
+          targetPoints =
+            pointerPoint === undefined
+              ? selectionNodes
+              : [...new Set([...selectionNodes, pointerPoint])];
+        } else {
+          // plain double-click: keep the upstream selection semantics, but never
+          // end up with nothing to act on when the pointer is on a node
+          targetPoints =
+            selectionNodes.length || pointerPoint === undefined
+              ? selectionNodes
+              : [pointerPoint];
+        }
+        if (targetPoints.length) {
+          // Alt is the "flag only" escape hatch: change the node kind without
+          // touching any geometry (see the two handlers below).
+          const flagOnly = !!event.altKey;
+          if (event.shiftKey) {
+            await this.handlePointsShiftDoubleClick(targetPoints, { flagOnly });
+          } else {
+            await this.handlePointsDoubleClick(targetPoints, { flagOnly });
+          }
+        }
       } else if (sceneController.hoverPathHit) {
         const contourIndex = sceneController.hoverPathHit.contourIndex;
         const startPoint = instance.path.getAbsolutePointIndex(contourIndex, 0);
@@ -318,46 +385,160 @@ export class PointerTool extends BaseTool {
     }
   }
 
-  async handlePointsDoubleClick(pointIndices) {
-    let newPointType;
+  // The on-curve point the pointer is sitting on, if any (within a few screen
+  // pixels). Used to decide whether a double-click is a node-kind gesture or a
+  // click on the path itself; `hoverPathHit` cannot answer that because it is
+  // sticky and stays set after any click on the path. Off-curve handles are
+  // skipped on purpose: they carry no node kind, so they are never a valid
+  // target for a node-kind gesture.
+  pointIndexUnderPointer(sceneController, instance, point) {
+    const path = instance.path;
+    // `point` arrives in SCENE coordinates while the path is in GLYPH
+    // coordinates. Subtracting the positioned-glyph offset is what
+    // pointSelectionAtPoint() does, and SKIPPING it makes this test fail for
+    // every glyph that is not sitting exactly on the canvas origin -- which is
+    // most of them, since the offset carries the sidebearings. The gesture then
+    // silently falls back to "whatever the selection happens to hold".
+    const positionedGlyph = sceneController.sceneModel.getSelectedPositionedGlyph();
+    const glyphPoint = positionedGlyph
+      ? { x: point.x - positionedGlyph.x, y: point.y - positionedGlyph.y }
+      : point;
+    const canvasController = sceneController.canvasController;
+    // 6 screen px, converted to scene units via the current magnification
+    const radius = 6 * (canvasController?.onePixelUnit ?? 1);
+    let best;
+    let bestDist = radius;
+    for (let i = 0; i < path.pointTypes.length; i++) {
+      if (
+        (path.pointTypes[i] & VarPackedPath.POINT_TYPE_MASK) !==
+        VarPackedPath.ON_CURVE
+      ) {
+        continue; // off-curve handle
+      }
+      const p = path.getPoint(i);
+      if (!p) {
+        continue;
+      }
+      const d = Math.hypot(p.x - glyphPoint.x, p.y - glyphPoint.y);
+      if (d <= bestDist) {
+        bestDist = d;
+        best = i;
+      }
+    }
+    return best;
+  }
+
+  async handlePointsDoubleClick(pointIndices, { flagOnly = false } = {}) {
+    // Plain double-click walks the node-kind cycle
+    //   corner -> smooth -> squircle -> corner -> ...
+    // (increasing continuity), so one gesture reaches every kind.
+    //
+    // The geometry follows the state: a corner really becomes two straight runs
+    // through the node, a smooth node really gets collinear handles, a squircle
+    // really solves G2. `flagOnly` (Alt held) is the escape hatch -- it changes
+    // the node kind without touching any geometry.
+    let newKind;
     await this.sceneController.editLayersAndRecordChanges((layerGlyphs) => {
       for (const layerGlyph of Object.values(layerGlyphs)) {
-        newPointType = toggleSmooth(layerGlyph.path, pointIndices, newPointType);
+        newKind = advanceNodeKind(layerGlyph.path, pointIndices, {
+          geometry: !flagOnly,
+        });
       }
       return translate("edit-tools-pointer.undo.toggle-smooth");
+    });
+  }
+
+  // Shift-double-click: jump straight to the squircle node
+  // (curvature-continuous / G2 join) from any kind. Idempotent -- on an
+  // already-squircle node it does nothing, so it never de-escalates. See
+  // ADR-0009.
+  async handlePointsShiftDoubleClick(pointIndices, { flagOnly = false } = {}) {
+    let applied;
+    await this.sceneController.editLayersAndRecordChanges((layerGlyphs) => {
+      for (const layerGlyph of Object.values(layerGlyphs)) {
+        applied = makeSquircle(layerGlyph.path, pointIndices, undefined, {
+          allowNodeDrift: !flagOnly,
+        });
+      }
+      return translate("edit-tools-pointer.undo.toggle-squircle");
     });
   }
 
   async handleRectSelect(eventStream, initialEvent, initialSelection) {
     const sceneController = this.sceneController;
     const initialPoint = sceneController.localPoint(initialEvent);
+    // Slanted-selection state (Glyphs-app style): once Control is held during
+    // the drag, the selection becomes a parallelogram. `k` is the shear
+    // (horizontal offset per vertical unit), `w` the frozen bottom-edge width,
+    // `dy` the vertical span. While Control is held the mouse changes the
+    // angle; after release it resizes the selection at the current angle.
+    let slant = undefined;
+    let ctrlWasDown = false;
     for await (const event of eventStream) {
       const modifierEvent = sceneController.applicationSettings
         .rectSelectLiveModifierKeys
         ? event
         : initialEvent;
       const currentPoint = sceneController.localPoint(event);
-      const selRect = normalizeRect({
-        xMin: initialPoint.x,
-        yMin: initialPoint.y,
-        xMax: currentPoint.x,
-        yMax: currentPoint.y,
-      });
-      const selection = this.sceneModel.selectionAtRect(
-        selRect,
-        modifierEvent.altKey ? (point) => !!point.type : (point) => !point.type
-      );
+      const dx = currentPoint.x - initialPoint.x;
+      const dy = currentPoint.y - initialPoint.y;
+
+      let selRect;
+      let selPara;
+      if (event.ctrlKey) {
+        if (!ctrlWasDown) {
+          // Entering angle mode: freeze the horizontal size at this moment
+          slant = slant || { k: 0, dy: 0 };
+          slant.w = dx - slant.k * slant.dy;
+        }
+        if (Math.abs(dy) >= 0.25) {
+          slant.k = Math.max(-12, Math.min(12, (dx - slant.w) / dy));
+          slant.dy = dy;
+        }
+        selPara = makeSelectionParallelogram(initialPoint, slant);
+      } else if (slant) {
+        // Control released: resize the selection at its current angle
+        slant.dy = dy;
+        slant.w = dx - slant.k * dy;
+        selPara = makeSelectionParallelogram(initialPoint, slant);
+      } else {
+        selRect = normalizeRect({
+          xMin: initialPoint.x,
+          yMin: initialPoint.y,
+          xMax: currentPoint.x,
+          yMax: currentPoint.y,
+        });
+      }
+      ctrlWasDown = event.ctrlKey;
+
+      const pointFilterFunc = modifierEvent.altKey
+        ? (point) => !!point.type
+        : (point) => !point.type;
+      const selection = selPara
+        ? this.sceneModel.selectionAtParallelogram(selPara, pointFilterFunc)
+        : this.sceneModel.selectionAtRect(selRect, pointFilterFunc);
       const positionedGlyph = this.sceneModel.getSelectedPositionedGlyph();
-      sceneController.selectionRect = offsetRect(
-        selRect,
-        -positionedGlyph.x,
-        -positionedGlyph.y
-      );
+      if (selPara) {
+        sceneController.selectionRect = undefined;
+        sceneController.selectionParallelogram = offsetSelectionParallelogram(
+          selPara,
+          -positionedGlyph.x,
+          -positionedGlyph.y
+        );
+      } else {
+        sceneController.selectionParallelogram = undefined;
+        sceneController.selectionRect = offsetRect(
+          selRect,
+          -positionedGlyph.x,
+          -positionedGlyph.y
+        );
+      }
 
       const modeFunc = getSelectModeFunction(modifierEvent);
       sceneController.selection = modeFunc(initialSelection, selection);
     }
     sceneController.selectionRect = undefined;
+    sceneController.selectionParallelogram = undefined;
     this._selectionBeforeSingleClick = undefined;
   }
 
@@ -807,6 +988,26 @@ function getSelectModeFunction(event) {
     : event[commandKeyProperty]
       ? union
       : replace;
+}
+
+function makeSelectionParallelogram(initialPoint, slant) {
+  return {
+    x0: initialPoint.x,
+    y0: initialPoint.y,
+    x1: initialPoint.x + slant.w,
+    y1: initialPoint.y + slant.dy,
+    shearK: slant.k,
+  };
+}
+
+function offsetSelectionParallelogram(para, dx, dy) {
+  return {
+    x0: para.x0 + dx,
+    y0: para.y0 + dy,
+    x1: para.x1 + dx,
+    y1: para.y1 + dy,
+    shearK: para.shearK,
+  };
 }
 
 registerVisualizationLayerDefinition({

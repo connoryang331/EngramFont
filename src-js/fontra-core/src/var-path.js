@@ -22,6 +22,12 @@ export class VarPackedPath {
   static OFF_CURVE_QUAD = 0x01;
   static OFF_CURVE_CUBIC = 0x02;
   static SMOOTH_FLAG = 0x08;
+  // Squircle nodes: curvature-continuous (G2) joins, drawn as a superellipse.
+  // This lives OUTSIDE POINT_TYPE_MASK, exactly like SMOOTH_FLAG, so it is an
+  // independent on-curve annotation rather than another curve type. A squircle
+  // point is always smooth (G1) as well, so SMOOTH_FLAG is set alongside it;
+  // only SQUIRCLE_FLAG distinguishes the third kind in getPoint().
+  static SQUIRCLE_FLAG = 0x10;
   static POINT_TYPE_MASK = 0x07;
 
   constructor(coordinates, pointTypes, contourInfo, pointAttributes) {
@@ -349,6 +355,10 @@ export class VarPackedPath {
         pointType === VarPackedPath.OFF_CURVE_CUBIC
           ? POINT_TYPE_OFF_CURVE_CUBIC
           : POINT_TYPE_OFF_CURVE_QUAD;
+    } else if (this.pointTypes[pointIndex] & VarPackedPath.SQUIRCLE_FLAG) {
+      // Squircle: curvature-continuous (G2) -- always G1 too
+      point["smooth"] = true;
+      point["squircle"] = true;
     } else if (this.pointTypes[pointIndex] & VarPackedPath.SMOOTH_FLAG) {
       point["smooth"] = true;
     }
@@ -362,7 +372,7 @@ export class VarPackedPath {
 
   setPoint(pointIndex, point) {
     this.setPointPosition(pointIndex, point.x, point.y);
-    this.setPointType(pointIndex, point.type, point.smooth);
+    this.setPointType(pointIndex, point.type, point.smooth, point.squircle);
     this.setPointAttrs(pointIndex, point.attrs);
   }
 
@@ -381,13 +391,13 @@ export class VarPackedPath {
     this.coordinates[coordIndex + 1] = y;
   }
 
-  setPointType(pointIndex, type, smooth) {
+  setPointType(pointIndex, type, smooth, squircle) {
     if (pointIndex >= this.pointTypes.length) {
       throw new Error(
         `pointIndex out of range: ${pointIndex} >= ${this.pointTypes.length}`
       );
     }
-    this.pointTypes[pointIndex] = packPointType(type, smooth);
+    this.pointTypes[pointIndex] = packPointType(type, smooth, squircle);
   }
 
   setPointAttrs(pointIndex, attrs) {
@@ -1111,15 +1121,22 @@ function pointTypesEquals(a, b) {
   return true;
 }
 
-function packPointType(type, smooth) {
+function packPointType(type, smooth, squircle) {
   let pointType = VarPackedPath.ON_CURVE;
   if (type) {
     pointType =
       type === POINT_TYPE_OFF_CURVE_CUBIC
         ? VarPackedPath.OFF_CURVE_CUBIC
         : VarPackedPath.OFF_CURVE_QUAD;
-  } else if (smooth) {
-    pointType |= VarPackedPath.SMOOTH_FLAG;
+  } else {
+    // a Squircle point is smooth (G1) by definition, so it carries both
+    // flags; the reader gives SQUIRCLE_FLAG precedence
+    if (smooth) {
+      pointType |= VarPackedPath.SMOOTH_FLAG;
+    }
+    if (squircle) {
+      pointType |= VarPackedPath.SMOOTH_FLAG | VarPackedPath.SQUIRCLE_FLAG;
+    }
   }
   return pointType;
 }
@@ -1132,7 +1149,7 @@ export function packContour(unpackedContour) {
     const point = unpackedContour.points[i];
     coordinates[i * 2] = point.x;
     coordinates[i * 2 + 1] = point.y;
-    pointTypes[i] = packPointType(point.type, point.smooth);
+    pointTypes[i] = packPointType(point.type, point.smooth, point.squircle);
     pointAttributes[i] = copyPointAttrs(point.attrs);
   }
   return {

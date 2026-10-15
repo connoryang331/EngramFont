@@ -1,0 +1,945 @@
+{
+  "roomRule": {
+    "maxSetbackRoomRatio": 0.9,
+    "setbackCurveFactor": 0.5,
+    "defaultSetbackRule": "setbackCurveFactor * |curve_near - node|",
+    "roomRule": "refuse 'no-room' when setback >= maxSetbackRoomRatio * room"
+  },
+  "cases": [
+    {
+      "name": "convex-quarter-arc",
+      "input": {
+        "node": [
+          0.0,
+          0.0
+        ],
+        "lineFar": [
+          -400.0,
+          0.0
+        ],
+        "curve": {
+          "near": [
+            132.0,
+            0.0
+          ],
+          "far": [
+            268.0,
+            132.0
+          ],
+          "end": [
+            400.0,
+            268.0
+          ]
+        },
+        "setback": 60.0,
+        "room": 400.0,
+        "scale": 132.0
+      },
+      "expected": {
+        "status": "ok",
+        "E": [
+          -60.0,
+          0.0
+        ],
+        "c1": [
+          -45.0,
+          0.0
+        ],
+        "c2": [
+          -30.0,
+          0.0
+        ],
+        "M": [
+          22.411827200000005,
+          10.170675200000002
+        ],
+        "Q": [
+          224.11827200000002,
+          101.70675200000001
+        ],
+        "g1": [
+          108.65704855536397,
+          26.906823905716386
+        ],
+        "g2": [
+          151.1283195156185,
+          43.03026413838572
+        ],
+        "q": 0.56,
+        "mFrac": 0.1,
+        "s": 1.6455297585077127,
+        "v": 1.2382232572845626,
+        "kE": 0.0,
+        "k1m": 0.0006683153129587384,
+        "k2m": 0.0006683153129672354,
+        "k2q": 0.0010675100545322104,
+        "kh": 0.0010675100545290534,
+        "g1M": 2.4237744157426585e-17,
+        "g1Q": 6.420170986692867e-17,
+        "roomRule": {
+          "maxSetbackRoomRatio": 0.9,
+          "setbackCurveFactor": 0.5,
+          "defaultSetbackRule": "setbackCurveFactor * |curve_near - node|",
+          "roomRule": "refuse 'no-room' when setback >= maxSetbackRoomRatio * room"
+        }
+      }
+    },
+    {
+      "name": "shallow-convex-arc",
+      "input": {
+        "node": [
+          0.0,
+          0.0
+        ],
+        "lineFar": [
+          -500.0,
+          0.0
+        ],
+        "curve": {
+          "near": [
+            180.0,
+            0.0
+          ],
+          "far": [
+            320.0,
+            60.0
+          ],
+          "end": [
+            420.0,
+            140.0
+          ]
+        },
+        "setback": 50.0,
+        "room": 500.0,
+        "scale": 180.0
+      },
+      "expected": {
+        "status": "ok",
+        "E": [
+          -50.0,
+          0.0
+        ],
+        "c1": [
+          -37.5,
+          0.0
+        ],
+        "c2": [
+          -25.0,
+          0.0
+        ],
+        "M": [
+          17.430000000000003,
+          2.0335
+        ],
+        "Q": [
+          174.3,
+          20.335
+        ],
+        "g1": [
+          94.53140113613048,
+          5.728661423764349
+        ],
+        "g2": [
+          129.410554883355,
+          9.378431487976776
+        ],
+        "q": 0.35,
+        "mFrac": 0.1,
+        "s": 1.8171435572974421,
+        "v": 0.45434661049235847,
+        "kE": 0.0,
+        "k1m": 0.0002210798972166285,
+        "k2m": 0.00022107989721652162,
+        "k2q": 0.001475270500256602,
+        "kh": 0.0014752705002591983,
+        "g1M": 0.0,
+        "g1Q": 4.838463722845362e-17,
+        "roomRule": {
+          "maxSetbackRoomRatio": 0.9,
+          "setbackCurveFactor": 0.5,
+          "defaultSetbackRule": "setbackCurveFactor * |curve_near - node|",
+          "roomRule": "refuse 'no-room' when setback >= maxSetbackRoomRatio * room"
+        }
+      }
+    },
+    {
+      "name": "inflection-near-node",
+      "input": {
+        "node": [
+          0.0,
+          0.0
+        ],
+        "lineFar": [
+          -400.0,
+          0.0
+        ],
+        "curve": {
+          "near": [
+            150.0,
+            0.0
+          ],
+          "far": [
+            260.0,
+            80.0
+          ],
+          "end": [
+            400.0,
+            200.0
+          ]
+        },
+        "setback": 60.0,
+        "room": 400.0,
+        "scale": 150.0
+      },
+      "expected": {
+        "status": "ok",
+        "E": [
+          -60.0,
+          0.0
+        ],
+        "c1": [
+          -45.0,
+          0.0
+        ],
+        "c2": [
+          -30.0,
+          0.0
+        ],
+        "M": [
+          16.528000000000002,
+          3.5840000000000005
+        ],
+        "Q": [
+          165.28,
+          35.84
+        ],
+        "g1": [
+          80.10563822792524,
+          8.481314636538947
+        ],
+        "g2": [
+          114.73538192305399,
+          13.30617646105194
+        ],
+        "q": 0.4,
+        "mFrac": 0.1,
+        "s": 1.3664382356414466,
+        "v": 0.6520203570297471,
+        "kE": 0.0,
+        "k1m": 0.0003526719930634838,
+        "k2m": 0.00035267199305504964,
+        "k2q": 0.0021102460472594386,
+        "kh": 0.0021102460472665462,
+        "g1M": 1.9102586091521047e-17,
+        "g1Q": 4.840840306163114e-17,
+        "roomRule": {
+          "maxSetbackRoomRatio": 0.9,
+          "setbackCurveFactor": 0.5,
+          "defaultSetbackRule": "setbackCurveFactor * |curve_near - node|",
+          "roomRule": "refuse 'no-room' when setback >= maxSetbackRoomRatio * room"
+        }
+      }
+    },
+    {
+      "name": "tiny-setback",
+      "input": {
+        "node": [
+          0.0,
+          0.0
+        ],
+        "lineFar": [
+          -400.0,
+          0.0
+        ],
+        "curve": {
+          "near": [
+            132.0,
+            0.0
+          ],
+          "far": [
+            268.0,
+            132.0
+          ],
+          "end": [
+            400.0,
+            268.0
+          ]
+        },
+        "setback": 3.0,
+        "room": 400.0,
+        "scale": 132.0
+      },
+      "expected": {
+        "status": "refused",
+        "reason": "no-solution",
+        "attempts": 8128,
+        "failureReasons": {
+          "no-convergence": 8126,
+          "sense-mismatch": 2
+        },
+        "roomRule": {
+          "maxSetbackRoomRatio": 0.9,
+          "setbackCurveFactor": 0.5,
+          "defaultSetbackRule": "setbackCurveFactor * |curve_near - node|",
+          "roomRule": "refuse 'no-room' when setback >= maxSetbackRoomRatio * room"
+        }
+      }
+    },
+    {
+      "name": "setback-exceeds-room",
+      "input": {
+        "node": [
+          0.0,
+          0.0
+        ],
+        "lineFar": [
+          -50.0,
+          0.0
+        ],
+        "curve": {
+          "near": [
+            132.0,
+            0.0
+          ],
+          "far": [
+            268.0,
+            132.0
+          ],
+          "end": [
+            400.0,
+            268.0
+          ]
+        },
+        "setback": 60.0,
+        "room": 50.0,
+        "scale": 132.0
+      },
+      "expected": {
+        "status": "refused",
+        "reason": "no-room",
+        "attempts": 0,
+        "failureReasons": {
+          "no-room": 1
+        },
+        "roomRule": {
+          "maxSetbackRoomRatio": 0.9,
+          "setbackCurveFactor": 0.5,
+          "defaultSetbackRule": "setbackCurveFactor * |curve_near - node|",
+          "roomRule": "refuse 'no-room' when setback >= maxSetbackRoomRatio * room"
+        }
+      }
+    },
+    {
+      "name": "room-rule-setback-095-of-room",
+      "input": {
+        "node": [
+          0.0,
+          0.0
+        ],
+        "lineFar": [
+          -100.0,
+          0.0
+        ],
+        "curve": {
+          "near": [
+            132.0,
+            0.0
+          ],
+          "far": [
+            268.0,
+            132.0
+          ],
+          "end": [
+            400.0,
+            268.0
+          ]
+        },
+        "setback": 95.0,
+        "room": 100.0,
+        "scale": 132.0
+      },
+      "expected": {
+        "status": "refused",
+        "reason": "no-room",
+        "attempts": 0,
+        "failureReasons": {
+          "no-room": 1
+        },
+        "roomRule": {
+          "maxSetbackRoomRatio": 0.9,
+          "setbackCurveFactor": 0.5,
+          "defaultSetbackRule": "setbackCurveFactor * |curve_near - node|",
+          "roomRule": "refuse 'no-room' when setback >= maxSetbackRoomRatio * room"
+        }
+      }
+    }
+  ],
+  "pathCases": [
+    {
+      "name": "path-convex-quarter-arc",
+      "input": {
+        "contour": [
+          {
+            "x": -400.0,
+            "y": 0.0,
+            "pointType": 0
+          },
+          {
+            "x": 0.0,
+            "y": 0.0,
+            "pointType": 24
+          },
+          {
+            "x": 132.0,
+            "y": 0.0,
+            "pointType": 2
+          },
+          {
+            "x": 268.0,
+            "y": 132.0,
+            "pointType": 2
+          },
+          {
+            "x": 400.0,
+            "y": 268.0,
+            "pointType": 0
+          }
+        ],
+        "isClosed": true
+      },
+      "expected": {
+        "status": "ok",
+        "pointIndex": 1,
+        "setback": 66.0,
+        "attempts": 2208,
+        "contour": [
+          {
+            "x": -400.0,
+            "y": 0.0,
+            "pointType": 0
+          },
+          {
+            "x": -66.0,
+            "y": 0.0,
+            "pointType": 0
+          },
+          {
+            "x": -49.5,
+            "y": 0.0,
+            "pointType": 2
+          },
+          {
+            "x": -33.0,
+            "y": 0.0,
+            "pointType": 2
+          },
+          {
+            "x": 24.019199999999998,
+            "y": 11.4912,
+            "pointType": 0
+          },
+          {
+            "x": 114.28903718182961,
+            "y": 29.6834712529085,
+            "pointType": 2
+          },
+          {
+            "x": 159.3343239354125,
+            "y": 47.09588459099115,
+            "pointType": 2
+          },
+          {
+            "x": 240.19199999999998,
+            "y": 114.91199999999998,
+            "pointType": 0
+          },
+          {
+            "x": 293.76,
+            "y": 159.83999999999997,
+            "pointType": 2
+          },
+          {
+            "x": 347.2,
+            "y": 213.6,
+            "pointType": 2
+          },
+          {
+            "x": 400.0,
+            "y": 268.0,
+            "pointType": 0
+          }
+        ],
+        "roomRule": {
+          "maxSetbackRoomRatio": 0.9,
+          "setbackCurveFactor": 0.5,
+          "defaultSetbackRule": "setbackCurveFactor * |curve_near - node|",
+          "roomRule": "refuse 'no-room' when setback >= maxSetbackRoomRatio * room"
+        }
+      }
+    },
+    {
+      "name": "path-convex-quarter-arc-mirrored",
+      "input": {
+        "contour": [
+          {
+            "x": 400.0,
+            "y": 268.0,
+            "pointType": 0
+          },
+          {
+            "x": 268.0,
+            "y": 132.0,
+            "pointType": 2
+          },
+          {
+            "x": 132.0,
+            "y": 0.0,
+            "pointType": 2
+          },
+          {
+            "x": 0.0,
+            "y": 0.0,
+            "pointType": 24
+          },
+          {
+            "x": -400.0,
+            "y": 0.0,
+            "pointType": 0
+          }
+        ],
+        "isClosed": true
+      },
+      "expected": {
+        "status": "ok",
+        "pointIndex": 3,
+        "setback": 66.0,
+        "attempts": 2208,
+        "contour": [
+          {
+            "x": 400.0,
+            "y": 268.0,
+            "pointType": 0
+          },
+          {
+            "x": 347.2,
+            "y": 213.6,
+            "pointType": 2
+          },
+          {
+            "x": 293.76,
+            "y": 159.83999999999997,
+            "pointType": 2
+          },
+          {
+            "x": 240.19199999999998,
+            "y": 114.91199999999998,
+            "pointType": 0
+          },
+          {
+            "x": 159.3343239354125,
+            "y": 47.09588459099115,
+            "pointType": 2
+          },
+          {
+            "x": 114.28903718182961,
+            "y": 29.6834712529085,
+            "pointType": 2
+          },
+          {
+            "x": 24.019199999999998,
+            "y": 11.4912,
+            "pointType": 0
+          },
+          {
+            "x": -33.0,
+            "y": 0.0,
+            "pointType": 2
+          },
+          {
+            "x": -49.5,
+            "y": 0.0,
+            "pointType": 2
+          },
+          {
+            "x": -66.0,
+            "y": 0.0,
+            "pointType": 0
+          },
+          {
+            "x": -400.0,
+            "y": 0.0,
+            "pointType": 0
+          }
+        ],
+        "roomRule": {
+          "maxSetbackRoomRatio": 0.9,
+          "setbackCurveFactor": 0.5,
+          "defaultSetbackRule": "setbackCurveFactor * |curve_near - node|",
+          "roomRule": "refuse 'no-room' when setback >= maxSetbackRoomRatio * room"
+        }
+      }
+    },
+    {
+      "name": "path-convex-quarter-arc-open",
+      "input": {
+        "contour": [
+          {
+            "x": -400.0,
+            "y": 0.0,
+            "pointType": 0
+          },
+          {
+            "x": 0.0,
+            "y": 0.0,
+            "pointType": 24
+          },
+          {
+            "x": 132.0,
+            "y": 0.0,
+            "pointType": 2
+          },
+          {
+            "x": 268.0,
+            "y": 132.0,
+            "pointType": 2
+          },
+          {
+            "x": 400.0,
+            "y": 268.0,
+            "pointType": 0
+          }
+        ],
+        "isClosed": false
+      },
+      "expected": {
+        "status": "refused",
+        "reason": "open-contour",
+        "contour": [
+          {
+            "x": -400.0,
+            "y": 0.0,
+            "pointType": 0
+          },
+          {
+            "x": 0.0,
+            "y": 0.0,
+            "pointType": 24
+          },
+          {
+            "x": 132.0,
+            "y": 0.0,
+            "pointType": 2
+          },
+          {
+            "x": 268.0,
+            "y": 132.0,
+            "pointType": 2
+          },
+          {
+            "x": 400.0,
+            "y": 268.0,
+            "pointType": 0
+          }
+        ],
+        "roomRule": {
+          "maxSetbackRoomRatio": 0.9,
+          "setbackCurveFactor": 0.5,
+          "defaultSetbackRule": "setbackCurveFactor * |curve_near - node|",
+          "roomRule": "refuse 'no-room' when setback >= maxSetbackRoomRatio * room"
+        }
+      }
+    },
+    {
+      "name": "path-curve-to-curve",
+      "input": {
+        "contour": [
+          {
+            "x": -400.0,
+            "y": 0.0,
+            "pointType": 0
+          },
+          {
+            "x": -200.0,
+            "y": 120.0,
+            "pointType": 2
+          },
+          {
+            "x": -60.0,
+            "y": 0.0,
+            "pointType": 2
+          },
+          {
+            "x": 0.0,
+            "y": 0.0,
+            "pointType": 24
+          },
+          {
+            "x": 60.0,
+            "y": 0.0,
+            "pointType": 2
+          },
+          {
+            "x": 200.0,
+            "y": 120.0,
+            "pointType": 2
+          },
+          {
+            "x": 400.0,
+            "y": 0.0,
+            "pointType": 0
+          }
+        ],
+        "isClosed": true
+      },
+      "expected": {
+        "status": "refused",
+        "reason": "not-a-line-to-curve-join",
+        "contour": [
+          {
+            "x": -400.0,
+            "y": 0.0,
+            "pointType": 0
+          },
+          {
+            "x": -200.0,
+            "y": 120.0,
+            "pointType": 2
+          },
+          {
+            "x": -60.0,
+            "y": 0.0,
+            "pointType": 2
+          },
+          {
+            "x": 0.0,
+            "y": 0.0,
+            "pointType": 24
+          },
+          {
+            "x": 60.0,
+            "y": 0.0,
+            "pointType": 2
+          },
+          {
+            "x": 200.0,
+            "y": 120.0,
+            "pointType": 2
+          },
+          {
+            "x": 400.0,
+            "y": 0.0,
+            "pointType": 0
+          }
+        ],
+        "roomRule": {
+          "maxSetbackRoomRatio": 0.9,
+          "setbackCurveFactor": 0.5,
+          "defaultSetbackRule": "setbackCurveFactor * |curve_near - node|",
+          "roomRule": "refuse 'no-room' when setback >= maxSetbackRoomRatio * room"
+        }
+      }
+    },
+    {
+      "name": "path-no-room",
+      "input": {
+        "contour": [
+          {
+            "x": -20.0,
+            "y": 0.0,
+            "pointType": 0
+          },
+          {
+            "x": 0.0,
+            "y": 0.0,
+            "pointType": 24
+          },
+          {
+            "x": 132.0,
+            "y": 0.0,
+            "pointType": 2
+          },
+          {
+            "x": 268.0,
+            "y": 132.0,
+            "pointType": 2
+          },
+          {
+            "x": 400.0,
+            "y": 268.0,
+            "pointType": 0
+          }
+        ],
+        "isClosed": true
+      },
+      "expected": {
+        "status": "refused",
+        "reason": "no-room",
+        "contour": [
+          {
+            "x": -20.0,
+            "y": 0.0,
+            "pointType": 0
+          },
+          {
+            "x": 0.0,
+            "y": 0.0,
+            "pointType": 24
+          },
+          {
+            "x": 132.0,
+            "y": 0.0,
+            "pointType": 2
+          },
+          {
+            "x": 268.0,
+            "y": 132.0,
+            "pointType": 2
+          },
+          {
+            "x": 400.0,
+            "y": 268.0,
+            "pointType": 0
+          }
+        ],
+        "roomRule": {
+          "maxSetbackRoomRatio": 0.9,
+          "setbackCurveFactor": 0.5,
+          "defaultSetbackRule": "setbackCurveFactor * |curve_near - node|",
+          "roomRule": "refuse 'no-room' when setback >= maxSetbackRoomRatio * room"
+        }
+      }
+    },
+    {
+      "name": "path-right-angle-corner-raindrop",
+      "input": {
+        "contour": [
+          {
+            "x": 150.0,
+            "y": 600.0,
+            "pointType": 24
+          },
+          {
+            "x": 350.0,
+            "y": 600.0,
+            "pointType": 2
+          },
+          {
+            "x": 609.0,
+            "y": 741.0,
+            "pointType": 2
+          },
+          {
+            "x": 750.0,
+            "y": 600.0,
+            "pointType": 8
+          },
+          {
+            "x": 844.0,
+            "y": 506.0,
+            "pointType": 2
+          },
+          {
+            "x": 750.0,
+            "y": 333.0,
+            "pointType": 2
+          },
+          {
+            "x": 750.0,
+            "y": 200.0,
+            "pointType": 0
+          },
+          {
+            "x": 150.0,
+            "y": 200.0,
+            "pointType": 0
+          }
+        ],
+        "isClosed": true
+      },
+      "expected": {
+        "status": "ok",
+        "pointIndex": 0,
+        "setback": 100.0,
+        "attempts": 8128,
+        "contour": [
+          {
+            "x": 150.0,
+            "y": 500.0,
+            "pointType": 0
+          },
+          {
+            "x": 150.0,
+            "y": 525.0,
+            "pointType": 2
+          },
+          {
+            "x": 150.0,
+            "y": 550.0,
+            "pointType": 2
+          },
+          {
+            "x": 335.21383125,
+            "y": 616.04491875,
+            "pointType": 0
+          },
+          {
+            "x": 375.9659654161194,
+            "y": 630.5766163652689,
+            "pointType": 2
+          },
+          {
+            "x": 555.1510366043914,
+            "y": 693.2614528376185,
+            "pointType": 2
+          },
+          {
+            "x": 679.1823750000001,
+            "y": 645.842625,
+            "pointType": 0
+          },
+          {
+            "x": 705.0450000000001,
+            "y": 635.9549999999999,
+            "pointType": 2
+          },
+          {
+            "x": 728.85,
+            "y": 621.15,
+            "pointType": 2
+          },
+          {
+            "x": 750.0,
+            "y": 600.0,
+            "pointType": 8
+          },
+          {
+            "x": 844.0,
+            "y": 506.0,
+            "pointType": 2
+          },
+          {
+            "x": 750.0,
+            "y": 333.0,
+            "pointType": 2
+          },
+          {
+            "x": 750.0,
+            "y": 200.0,
+            "pointType": 0
+          },
+          {
+            "x": 150.0,
+            "y": 200.0,
+            "pointType": 0
+          }
+        ],
+        "roomRule": {
+          "maxSetbackRoomRatio": 0.9,
+          "setbackCurveFactor": 0.5,
+          "defaultSetbackRule": "setbackCurveFactor * |curve_near - node|",
+          "roomRule": "refuse 'no-room' when setback >= maxSetbackRoomRatio * room"
+        }
+      }
+    }
+  ]
+}

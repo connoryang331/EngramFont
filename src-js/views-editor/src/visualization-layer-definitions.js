@@ -2,6 +2,7 @@ import { guessGlyphPlaceholderString } from "@fontra/core/glyph-data.js";
 import { translate } from "@fontra/core/localization.js";
 import { rectToPoints } from "@fontra/core/rectangle.ts";
 import { difference, isSuperset, union } from "@fontra/core/set-ops.js";
+import { deriveSquircleTransitions } from "@fontra/core/squircle-transition.js";
 import { decomposedToTransform } from "@fontra/core/transform.js";
 import {
   chain,
@@ -16,6 +17,15 @@ import {
 } from "@fontra/core/utils.ts";
 import { subVectors } from "@fontra/core/vector.js";
 import { isProofMode } from "./canvas-mode.js";
+
+// Default exponent of the squircle node icon (|x/a|^n + |y/b|^n = 1):
+// n = 1 diamond, 2 circle, 3 rounded square, higher = squarer.
+// Declared here -- ahead of every registerVisualizationLayerDefinition() call,
+// which run at module load and reference it -- so there is no temporal dead
+// zone. The user can change it in the settings (theme model
+// `nodeSquircleExponent`); it reaches the layers via glyphParameters, which are
+// deliberately NOT scaled by the zoom factor.
+const SQUIRCLE_EXPONENT_DEFAULT = 3;
 
 export const visualizationLayerDefinitions = [];
 
@@ -900,6 +910,111 @@ registerVisualizationLayerDefinition({
   },
 });
 
+// ---- derived edit path (ADR-0012) ---------------------------------------
+//
+// A line-to-curve squircle join is DERIVED geometry: the stored outline keeps the
+// line and the curve meeting at the node, and the smooth G2 transition is
+// materialised only for display and export. The three edit-path layers below
+// therefore draw the derived outline, while `fontra.edit.editing.layers` (and
+// every editing interaction: hit testing, node drawing, selection) keeps using
+// the stored path -- derived points are deliberately NOT selectable or draggable.
+//
+// Deriving runs a damped Newton per join, so it must not happen per layer per
+// frame. The result is cached per glyph controller and invalidated by an EXACT
+// geometry comparison (coordinates + point types + contour ends): an edit
+// anywhere re-derives exactly once, and all three layers share the one result.
+//
+// TODO: move this onto the glyph controller's own representation cache so it is
+// invalidated for free and can also be handed to the exporter (the Python side
+// derives independently; the shared truth table keeps the two equal).
+const derivedEditPathCache = new WeakMap();
+
+function derivedGeometryUnchanged(entry, path) {
+  if (
+    entry.coordinates.length !== path.coordinates.length ||
+    entry.pointTypes.length !== path.pointTypes.length ||
+    entry.contourInfo.length !== path.contourInfo.length
+  ) {
+    return false;
+  }
+  for (let i = 0; i < entry.coordinates.length; i++) {
+    if (entry.coordinates[i] !== path.coordinates[i]) {
+      return false;
+    }
+  }
+  for (let i = 0; i < entry.pointTypes.length; i++) {
+    if (entry.pointTypes[i] !== path.pointTypes[i]) {
+      return false;
+    }
+  }
+  for (let i = 0; i < entry.contourInfo.length; i++) {
+    if (entry.contourInfo[i].endPoint !== path.contourInfo[i].endPoint) {
+      return false;
+    }
+    if (!!entry.contourInfo[i].isClosed !== !!path.contourInfo[i].isClosed) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function buildDerivedEditPathEntry(glyphController, path) {
+  const { derivedPath, transitions } = deriveSquircleTransitions(path);
+  const entry = {
+    coordinates: Array.from(path.coordinates),
+    pointTypes: Array.from(path.pointTypes),
+    contourInfo: path.contourInfo.map((contour) => ({ ...contour })),
+    hasTransition: transitions.some((transition) => transition.status === "ok"),
+    fullPath2d: undefined,
+    closedPath2d: undefined,
+  };
+  if (!entry.hasTransition) {
+    return entry;
+  }
+  // components are untouched by the derivation but still have to be drawn
+  const componentsPath = glyphController.componentsPath;
+  const full = new Path2D();
+  derivedPath.drawToPath2d(full);
+  if (componentsPath) {
+    componentsPath.drawToPath2d(full);
+  }
+  entry.fullPath2d = full;
+  if (derivedPath.contourInfo.every((contour) => contour.isClosed)) {
+    // no open contours: the closed-contours variant IS the full path
+    entry.closedPath2d = full;
+  } else {
+    const closed = new Path2D();
+    for (const [index, contour] of enumerate(derivedPath.contourInfo)) {
+      if (contour.isClosed) {
+        derivedPath.drawContourToPath2d(closed, index);
+      }
+    }
+    if (componentsPath) {
+      componentsPath.drawToPath2d(closed);
+    }
+    entry.closedPath2d = closed;
+  }
+  return entry;
+}
+
+// The Path2D the edit-path layers should draw, or undefined when the glyph has
+// nothing to derive (the caller then uses the stock representation).
+function derivedEditPath2d(glyphController, { closedContoursOnly = false } = {}) {
+  const path = glyphController?.instance?.path;
+  if (!path) {
+    return undefined;
+  }
+  let entry = derivedEditPathCache.get(glyphController);
+  if (!entry || !derivedGeometryUnchanged(entry, path)) {
+    entry = buildDerivedEditPathEntry(glyphController, path);
+    derivedEditPathCache.set(glyphController, entry);
+  }
+  if (!entry.hasTransition) {
+    return undefined;
+  }
+  return closedContoursOnly ? entry.closedPath2d : entry.fullPath2d;
+}
+
 registerVisualizationLayerDefinition({
   identifier: "fontra.edit.path.fill",
   name: "Edit path fill",
@@ -910,7 +1025,10 @@ registerVisualizationLayerDefinition({
   colorsDarkMode: { fillColor: "#FFF3" },
   draw: ({ context, positionedGlyph, parameters, model, controller }) => {
     context.fillStyle = parameters.fillColor;
-    context.fill(positionedGlyph.glyph.closedContoursPath2d);
+    context.fill(
+      derivedEditPath2d(positionedGlyph.glyph, { closedContoursOnly: true }) ??
+        positionedGlyph.glyph.closedContoursPath2d
+    );
   },
 });
 
@@ -1136,21 +1254,101 @@ function parseComponentSelection(selection, numComponents) {
   return result;
 }
 
-const START_POINT_ARC_GAP_ANGLE = 0.25 * Math.PI;
+// Chevron geometry (screen px) for the start-point direction indicator: a
+// ">" / "<" whose tip points along the contour.
+//
+// Two independent requirements shape this:
+//   - the chevron SCALES with the node icons (chevronLength/chevronSpread are
+//     multiplied by nodeSize / NODE_SIZE_DEFAULT in
+//     applyNodeAppearanceSettings), so the indicator stays proportionate to
+//     bigger or smaller nodes;
+//   - the GAP between the node icon and the chevron stays constant, so the two
+//     never touch however large the nodes get (the gap is deliberately NOT
+//     scaled).
+// The values below are the size-8 baseline; applyNodeAppearanceSettings()
+// rescales them from there.
+const NODE_SIZE_DEFAULT = 8;
+const START_POINT_CHEVRON_GAP = 5;
+const START_POINT_CHEVRON_LENGTH = 6;
+const START_POINT_CHEVRON_SPREAD = 5;
+
+// Eye (smooth-node) proportions, as multiples of the node size.
+// `halfLen` runs along the curve tangent, `halfWidth` across it.
+//
+// Shape follows the outer contour of the Lucide `eye` icon, with the pupil
+// dropped (lucide/icons/eye.svg: the enclosing path
+// "M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0
+// .696 10.75 10.75 0 0 1-19.876 0"; the <circle cx=12 cy=12 r=3> is the pupil
+// and is intentionally omitted, as are the lashes). That contour spans
+// 19.88 x 14.0 units -- a 1.42 : 1 length-to-width ratio (fuller than the
+// Tabler eye's 1.5 : 1, which read as a sliver at node size).
+// We keep our pointed tips (see eyePath) rather than Lucide's rounded ones,
+// because the cusps carry the curvature semantics (see the design note).
+//
+// SIZE is chosen so the eye's visual weight equals the corner square's, i.e.
+// equal area: the square is size^2, and the lens (two quadratic curves)
+// encloses (8/3) * halfLen * halfWidth, so 0.73 * 0.514 gives exactly size^2.
+// The eye used to be 2.3 * size long, which dwarfed the square.
+//
+// These are the single source of truth for the canvas drawing (eyePath) and
+// the start-point clearance maths.
+export const EYE_HALF_LEN_FACTOR = 0.73;
+export const EYE_HALF_WIDTH_FACTOR = 0.514; // 0.73 / 1.42 -> Lucide's ratio
+
+// How far the node icon reaches from its centre along unit direction
+// (ux, uy) in the GLYPH frame -- the support distance of the shape. Placing the
+// chevron at supportDistance + gap makes the clearance between the node and the
+// chevron constant BY CONSTRUCTION, for either node shape and at every node
+// size, which is what the directional indicator needs. (A minimum-distance
+// measure would degenerate on the eye's pointed tips.)
+//   - square corner node, axis-aligned, half-size h:  h * (|ux| + |uy|)
+//   - eye smooth node, semi-axes halfLen along its tangent axis and
+//     halfWidth across it (see eyePath): the ellipse support distance
+//     sqrt((halfLen * (u·a))^2 + (halfWidth * (u·a_perp))^2)
+function nodeSupportDistance(pt, ux, uy, cornerSize, smoothSize, axis) {
+  if (!pt.type && pt.smooth) {
+    const halfLen = smoothSize * EYE_HALF_LEN_FACTOR; // see eyePath
+    const halfWidth = smoothSize * EYE_HALF_WIDTH_FACTOR;
+    const ax = axis ? axis.x : 1;
+    const ay = axis ? axis.y : 0;
+    const along = ax * ux + ay * uy;
+    const across = -ay * ux + ax * uy;
+    return Math.hypot(halfLen * along, halfWidth * across);
+  }
+  if (!pt.type) {
+    const half = cornerSize / 2;
+    return half * (Math.abs(ux) + Math.abs(uy));
+  }
+  return 0;
+}
 
 registerVisualizationLayerDefinition({
   identifier: "fontra.startpoint.indicator",
   name: "Startpoint indicator",
   selectionFunc: glyphSelector("editing"),
   zIndex: 500,
-  screenParameters: { radius: 9, strokeWidth: 2 },
+  // cornerSize / smoothSize are synced from the node appearance settings by
+  // applyNodeAppearanceSettings(); the defaults keep the layer working before
+  // that runs
+  screenParameters: {
+    cornerSize: 8,
+    smoothSize: 8,
+    gap: START_POINT_CHEVRON_GAP,
+    chevronLength: START_POINT_CHEVRON_LENGTH,
+    chevronSpread: START_POINT_CHEVRON_SPREAD,
+    strokeWidth: 2,
+  },
   colors: { color: "#989898A0" },
   colorsDarkMode: { color: "#989898A0" },
   draw: ({ context, positionedGlyph, parameters, model, controller }) => {
     const glyph = positionedGlyph.glyph;
     context.strokeStyle = parameters.color;
     context.lineWidth = parameters.strokeWidth;
-    const radius = parameters.radius;
+    const gap = parameters.gap;
+    const chevronLength = parameters.chevronLength;
+    const spread = parameters.chevronSpread;
+    // the eye axis of any smooth node (also used for the start points)
+    const tangents = computeSmoothTangents(glyph.path);
     let startPointIndex = 0;
     for (const contourInfo of glyph.path.contourInfo) {
       const startPoint = glyph.path.getPoint(startPointIndex);
@@ -1160,15 +1358,34 @@ registerVisualizationLayerDefinition({
         const direction = subVectors(nextPoint, startPoint);
         angle = Math.atan2(direction.y, direction.x);
       }
-      let startAngle = 0;
-      let endAngle = 2 * Math.PI;
       if (angle !== undefined) {
-        startAngle += angle + START_POINT_ARC_GAP_ANGLE;
-        endAngle += angle - START_POINT_ARC_GAP_ANGLE;
+        const axis = tangents.get(startPointIndex);
+        // Support distance of the node icon along the contour direction (the
+        // chevron's own +x). Both leg ends share the same x, so placing that x
+        // at supportDistance + gap gives a clearance of exactly `gap` between
+        // the node's furthest point ahead and the chevron -- identical for
+        // square and eye nodes, and constant as the node size changes.
+        const support = nodeSupportDistance(
+          startPoint,
+          1,
+          0,
+          parameters.cornerSize,
+          parameters.smoothSize,
+          axis
+        );
+        const legX = support + gap;
+        // chevron pointing along the contour direction: ">" when heading
+        // right, "<" when heading left, rotated for any other direction
+        context.save();
+        context.translate(startPoint.x, startPoint.y);
+        context.rotate(angle);
+        context.beginPath();
+        context.moveTo(legX, -spread);
+        context.lineTo(legX + chevronLength, 0);
+        context.lineTo(legX, spread);
+        context.stroke();
+        context.restore();
       }
-      context.beginPath();
-      context.arc(startPoint.x, startPoint.y, radius, startAngle, endAngle, false);
-      context.stroke();
       startPointIndex = contourInfo.endPoint + 1;
     }
   },
@@ -1296,11 +1513,13 @@ registerVisualizationLayerDefinition({
   },
   colors: {
     smoothColor: "#7A4FE8B0",
+    squircleColor: "#D6336CB0",
     cornerColor: "#D99A1FB0",
     handleColor: "#A0A0B0B0",
   },
   colorsDarkMode: {
     smoothColor: "#A78BFAB0",
+    squircleColor: "#F472B6B0",
     cornerColor: "#E8B84AB0",
     handleColor: "#7E8290B0",
   },
@@ -1310,14 +1529,25 @@ registerVisualizationLayerDefinition({
     const smoothSize = parameters.smoothSize;
     const handleSize = parameters.handleSize;
 
+    const componentTangents = computeSmoothTangents(glyph.componentsPath);
+
     context.strokeStyle = parameters.handleColor;
     context.lineWidth = parameters.strokeWidth;
     for (const [pt1, pt2] of glyph.componentsPath.iterHandles()) {
       strokeLine(context, pt1.x, pt1.y, pt2.x, pt2.y);
     }
 
+    let pointIndex = 0;
     for (const pt of glyph.componentsPath.iterPoints()) {
-      strokeNode(context, pt, cornerSize, smoothSize, handleSize, parameters);
+      strokeNode(
+        context,
+        pt,
+        cornerSize,
+        smoothSize,
+        handleSize,
+        parameters,
+        componentTangents.get(pointIndex++)
+      );
     }
   },
 });
@@ -1353,11 +1583,13 @@ registerVisualizationLayerDefinition({
   },
   colors: {
     smoothColor: "#7A4FE8",
+    squircleColor: "#D6336C",
     cornerColor: "#D99A1F",
     handleColor: "#A0A0B0",
   },
   colorsDarkMode: {
     smoothColor: "#A78BFA",
+    squircleColor: "#F472B6",
     cornerColor: "#E8B84A",
     handleColor: "#7E8290",
   },
@@ -1370,8 +1602,18 @@ registerVisualizationLayerDefinition({
     // unselected nodes are HOLLOW: type-colored outline only (solid fill
     // marks the active/selected nodes, see fontra.selected.nodes)
     context.lineWidth = parameters.strokeWidth;
+    const tangents = computeSmoothTangents(glyph.path);
+    let pointIndex = 0;
     for (const pt of glyph.path.iterPoints()) {
-      strokeNode(context, pt, cornerSize, smoothSize, handleSize, parameters);
+      strokeNode(
+        context,
+        pt,
+        cornerSize,
+        smoothSize,
+        handleSize,
+        parameters,
+        tangents.get(pointIndex++)
+      );
     }
   },
 });
@@ -1393,6 +1635,7 @@ registerVisualizationLayerDefinition({
     selectedColor: "#000",
     underColor: "#FFFA",
     smoothColor: "#7A4FE8",
+    squircleColor: "#D6336C",
     cornerColor: "#D99A1F",
     handleColor: "#A0A0B0",
   },
@@ -1400,6 +1643,7 @@ registerVisualizationLayerDefinition({
     selectedColor: "#FFF",
     underColor: "#0008",
     smoothColor: "#A78BFA",
+    squircleColor: "#F472B6",
     cornerColor: "#E8B84A",
     handleColor: "#7E8290",
   },
@@ -1411,6 +1655,7 @@ registerVisualizationLayerDefinition({
 
     const { point: hoveredPointIndices } = parseSelection(model.hoverSelection);
     const { point: selectedPointIndices } = parseSelection(model.selection);
+    const tangents = computeSmoothTangents(glyph.path);
 
     // Under layer
     const underlayOffset = parameters.underlayOffset;
@@ -1420,32 +1665,42 @@ registerVisualizationLayerDefinition({
       handle: parameters.underColor,
     };
     context.fillStyle = parameters.underColor;
-    for (const pt of iterPointsByIndex(glyph.path, selectedPointIndices)) {
+    for (const [i, pt] of enumerate(iterPointsByIndex(glyph.path, selectedPointIndices))) {
       fillNode(
         context,
         pt,
         cornerSize + underlayOffset,
         smoothSize + underlayOffset,
         handleSize + underlayOffset,
-        underColors
+        underColors,
+        tangents.get(selectedPointIndices[i])
       );
     }
     // Selected (active) nodes are SOLID, in their type colors
     context.fillStyle = parameters.selectedColor;
-    for (const pt of iterPointsByIndex(glyph.path, selectedPointIndices)) {
-      fillNode(context, pt, cornerSize, smoothSize, handleSize, parameters);
+    for (const [i, pt] of enumerate(iterPointsByIndex(glyph.path, selectedPointIndices))) {
+      fillNode(
+        context,
+        pt,
+        cornerSize,
+        smoothSize,
+        handleSize,
+        parameters,
+        tangents.get(selectedPointIndices[i])
+      );
     }
     // Hovered nodes get a type-colored ring
     context.lineWidth = parameters.strokeWidth;
     const hoverStrokeOffset = parameters.hoverStrokeOffset;
-    for (const pt of iterPointsByIndex(glyph.path, hoveredPointIndices)) {
+    for (const [i, pt] of enumerate(iterPointsByIndex(glyph.path, hoveredPointIndices))) {
       strokeNode(
         context,
         pt,
         cornerSize + hoverStrokeOffset,
         smoothSize + hoverStrokeOffset,
         handleSize + hoverStrokeOffset,
-        parameters
+        parameters,
+        tangents.get(hoveredPointIndices[i])
       );
     }
   },
@@ -1733,8 +1988,18 @@ function drawBackgroundHandlesAndNodes(
       strokeLine(context, pt1.x, pt1.y, pt2.x, pt2.y);
     }
 
+    const tangents = computeSmoothTangents(glyph.path);
+    let pointIndex = 0;
     for (const pt of glyph.path.iterPoints()) {
-      fillNode(context, pt, cornerSize, smoothSize, handleSize);
+      fillNode(
+        context,
+        pt,
+        cornerSize,
+        smoothSize,
+        handleSize,
+        undefined,
+        tangents.get(pointIndex++)
+      );
     }
   }
 }
@@ -1810,7 +2075,9 @@ registerVisualizationLayerDefinition({
     context.lineJoin = "round";
     context.lineWidth = parameters.strokeWidth;
     context.strokeStyle = parameters.color;
-    context.stroke(positionedGlyph.glyph.flattenedPath2d);
+    context.stroke(
+      derivedEditPath2d(positionedGlyph.glyph) ?? positionedGlyph.glyph.flattenedPath2d
+    );
   },
 });
 
@@ -1828,7 +2095,9 @@ registerVisualizationLayerDefinition({
     context.lineJoin = "round";
     context.lineWidth = parameters.strokeWidth;
     context.strokeStyle = parameters.color;
-    context.stroke(positionedGlyph.glyph.flattenedPath2d);
+    context.stroke(
+      derivedEditPath2d(positionedGlyph.glyph) ?? positionedGlyph.glyph.flattenedPath2d
+    );
   },
 });
 
@@ -1842,6 +2111,25 @@ registerVisualizationLayerDefinition({
     lineDash: [10, 10],
   },
   draw: ({ context, positionedGlyph, parameters, model, controller }) => {
+    if (model.selectionParallelogram !== undefined) {
+      // Slanted (Glyphs-style) selection: a parallelogram with horizontal
+      // top/bottom edges and slanted sides
+      const para = model.selectionParallelogram;
+      const dx = para.shearK * (para.y1 - para.y0);
+      const polygon = [
+        { x: para.x0, y: para.y0 },
+        { x: para.x1, y: para.y0 },
+        { x: para.x1 + dx, y: para.y1 },
+        { x: para.x0 + dx, y: para.y1 },
+      ];
+      context.lineWidth = parameters.strokeWidth;
+      context.strokeStyle = "#000";
+      strokePolygon(context, polygon);
+      context.strokeStyle = "#FFF";
+      context.setLineDash(parameters.lineDash);
+      strokePolygon(context, polygon);
+      return;
+    }
     if (model.selectionRect === undefined) {
       return;
     }
@@ -1893,37 +2181,62 @@ const nodeAppearanceDefaults = Object.fromEntries(
         colors: { ...layerDef.colors },
         colorsDarkMode: { ...layerDef.colorsDarkMode },
         screenParameters: { ...layerDef.screenParameters },
+        glyphParameters: { ...layerDef.glyphParameters },
       },
     ])
 );
 
-// Apply the user's node appearance overrides (themeController model) to the
-// node layer definitions; with nodeAppearanceCustom off, restore the
-// built-in theme defaults
+// Apply the user's node appearance settings (themeController model) to the
+// node layer definitions; custom colors/sizes are always active.
+// `model.nodeSize` is a SINGLE size for every node kind: corner squares, smooth
+// eyes and off-curve handles must all read as the same size (they used to be
+// three separate settings, which let them drift apart).
 export function applyNodeAppearanceSettings(model) {
   for (const layerDef of visualizationLayerDefinitions) {
     if (!nodeAppearanceLayerIDs.has(layerDef.identifier)) {
       continue;
     }
     const defaults = nodeAppearanceDefaults[layerDef.identifier];
-    if (model.nodeAppearanceCustom) {
-      layerDef.colors = {
-        smoothColor: model.nodeSmoothColor,
-        cornerColor: model.nodeCornerColor,
-        handleColor: model.nodeHandleColor,
-      };
-      layerDef.colorsDarkMode = { ...layerDef.colors };
-      layerDef.screenParameters = {
-        ...defaults.screenParameters,
-        cornerSize: model.nodeCornerSize,
-        smoothSize: model.nodeSmoothSize,
-        handleSize: model.nodeHandleSize,
-      };
-    } else {
-      layerDef.colors = { ...defaults.colors };
-      layerDef.colorsDarkMode = { ...defaults.colorsDarkMode };
-      layerDef.screenParameters = { ...defaults.screenParameters };
-    }
+    layerDef.colors = {
+      smoothColor: model.nodeSmoothColor,
+      squircleColor: model.nodeSquircleColor ?? model.nodeSmoothColor,
+      cornerColor: model.nodeCornerColor,
+      handleColor: model.nodeHandleColor,
+    };
+    layerDef.colorsDarkMode = { ...layerDef.colors };
+    layerDef.screenParameters = {
+      ...defaults.screenParameters,
+      cornerSize: model.nodeSize,
+      smoothSize: model.nodeSize,
+      handleSize: model.nodeSize,
+    };
+    // The superellipse exponent is a dimensionless shape parameter, so it must
+    // NOT live in screenParameters: buildLayers() scales every numeric
+    // screenParameter by the zoom factor, which would change the icon's shape
+    // as the user zooms (measured: exponent 3 became 3.92 at 1.31x zoom).
+    // glyphParameters are passed through verbatim, which is what we want.
+    layerDef.glyphParameters = {
+      ...defaults.glyphParameters,
+      squircleExponent: model.nodeSquircleExponent ?? SQUIRCLE_EXPONENT_DEFAULT,
+    };
+  }
+  // The start-point chevron sits outside the node icon, so it needs to know
+  // the node size for two reasons: to clear the icon by a constant gap, and to
+  // scale its own ">" / "<" along with the node icons so the indicator stays
+  // proportionate. The gap itself deliberately does NOT scale.
+  const startPointLayer = visualizationLayerDefinitions.find(
+    (layerDef) => layerDef.identifier === "fontra.startpoint.indicator"
+  );
+  if (startPointLayer) {
+    const nodeScale = (model.nodeSize ?? NODE_SIZE_DEFAULT) / NODE_SIZE_DEFAULT;
+    startPointLayer.screenParameters = {
+      ...startPointLayer.screenParameters,
+      cornerSize: model.nodeSize,
+      smoothSize: model.nodeSize,
+      gap: START_POINT_CHEVRON_GAP,
+      chevronLength: START_POINT_CHEVRON_LENGTH * nodeScale,
+      chevronSpread: START_POINT_CHEVRON_SPREAD * nodeScale,
+    };
   }
 }
 
@@ -1933,30 +2246,269 @@ export function applyNodeAppearanceSettings(model) {
 // nodes) and Glyphs.app (white/black nodes): violet rounds for smooth
 // nodes, amber squares for corner nodes, neutral lavender for off-curve
 // handles — echoing the keyboard dock's violet/yellow chip palette
+//
+// squircle is a distinct third kind and needs a hue that cannot be confused
+// with the smooth node's violet: teal. An earlier deeper-indigo choice sat too
+// close to #7A4FE8 and read as "another violet node"; teal is ~180 deg away in
+// hue from both the violet smooth node and the amber corner node.
 const nodeTypeColors = {
-  light: { smooth: "#7A4FE8", corner: "#D99A1F", handle: "#A0A0B0" },
-  dark: { smooth: "#A78BFA", corner: "#E8B84A", handle: "#7E8290" },
+  light: {
+    smooth: "#7A4FE8",
+    squircle: "#D6336C",
+    corner: "#D99A1F",
+    handle: "#A0A0B0",
+  },
+  dark: {
+    smooth: "#A78BFA",
+    squircle: "#F472B6",
+    corner: "#E8B84A",
+    handle: "#7E8290",
+  },
 };
 
-function fillNode(context, pt, cornerNodeSize, smoothNodeSize, handleNodeSize, colors) {
+function fillNode(
+  context,
+  pt,
+  cornerNodeSize,
+  smoothNodeSize,
+  handleNodeSize,
+  colors,
+  axis
+) {
   if (!pt.type && !pt.smooth) {
     fillSquareNode(context, pt, cornerNodeSize, colors?.cornerColor);
+  } else if (!pt.type && pt.squircle) {
+    // squircle node: curvature-continuous join. The icon IS a shape whose
+    // curvature changes continuously -- shape equals meaning (see the design
+    // note, section 3.2; Glyphs uses a star here, which we deliberately do not)
+    fillSquircleNode(
+      context,
+      pt,
+      smoothNodeSize,
+      colors?.squircleColor ?? colors?.smoothColor,
+      colors?.squircleExponent
+    );
   } else if (!pt.type) {
-    fillRoundNode(context, pt, smoothNodeSize, colors?.smoothColor);
+    // smooth on-curve point (the old round dot): an eye oriented along
+    // the curve tangent, its two pointed ends riding the curve
+    if (axis) {
+      fillEyeNode(context, pt, smoothNodeSize, colors?.smoothColor, axis);
+    } else {
+      fillRoundNode(context, pt, smoothNodeSize, colors?.smoothColor);
+    }
   } else {
     fillRoundNode(context, pt, handleNodeSize, colors?.handleColor);
   }
 }
 
-function strokeNode(context, pt, cornerNodeSize, smoothNodeSize, handleNodeSize, colors) {
+function strokeNode(
+  context,
+  pt,
+  cornerNodeSize,
+  smoothNodeSize,
+  handleNodeSize,
+  colors,
+  axis
+) {
   if (!pt.type && !pt.smooth) {
     strokeSquareNode(context, pt, cornerNodeSize, colors?.cornerColor);
+  } else if (!pt.type && pt.squircle) {
+    strokeSquircleNode(
+      context,
+      pt,
+      smoothNodeSize,
+      colors?.squircleColor ?? colors?.smoothColor,
+      colors?.squircleExponent
+    );
   } else if (!pt.type) {
-    strokeRoundNode(context, pt, smoothNodeSize, colors?.smoothColor);
+    if (axis) {
+      strokeEyeNode(context, pt, smoothNodeSize, colors?.smoothColor, axis);
+    } else {
+      strokeRoundNode(context, pt, smoothNodeSize, colors?.smoothColor);
+    }
   } else {
     strokeRoundNode(context, pt, handleNodeSize, colors?.handleColor);
   }
 }
+
+// Squircle node icon: the superellipse |x/a|^n + |y/b|^n = 1, i.e. a rounded
+// square. It is the icon for curvature-continuous joins: the shape itself is a
+// curve whose curvature changes continuously, so shape equals meaning -- see the
+// design note "字体设计图例符号系统设计说明" section 3.2. Glyphs uses a
+// five-pointed star for this case; we deliberately do not, because a star
+// carries no intuition about curvature and is pure convention.
+//
+// The exponent n is a user setting (theme model `nodeSquircleExponent`,
+// default 3): n = 1 diamond, 2 circle, 3 rounded square, higher = squarer.
+// It arrives through the layer's screenParameters, so one setting drives every
+// node layer.
+
+// The icon is based on the corner square's box (half-extent = nodeSize / 2),
+// but scaled up slightly: a rounded square of the same side as a sharp square
+// loses area at its corners and therefore reads a touch smaller, so the
+// squircle is drawn SQUIRCLE_SIZE_FACTOR bigger to look equally substantial.
+// (Inscribing by equal AREA instead would shrink it to ~58% of the box at
+// n = 3 -- far too small, which is what it looked like at first.)
+//
+// The settings colour swatch keeps filling its own 1.7em box, so all the
+// swatches stay aligned in one column; the swatch shows the shape, not the
+// icon's exact scale relative to the square.
+const SQUIRCLE_SIZE_FACTOR = 1.15;
+
+function squircleHalfExtent(nodeSize) {
+  return (nodeSize / 2) * SQUIRCLE_SIZE_FACTOR;
+}
+
+function squirclePath(context, pt, nodeSize, exponent) {
+  const a = squircleHalfExtent(nodeSize);
+  const n = exponent || SQUIRCLE_EXPONENT_DEFAULT;
+  const STEPS = 72;
+  context.beginPath();
+  for (let i = 0; i <= STEPS; i++) {
+    const t = (i / STEPS) * 2 * Math.PI;
+    const cx = Math.cos(t);
+    const cy = Math.sin(t);
+    // superellipse parameterisation
+    const x = Math.sign(cx) * Math.pow(Math.abs(cx), 2 / n);
+    const y = Math.sign(cy) * Math.pow(Math.abs(cy), 2 / n);
+    const px = pt.x + x * a;
+    const py = pt.y + y * a;
+    if (i === 0) {
+      context.moveTo(px, py);
+    } else {
+      context.lineTo(px, py);
+    }
+  }
+  context.closePath();
+}
+
+export function fillSquircleNode(context, pt, nodeSize, color, exponent) {
+  if (color !== undefined) {
+    context.fillStyle = color;
+  }
+  squirclePath(context, pt, nodeSize, exponent);
+  context.fill();
+}
+
+export function strokeSquircleNode(context, pt, nodeSize, color, exponent) {
+  if (color !== undefined) {
+    context.strokeStyle = color;
+  }
+  squirclePath(context, pt, nodeSize, exponent);
+  context.stroke();
+}
+
+// Unit tangent axis for each smooth on-curve point (the old round dots):
+// average of the incoming/outgoing segment directions (point → neighbor;
+// the neighbor is the bezier handle for curves, the previous on-curve point
+// for lines), so the eye's two pointed ends ride the curve in any
+// direction. Degenerate cases fall back to the round dot.
+function computeSmoothTangents(path) {
+  const tangents = new Map();
+  let contourStart = 0;
+  for (const contourInfo of path.contourInfo) {
+    const count = contourInfo.endPoint - contourStart + 1;
+    for (let i = 0; i < count; i++) {
+      const index = contourStart + i;
+      const pt = path.getPoint(index);
+      if (pt.type || !pt.smooth) {
+        continue;
+      }
+      const prev =
+        i > 0 || contourInfo.isClosed
+          ? path.getPoint(contourStart + ((i - 1 + count) % count))
+          : null;
+      const next =
+        i < count - 1 || contourInfo.isClosed
+          ? path.getPoint(contourStart + ((i + 1) % count))
+          : null;
+      let ax = 0;
+      let ay = 0;
+      let have = false;
+      if (prev) {
+        const dx = pt.x - prev.x;
+        const dy = pt.y - prev.y;
+        const len = Math.hypot(dx, dy);
+        if (len > 1e-6) {
+          ax = dx / len;
+          ay = dy / len;
+          have = true;
+        }
+      }
+      if (next) {
+        const dx = next.x - pt.x;
+        const dy = next.y - pt.y;
+        const len = Math.hypot(dx, dy);
+        if (len > 1e-6) {
+          if (have) {
+            ax += dx / len;
+            ay += dy / len;
+          } else {
+            ax = dx / len;
+            ay = dy / len;
+            have = true;
+          }
+        }
+      }
+      if (!have) {
+        continue;
+      }
+      const len = Math.hypot(ax, ay);
+      if (len < 1e-6) {
+        continue;
+      }
+      tangents.set(index, { x: ax / len, y: ay / len });
+    }
+    contourStart += count;
+  }
+  return tangents;
+}
+
+// Eye (smooth-node) proportions live near the top of this file
+// (EYE_HALF_LEN_FACTOR / EYE_HALF_WIDTH_FACTOR), next to the other node
+// rendering constants.
+
+function eyePath(context, pt, nodeSize, axis) {
+  // pointed-oval (eye) through pt, long axis along `axis`; the two sharp
+  // tips read as arrows riding the curve
+  const halfLen = nodeSize * EYE_HALF_LEN_FACTOR;
+  const halfWidth = nodeSize * EYE_HALF_WIDTH_FACTOR;
+  const nx = -axis.y;
+  const ny = axis.x;
+  const control = halfWidth * 2; // quadratic bulge = control / 2
+  context.beginPath();
+  context.moveTo(pt.x - axis.x * halfLen, pt.y - axis.y * halfLen);
+  context.quadraticCurveTo(
+    pt.x + nx * control,
+    pt.y + ny * control,
+    pt.x + axis.x * halfLen,
+    pt.y + axis.y * halfLen
+  );
+  context.quadraticCurveTo(
+    pt.x - nx * control,
+    pt.y - ny * control,
+    pt.x - axis.x * halfLen,
+    pt.y - axis.y * halfLen
+  );
+  context.closePath();
+}
+
+export function fillEyeNode(context, pt, nodeSize, color, axis) {
+  if (color !== undefined) {
+    context.fillStyle = color;
+  }
+  eyePath(context, pt, nodeSize, axis);
+  context.fill();
+}
+
+export function strokeEyeNode(context, pt, nodeSize, color, axis) {
+  if (color !== undefined) {
+    context.strokeStyle = color;
+  }
+  eyePath(context, pt, nodeSize, axis);
+  context.stroke();
+}
+
 
 function fillSquareNode(context, pt, nodeSize, color) {
   if (color !== undefined) {

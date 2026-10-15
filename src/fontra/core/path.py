@@ -69,6 +69,12 @@ class PointType(IntEnum):
     OFF_CURVE_QUAD = 0x01
     OFF_CURVE_CUBIC = 0x02
     ON_CURVE_SMOOTH = 0x08
+    # Squircle node (curvature-continuous / G2 join). A squircle point is always
+    # smooth as well, so the single stored value is SMOOTH | SQUIRCLE = 0x18 --
+    # there is deliberately no bare 0x10 member, which would admit the invalid
+    # "curvature-continuous but not tangent-continuous" state. Mirrors
+    # SQUIRCLE_FLAG in src-js/fontra-core/src/var-path.js.
+    ON_CURVE_SQUIRCLE = 0x18
 
 
 @dataclass
@@ -227,7 +233,15 @@ class PackedPath:
                 pointSegmentType = None
                 if pointType == PointType.ON_CURVE:
                     pointSegmentType = segmentType
-                elif pointType == PointType.ON_CURVE_SMOOTH:
+                elif pointType in {
+                    PointType.ON_CURVE_SMOOTH,
+                    PointType.ON_CURVE_SQUIRCLE,
+                }:
+                    # a squircle point is an on-curve smooth point as well; the
+                    # pen protocol has no notion of curvature continuity, so the
+                    # squircle-ness is not carried through a pen round-trip (it
+                    # is preserved in the packed form, which is what the editor
+                    # and the files use)
                     pointSegmentType = segmentType
                     isSmooth = True
 
@@ -553,6 +567,10 @@ def _iterPoints(coordinates, pointTypes, pointAttributes, startIndex, endIndex):
             point["type"] = "cubic"
         elif pointType == PointType.OFF_CURVE_QUAD:
             point["type"] = "quad"
+        elif pointType == PointType.ON_CURVE_SQUIRCLE:
+            # curvature-continuous (G2) smooth point
+            point["smooth"] = True
+            point["squircle"] = True
         elif pointType == PointType.ON_CURVE_SMOOTH:
             point["smooth"] = True
         if pointAttributes is not None:
@@ -569,7 +587,11 @@ def _packContour(unpackedContour):
     for point in unpackedContour["points"]:
         coordinates.append(point["x"])
         coordinates.append(point["y"])
-        pointTypes.append(packPointType(point.get("type"), point.get("smooth")))
+        pointTypes.append(
+            packPointType(
+                point.get("type"), point.get("smooth"), point.get("squircle")
+            )
+        )
         attrs = point.get("attrs")
         pointAttributes.append(attrs if attrs else None)
     return dict(
@@ -580,11 +602,15 @@ def _packContour(unpackedContour):
     )
 
 
-def packPointType(type, smooth):
+def packPointType(type, smooth, squircle=False):
     if type:
         pointType = (
             PointType.OFF_CURVE_CUBIC if type == "cubic" else PointType.OFF_CURVE_QUAD
         )
+    elif squircle:
+        # curvature-continuous; implies smooth (G1), which is why this is a
+        # single combined value rather than a separate bit
+        pointType = PointType.ON_CURVE_SQUIRCLE
     elif smooth:
         pointType = PointType.ON_CURVE_SMOOTH
     else:

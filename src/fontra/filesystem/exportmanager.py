@@ -169,6 +169,46 @@ def _sourceStaticGlyph(varGlyph, sourceIndex):
     return layer.glyph
 
 
+def _drawablePath(path, name=""):
+    """The path to draw, with line-to-curve squircle transitions derived.
+
+    ADR-0012: a squircle node between a straight run and a curve cannot express
+    curvature continuity with the stored points, so the G2 transition is DERIVED
+    here, at export time (the canvas derives the same geometry on the JS side,
+    and both sides are pinned to one shared truth table in test-common/). The
+    stored file keeps the simple line+curve.
+
+    Contract, in order of importance:
+      - the stored path is never modified, and a join that cannot be solved
+        keeps the stored outline, so what we draw is never "half a transition";
+      - a failure in the derivation must never break an export: we log and draw
+        the original path.
+    """
+    from fontra.core.squircle_transition import (
+        derive_squircle_transitions,
+        path_has_line_curve_squircle,
+    )
+
+    try:
+        if not path_has_line_curve_squircle(path):
+            return path
+        derived, diagnostics = derive_squircle_transitions(path)
+    except Exception as e:  # pragma: no cover - export must never break
+        logger.warning(
+            f"squircle transition derivation failed for {name!r}, "
+            f"drawing the stored outline: {e}"
+        )
+        return path
+    for diagnostic in diagnostics:
+        if diagnostic.status != "ok":
+            logger.info(
+                f"{name!r}: squircle transition refused "
+                f"(contour {diagnostic.contourIndex}, point {diagnostic.pointIndex}): "
+                f"{diagnostic.reason}"
+            )
+    return derived
+
+
 def _drawGlyph(glyphs, name, segmentPenFactory, sourceIndex=0):
     """Flatten glyph `name` (contours + one-level components) into the segment
     pen returned by segmentPenFactory(advance)."""
@@ -176,14 +216,16 @@ def _drawGlyph(glyphs, name, segmentPenFactory, sourceIndex=0):
 
     pen = segmentPenFactory(sg.xAdvance or 0)
     pointPen = PointToSegmentPen(pen)
-    sg.path.drawPoints(pointPen)
+    _drawablePath(sg.path, name).drawPoints(pointPen)
     for comp in sg.components:
         if comp.name not in glyphs or glyphs[comp.name] is None:
             continue
         t = comp.transformation
         baseSg = _sourceStaticGlyph(glyphs[comp.name], sourceIndex)
         transform = Transform().translate(t.translateX, t.translateY)
-        baseSg.path.drawPoints(TransformPointPen(PointToSegmentPen(pen), transform))
+        _drawablePath(baseSg.path, comp.name).drawPoints(
+            TransformPointPen(PointToSegmentPen(pen), transform)
+        )
     return pen
 
 

@@ -19,6 +19,15 @@ import {
   arePathsCompatible,
 } from "./var-path.js";
 import * as vector from "./vector.js";
+import {
+  makeSuperSmooth,
+  makeSuperSmoothWithNodeDrift,
+  curvatureAt,
+} from "./path-curvature.js";
+import {
+  deriveLineCurveTransition,
+  findLineCurveJoin,
+} from "./squircle-transition.js";
 
 export function insertPoint(path, intersection, ...additionalSameSegmentIntersections) {
   assert(
@@ -806,155 +815,1229 @@ function* rangesToContours(path, startPoint, ranges) {
   }
 }
 
-export function toggleSmooth(path, pointIndices, newPointType) {
+// `opts.geometry === false` makes a downgrade flag-only (no corner
+// reconstruction): that is the Alt+double-click gesture.
+export function toggleSmooth(path, pointIndices, newPointType, opts = {}) {
   // pass 1: collect the toggleable points (open-path endpoints have nothing
   // to smooth against; off-curve nodes never toggle) and determine the
   // target type from the first of them
   const items = [];
   for (const pointIndex of pointIndices) {
     const pointType = path.pointTypes[pointIndex];
+    // Use the mask, not an exact comparison: a squircle point carries
+    // SMOOTH_FLAG | SQUIRCLE_FLAG (0x18), and testing `=== SMOOTH_FLAG` would
+    // make plain double-click do nothing at all on it.
+    const isOnCurve =
+      (pointType & VarPackedPath.POINT_TYPE_MASK) === VarPackedPath.ON_CURVE;
+    if (!isOnCurve) {
+      continue; // off-curve handles never toggle
+    }
+    const isSmooth = (pointType & VarPackedPath.SMOOTH_FLAG) !== 0;
     const [prevIndex, prevPoint, nextIndex, nextPoint] = neighborPoints(
       path,
       pointIndex
     );
-    if (
-      (!prevPoint || !nextPoint) &&
-      pointType !== VarPackedPath.SMOOTH_FLAG
-    ) {
+    if ((!prevPoint || !nextPoint) && !isSmooth) {
       continue;
     }
-    if (
-      pointType === VarPackedPath.ON_CURVE ||
-      pointType === VarPackedPath.SMOOTH_FLAG
-    ) {
-      items.push({ pointIndex, prevIndex, prevPoint, nextIndex, nextPoint });
-      if (newPointType === undefined) {
-        // Compute new point type based on the primary editing layer
-        newPointType =
-          pointType === VarPackedPath.ON_CURVE
-            ? VarPackedPath.SMOOTH_FLAG
-            : VarPackedPath.ON_CURVE;
-      }
+    const [contourIndex, relIndex] = path.getContourAndPointIndex(pointIndex);
+    items.push({
+      pointIndex,
+      prevIndex,
+      prevPoint,
+      nextIndex,
+      nextPoint,
+      previousType: pointType,
+      wasSmooth: isSmooth,
+      anchorPoint: path.getPoint(pointIndex),
+      contourIndex,
+      anchorRel: relIndex,
+    });
+    if (newPointType === undefined) {
+      // Toggling smoothness: a smooth node -- including a squircle node, which
+      // is smooth by definition -- becomes a corner, and a corner becomes a
+      // smooth node. Assigning ON_CURVE clears BOTH flags, so a squircle node
+      // goes straight back to a plain corner.
+      newPointType = isSmooth
+        ? VarPackedPath.ON_CURVE
+        : VarPackedPath.SMOOTH_FLAG;
     }
   }
   if (newPointType === undefined) {
     return newPointType;
   }
 
-  // pass 2: toggle the flags; align existing handles when becoming smooth.
-  // Corners whose neighbors are both LINE segments (no handles) are
-  // remembered: like FontLab/Glyphs, double-click switches the node type
-  // even without handles — and to make "smooth" actually mean something the
-  // handles are created in pass 3
-  const smoothCorners = [];
+  // pass 2: toggle the flags. Handle fix-up happens in pass 3 from the pass-1
+  // snapshots (never from the already-mutated path), so a multi-point or
+  // multi-contour operation can't corrupt positions.
+  const smoothItems = [];
   for (const item of items) {
     path.pointTypes[item.pointIndex] = newPointType;
     if (newPointType !== VarPackedPath.SMOOTH_FLAG) {
       continue;
     }
-    const anchorPoint = path.getPoint(item.pointIndex);
-    if (item.prevPoint?.type && item.nextPoint?.type) {
-      // Fix-up both incoming and outgoing handles
-      const [newPrevPoint, newNextPoint] = alignHandles(
-        item.prevPoint,
-        anchorPoint,
-        item.nextPoint
-      );
-      path.setPointPosition(item.prevIndex, newPrevPoint.x, newPrevPoint.y);
-      path.setPointPosition(item.nextIndex, newNextPoint.x, newNextPoint.y);
-    } else if (item.prevPoint?.type) {
-      // Fix-up incoming handle
-      const newPrevPoint = alignHandle(
-        item.nextPoint,
-        anchorPoint,
-        item.prevPoint
-      );
-      path.setPointPosition(item.prevIndex, newPrevPoint.x, newPrevPoint.y);
-    } else if (item.nextPoint?.type) {
-      // Fix-up outgoing handle
-      const newNextPoint = alignHandle(
-        item.prevPoint,
-        anchorPoint,
-        item.nextPoint
-      );
-      path.setPointPosition(item.nextIndex, newNextPoint.x, newNextPoint.y);
-    } else if (
-      path.getNumPointsOfContour(
-        path.getContourAndPointIndex(item.pointIndex)[0]
-      ) >= 3
-    ) {
-      smoothCorners.push(item);
-    }
+    smoothItems.push(item);
   }
 
-  // pass 3: line-line corners becoming smooth get handles on both adjacent
-  // segments (each touched line becomes a proper cubic with a handle near
-  // each end; the corner's two handles are collinear through the node). The
-  // far-end handle of a segment is skipped when the far corner is being
-  // smoothed in the same operation — that corner contributes its own handle.
-  // Processed in descending index order (with an insertion-offset lookup) so
-  // not-yet-processed corners keep their original indices
-  if (newPointType === VarPackedPath.SMOOTH_FLAG && smoothCorners.length) {
-    const smoothSet = new Set(smoothCorners.map((item) => item.pointIndex));
-    const insertedPositions = [];
-    const offsetFor = (originalIndex) =>
-      insertedPositions.filter((position) => position <= originalIndex).length;
+  // pass 3 (fork patch, R4-T4.22 -> R4-T4.28): Glyphs/FontLab-style convert.
+  // The adjacent straight segments become real cubics: each corner getting
+  // smoothed receives an incoming and an outgoing handle, and every side that
+  // has no handle yet gets a far-end handle too, so both segments curve.
+  //
+  // Handle placement (true tangent continuity at the node):
+  //   - direction: the tangent through the node, i.e. the normalized sum of
+  //     the incoming (anchor -> prev) and outgoing (anchor -> next) segment
+  //     directions;
+  //   - length: 1/3 of the respective segment, measured along that tangent.
+  //     With collinear neighbors (straight continuation) this reduces to the
+  //     points at 1/3 of each segment, so a straight-through node keeps its
+  //     original shape; at a genuine corner the handles swing onto the shared
+  //     tangent -- the line curves, as expected from "convert to curve".
+  //
+  // Every insertion is derived from the pass-1 snapshot and applied in
+  // descending absolute-index order, so positions stay valid regardless of
+  // how many points, on how many contours, are converted at once.
+  if (newPointType === VarPackedPath.SMOOTH_FLAG && smoothItems.length) {
+    const smoothSet = new Set(smoothItems.map((item) => item.pointIndex));
     const fraction = 1 / 3;
-    const interpolate = (from, to, t) => ({
-      x: from.x + t * (to.x - from.x),
-      y: from.y + t * (to.y - from.y),
-    });
     const offCurve = (vector) => ({
       x: Math.round(vector.x),
       y: Math.round(vector.y),
       type: "cubic",
     });
-    for (const item of [...smoothCorners].sort(
-      (a, b) => b.pointIndex - a.pointIndex
-    )) {
-      const pointIndex = item.pointIndex + offsetFor(item.pointIndex);
-      const anchorPoint = path.getPoint(pointIndex);
-      const [contourIndex, relIndex] =
-        path.getContourAndPointIndex(pointIndex);
-      const [, prevPoint, nextIndex, nextPoint] = neighborPoints(
-        path,
-        pointIndex
-      );
+    const insertions = [];
+    // Each entry: abs = the original absolute index whose slot the new point
+    // belongs in; priority breaks ties at the same slot. Two points can target
+    // the same slot (the far handle of one segment and the near handle of the
+    // next share the anchor's index); the far one must be inserted first so
+    // the near one lands after it -- i.e. in cubic order
+    // (start, far, near, end).
+    const pushInsertion = (contourIndex, abs, rel, point, priority) => {
+      insertions.push({ contourIndex, abs, rel, point, priority });
+    };
+
+    for (const item of smoothItems) {
+      const { anchorPoint, prevPoint, nextPoint } = item;
       if (!prevPoint || !nextPoint) {
         continue;
       }
-      const [newPrevPoint, newNextPoint] = alignHandles(
-        interpolate(anchorPoint, prevPoint, fraction),
-        anchorPoint,
-        interpolate(anchorPoint, nextPoint, fraction)
-      );
-      // insert in descending position order, so every position stays valid
-      // while we go
-      if (!smoothSet.has(item.nextIndex)) {
-        // far handle near the next point, staying on the original line
-        path.insertPoint(
-          contourIndex,
-          nextIndex,
-          offCurve(interpolate(nextPoint, anchorPoint, fraction))
+      // `prevPoint`/`nextPoint` above are simply whatever sits next to the node
+      // -- a handle on an already-smooth node, the neighbouring on-curve point on
+      // a corner -- so read the real slots to tell the cases apart.
+      const inSlots = sideHandleSlots(path, item.pointIndex, -1);
+      const outSlots = sideHandleSlots(path, item.pointIndex, +1);
+      const prevStraight = sideIsStraightThroughNode(path, item.pointIndex, -1);
+      const nextStraight = sideIsStraightThroughNode(path, item.pointIndex, +1);
+
+      // Curved on both sides: nothing to bend, only G1 to restore. That is
+      // upstream's alignHandles -- rotate each handle onto the common tangent,
+      // keeping its own length.
+      if (!prevStraight && !nextStraight) {
+        if (
+          item.wasSmooth &&
+          handlesCollinearThrough(
+            anchorPoint,
+            inSlots.near && inSlots.near.point,
+            outSlots.near && outSlots.near.point
+          )
+        ) {
+          // Nothing to do, and deliberately nothing WRITTEN: re-aligning would
+          // round coordinates that were written unrounded on purpose (the G2
+          // solve), which silently re-introduces a curvature jump -- measured
+          // 0.07% -> 1.1%.
+          continue;
+        }
+        const [newPrevPoint, newNextPoint] = alignHandles(
+          inSlots.near.point,
+          anchorPoint,
+          outSlots.near.point
         );
-        insertedPositions.push(nextIndex);
+        path.setPointPosition(inSlots.near.index, newPrevPoint.x, newPrevPoint.y);
+        path.setPointPosition(outSlots.near.index, newNextPoint.x, newNextPoint.y);
+        continue;
       }
-      path.insertPoint(contourIndex, relIndex + 1, offCurve(newNextPoint));
-      insertedPositions.push(item.pointIndex + 1);
-      path.insertPoint(contourIndex, relIndex, offCurve(newPrevPoint));
-      insertedPositions.push(item.pointIndex);
-      if (!smoothSet.has(item.prevIndex)) {
-        // far handle near the previous point, staying on the original line
-        path.insertPoint(
-          contourIndex,
-          item.prevIndex + offsetFor(item.prevIndex) + 1,
-          offCurve(interpolate(prevPoint, anchorPoint, fraction))
+      // tangent through the node (sum of the two segment directions)
+      const inLen = Math.hypot(
+        anchorPoint.x - prevPoint.x,
+        anchorPoint.y - prevPoint.y
+      );
+      const outLen = Math.hypot(
+        nextPoint.x - anchorPoint.x,
+        nextPoint.y - anchorPoint.y
+      );
+      if (inLen < 1e-6 || outLen < 1e-6) {
+        continue;
+      }
+      let tangentX =
+        (anchorPoint.x - prevPoint.x) / inLen +
+        (nextPoint.x - anchorPoint.x) / outLen;
+      let tangentY =
+        (anchorPoint.y - prevPoint.y) / inLen +
+        (nextPoint.y - anchorPoint.y) / outLen;
+      const tangentLen = Math.hypot(tangentX, tangentY);
+      if (tangentLen < 1e-6) {
+        // segments fold back on themselves: no sensible tangent, skip
+        continue;
+      }
+      tangentX /= tangentLen;
+      tangentY /= tangentLen;
+
+      // near handles, on the shared tangent at 1/3 of each segment
+      const nearPrev = {
+        x: anchorPoint.x - tangentX * (inLen * fraction),
+        y: anchorPoint.y - tangentY * (inLen * fraction),
+      };
+      const nearNext = {
+        x: anchorPoint.x + tangentX * (outLen * fraction),
+        y: anchorPoint.y + tangentY * (outLen * fraction),
+      };
+      // An existing near handle is ROTATED onto that tangent keeping its own
+      // length; only a side without one gets a handle inserted at 1/3 of the
+      // segment. Keeping the length is what makes one rule cover both sides:
+      //
+      //   - a straight run's handle already sits at 1/3 of the chord, so
+      //     rotating it onto the tangent bends the line through the node (the
+      //     "convert to curve" behaviour ADR-0006 is about) instead of leaving
+      //     a smooth icon on top of two straight lines;
+      //   - a curved side's handle is simply realigned, exactly as upstream did.
+      //
+      // Either way G1 becomes true in the geometry, not just in the icon.
+      const rotateOntoTangent = (slot, sign) => {
+        if (!slot) {
+          return false;
+        }
+        const handle = slot.point;
+        const handleLength = Math.hypot(
+          handle.x - anchorPoint.x,
+          handle.y - anchorPoint.y
         );
-        insertedPositions.push(item.prevIndex + 1);
+        path.setPointPosition(
+          slot.index,
+          anchorPoint.x + sign * tangentX * handleLength,
+          anchorPoint.y + sign * tangentY * handleLength
+        );
+        return true;
+      };
+      if (!rotateOntoTangent(inSlots.near, -1)) {
+        pushInsertion(item.contourIndex, item.pointIndex, item.anchorRel, offCurve(nearPrev), 1);
+      }
+      if (!rotateOntoTangent(outSlots.near, +1)) {
+        pushInsertion(item.contourIndex, item.pointIndex + 1, item.anchorRel + 1, offCurve(nearNext), 2);
+      }
+      // far-end handles, so the whole segment becomes a cubic; skipped when
+      // that far end is itself being converted in this operation (it places
+      // its own handle there)
+      if (!prevPoint.type && !smoothSet.has(item.prevIndex)) {
+        const prevRel = path.getContourAndPointIndex(item.prevIndex)[1];
+        pushInsertion(item.contourIndex, item.prevIndex + 1, prevRel + 1, offCurve({
+            x: prevPoint.x + (anchorPoint.x - prevPoint.x) * fraction,
+            y: prevPoint.y + (anchorPoint.y - prevPoint.y) * fraction,
+          }),
+          2
+        );
+      }
+      if (!nextPoint.type && !smoothSet.has(item.nextIndex)) {
+        const nextRel = path.getContourAndPointIndex(item.nextIndex)[1];
+        pushInsertion(item.contourIndex, item.nextIndex, nextRel, offCurve({
+            x: nextPoint.x + (anchorPoint.x - nextPoint.x) * fraction,
+            y: nextPoint.y + (anchorPoint.y - nextPoint.y) * fraction,
+          }),
+          1
+        );
       }
     }
+
+    insertions.sort((a, b) => b.abs - a.abs || b.priority - a.priority);
+    const applied = [];
+    for (const ins of insertions) {
+      const shift = applied.filter((p) => p <= ins.abs).length;
+      path.insertPoint(ins.contourIndex, ins.rel + shift, ins.point);
+      applied.push(ins.abs);
+    }
+  }
+
+  // pass 4 (downgrade): a corner must BE a corner.
+  //
+  // Flipping the flag alone would leave a square node icon sitting on top of a
+  // curve -- the same "the icon lies" failure ADR-0009 forbids for G2. So the
+  // geometry follows the state: see reconstructCornerGeometry().
+  // `opts.geometry === false` keeps the flag-only behaviour, which is what the
+  // Alt+double-click gesture asks for ("I only want the icon").
+  if (newPointType === VarPackedPath.ON_CURVE && opts.geometry !== false) {
+    reconstructCornerGeometry(path, items, opts);
   }
   return newPointType;
+}
+
+// Statuses that mean "this point now satisfies what the squircle flag claims".
+const SQUIRCLE_APPLIED_STATUSES = new Set([
+  "ok",
+  "inserted-handles",
+  "no-change",
+  "ok-no-room",
+]);
+
+// ---------------------------------------------------------------------------
+// corner reconstruction (downgrade: a corner must BE a corner)
+//
+// A square node icon drawn on top of a curve is a lie, so downgrading to a
+// corner changes the geometry too: the run through the node is rebuilt as a
+// straight line, which makes both adjacent sides straight and moves the kink to
+// the NEIGHBOURING nodes. That is what a corner is -- the bend belongs to the
+// neighbours, not to this node.
+//
+// Two deliberate choices:
+//
+// 1. The handles are KEPT, sitting on the chord, instead of being deleted. A
+//    handle may be shared with the neighbouring segment, so deleting it would
+//    silently straighten a side the user never touched, with no way back except
+//    undo. Keeping them also makes the cycle reversible: corner -> smooth reuses
+//    exactly these handles.
+//
+// 2. Coordinates are written UNROUNDED. Rounding would leave the control points
+//    a fraction of a unit off the chord and keep a small but real curvature at
+//    the node -- the same trap documented in applySquircleAtPoint().
+//
+// Because a side's far handle belongs to the neighbouring node, straightening a
+// side moves that neighbour's tangent. A neighbour that claimed G1/G2 would
+// quietly stop being true, so it is repaired here (one level deep), the way
+// FontLab's Genius behaves as a live constraint.
+// Describe the join at `pointIndex` as the solver sees it, and measure what the
+// geometry actually satisfies. `collectSegmentSide` fills in a chord handle for a
+// straight side, so a line reads back as zero curvature instead of vanishing.
+function measureJoin(path, pointIndex) {
+  const node = path.getPoint(pointIndex);
+  const P = { x: node.x, y: node.y };
+  const inSide = collectSegmentSide(path, pointIndex, -1);
+  const outSide = collectSegmentSide(path, pointIndex, +1);
+  if (!inSide || !outSide) {
+    return null;
+  }
+  const left = [inSide.far, inSide.farHandle, inSide.nodeHandle, P];
+  const right = [P, outSide.nodeHandle, outSide.farHandle, outSide.far];
+  const kL = curvatureAt(left, 1);
+  const kR = curvatureAt(right, 0);
+  const inVec = {
+    x: P.x - inSide.nodeHandle.x,
+    y: P.y - inSide.nodeHandle.y,
+  };
+  const outVec = {
+    x: outSide.nodeHandle.x - P.x,
+    y: outSide.nodeHandle.y - P.y,
+  };
+  const scale = Math.hypot(inVec.x, inVec.y) * Math.hypot(outVec.x, outVec.y);
+  const g1 =
+    scale > 0 && Math.abs(inVec.x * outVec.y - inVec.y * outVec.x) / scale < 1e-4;
+  const bothStraight = kL.mag < 1e-12 && kR.mag < 1e-12;
+  // Curvature continuity is about the curvature VECTOR, not just its magnitude:
+  // equal magnitudes with opposite senses (an inflection) leave the tangent of
+  // curvature jumping, so the join is NOT G2 and must not be called squircle.
+  const sameSense = kL.vec.x * kR.vec.x + kL.vec.y * kR.vec.y > 0;
+  const larger = Math.max(kL.mag, kR.mag);
+  const magnitudesMatch = larger > 0 && Math.abs(kL.mag - kR.mag) / larger < 1e-3;
+  const g2 = bothStraight || (sameSense && magnitudesMatch);
+  return { g1, g2, kL: kL.mag, kR: kR.mag };
+}
+
+// Does this node's geometry match what its flags claim? A corner makes no claim
+// beyond "not smooth"; a smooth node must really have collinear handles; a
+// squircle node must really have continuous curvature.
+function nodeFlagsAreHonest(path, pointIndex) {
+  const type = path.pointTypes[pointIndex];
+  // ADR-0012: a line<->curve squircle node does NOT claim curvature
+  // continuity at the node itself -- the stored join deliberately keeps the
+  // line meeting the curve (the derived transition replaces the whole corner
+  // region at render/export). Its honesty claim is "the region derives", so
+  // measure the derivation, not the raw join.
+  if (type & VarPackedPath.SQUIRCLE_FLAG) {
+    const lineCurveJoin = findLineCurveJoin(path, pointIndex);
+    if (lineCurveJoin) {
+      return deriveLineCurveTransition(lineCurveJoin).status === "ok";
+    }
+  }
+  const join = measureJoin(path, pointIndex);
+  if (!join) {
+    return true; // open path endpoint: nothing measurable to claim
+  }
+  if (!(type & VarPackedPath.SMOOTH_FLAG)) {
+    // A corner claims more than "not smooth": with "the state IS the geometry" it
+    // claims that BOTH of its runs are straight. The flag-only Alt gesture is the
+    // documented way to get a square icon on a curve.
+    return join.kL < 1e-9 && join.kR < 1e-9;
+  }
+  if (!join.g1) {
+    return false;
+  }
+  if ((type & VarPackedPath.SQUIRCLE_FLAG) && !join.g2) {
+    return false;
+  }
+  return true;
+}
+
+// The on-curve point nearest (x, y), within `tolerance`. Repairs may insert points
+// (which shift indices) and may slide a node, so anything that has to be tracked
+// across a repair is tracked by POSITION -- the same discipline the editor's own
+// code follows.
+function findOnCurveNear(path, x, y, tolerance) {
+  let best = -1;
+  let bestDistance = tolerance;
+  for (let i = 0; i < path.pointTypes.length; i++) {
+    if (path.pointTypes[i] & VarPackedPath.POINT_TYPE_MASK) {
+      continue; // off-curve
+    }
+    const p = path.getPoint(i);
+    const d = Math.hypot(p.x - x, p.y - y);
+    if (d < bestDistance) {
+      bestDistance = d;
+      best = i;
+    }
+  }
+  return best;
+}
+
+// Rebuild both runs through every downgraded node, then repair what that broke.
+function reconstructCornerGeometry(path, items, opts = {}) {
+  // descending absolute index, the same discipline as pass 3, so a multi-node
+  // downgrade cannot invalidate an index a later item still needs
+  const ordered = [...items].sort((a, b) => b.pointIndex - a.pointIndex);
+  for (const item of ordered) {
+    // NB: item.prevPoint/prevIndex are the ADJACENT points (often handles), so
+    // the neighbour node has to be found by walking outward over the handles.
+    const inSlots = sideHandleSlots(path, item.pointIndex, -1);
+    const outSlots = sideHandleSlots(path, item.pointIndex, +1);
+    if (!inSlots.farPoint || !outSlots.farPoint) {
+      continue; // open path endpoint: nothing to reconstruct
+    }
+    straightenRunThroughNode(path, item.pointIndex, -1, inSlots.farPoint);
+    straightenRunThroughNode(path, item.pointIndex, +1, outSlots.farPoint);
+    repairBrokenNeighbours(path, item.pointIndex, opts);
+  }
+  // Settle the contours we touched. Straightening a node, repairing a neighbour and
+  // re-straightening all move control points that neighbouring nodes also depend
+  // on, so this runs in rounds: sweep the smooth/squircle claims, then re-check the
+  // nodes this gesture downgraded (putting their runs back if a repair bent them
+  // again), and repeat while anything is still moving.
+  const contours = [
+    ...new Set(
+      ordered.map((item) => path.getContourAndPointIndex(item.pointIndex)[0])
+    ),
+  ];
+  for (let round = 0; round < 4; round++) {
+    let changed = false;
+    // 1. the nodes this gesture downgraded must really be corners ...
+    for (const item of ordered) {
+      if (nodeFlagsAreHonest(path, item.pointIndex)) {
+        continue;
+      }
+      const slots = [
+        sideHandleSlots(path, item.pointIndex, -1),
+        sideHandleSlots(path, item.pointIndex, +1),
+      ];
+      if (slots[0].farPoint) {
+        straightenRunThroughNode(path, item.pointIndex, -1, slots[0].farPoint);
+      }
+      if (slots[1].farPoint) {
+        straightenRunThroughNode(path, item.pointIndex, +1, slots[1].farPoint);
+      }
+      changed = true;
+    }
+    // 2. ... and the neighbours get the last word on their own claims, because
+    // every repair moves control points they also depend on. Order matters:
+    // straightening last would immediately re-break them.
+    for (const contourIndex of contours) {
+      changed = enforceContourHonesty(path, contourIndex, opts, 2) || changed;
+    }
+    if (!changed) {
+      break;
+    }
+  }
+}
+
+// The guarantee, enforced rather than hoped for: after a node-kind gesture, no
+// node on a touched contour may claim a continuity its geometry does not have.
+// Whatever an intermediate step got wrong -- a neighbour repair that bent an
+// edge another node needed, a second repair of the same node after an earlier one
+// moved its handles -- this settles it: re-solve where possible, otherwise drop
+// the claim and leave an honest corner. Bounded passes, and the sweep also mends
+// pre-existing lies on the contour it touches, which is the price of the
+// invariant "the icon never lies" (ADR-0009 §4).
+function enforceContourHonesty(path, contourIndex, opts = {}, maxPasses = 3) {
+  let changedAnything = false;
+  for (let pass = 0; pass < maxPasses; pass++) {
+    let changed = false;
+    const count = path.getNumPointsOfContour(contourIndex);
+    for (let rel = 0; rel < count; rel++) {
+      const index = path.getAbsolutePointIndex(contourIndex, rel);
+      if (path.pointTypes[index] & VarPackedPath.POINT_TYPE_MASK) {
+        continue; // off-curve
+      }
+      // Only smooth/squircle claims are swept here. A corner's two straight runs
+      // are the user's to shape -- if they hand-drew a corner with slightly curved
+      // sides, that is a legitimate drawing, and a node-kind gesture elsewhere on
+      // the contour must not straighten it behind their back. The corner THIS
+      // gesture downgraded is verified separately, right where it is written.
+      if (!(path.pointTypes[index] & VarPackedPath.SMOOTH_FLAG)) {
+        continue;
+      }
+      if (nodeFlagsAreHonest(path, index)) {
+        continue;
+      }
+      repairNeighbourContinuity(path, index, opts);
+      if (!nodeFlagsAreHonest(path, index)) {
+        path.pointTypes[index] = VarPackedPath.ON_CURVE;
+      }
+      changed = true;
+    }
+    changedAnything = changedAnything || changed;
+    if (!changed) {
+      return changedAnything;
+    }
+  }
+  return changedAnything;
+}
+
+// Straightening a side moves the far handle of that side, which belongs to the
+// NEIGHBOUR -- so the neighbour's tangent changes, and repairing the neighbour
+// moves handles of its own. Walk outward along the contour in both directions and
+// repair while the next node's claims are false; the first honest node ends the
+// walk. Only what we actually broke gets touched, and the walk is bounded.
+function repairBrokenNeighbours(path, fromIndex, opts = {}, maxWalk = 64) {
+  const scale = contourScale(path, path.getContourAndPointIndex(fromIndex)[0]);
+  const tolerance = 0.01 * scale;
+  for (const dir of [-1, +1]) {
+    let cursor = fromIndex;
+    for (let step = 0; step < maxWalk; step++) {
+      const slots = sideHandleSlots(path, cursor, dir);
+      const next = slots.farIndex;
+      if (next === undefined || next < 0) {
+        break;
+      }
+      cursor = next;
+      if (cursor === fromIndex) {
+        break; // wrapped all the way around a closed contour
+      }
+      if (!(path.pointTypes[cursor] & VarPackedPath.SMOOTH_FLAG)) {
+        break; // a corner has nothing to restore
+      }
+      if (nodeFlagsAreHonest(path, cursor)) {
+        break; // our damage does not reach this far
+      }
+      const before = path.getPoint(cursor);
+      const beforeX = before.x;
+      const beforeY = before.y;
+      repairNeighbourContinuity(path, cursor, opts);
+      // the repair may have inserted points (index shift) and may have slid the
+      // node, so re-locate it by position before continuing
+      const relocated = findOnCurveNear(path, beforeX, beforeY, tolerance);
+      if (relocated < 0) {
+        break;
+      }
+      cursor = relocated;
+    }
+  }
+}
+
+// A rough size for the contour, used to scale the re-location tolerance.
+function contourScale(path, contourIndex) {
+  const start = path.getAbsolutePointIndex(contourIndex, 0);
+  const count = path.getNumPointsOfContour(contourIndex);
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (let i = start; i < start + count; i++) {
+    const p = path.getPoint(i);
+    minX = Math.min(minX, p.x);
+    maxX = Math.max(maxX, p.x);
+    minY = Math.min(minY, p.y);
+    maxY = Math.max(maxY, p.y);
+  }
+  return Math.max(Math.hypot(maxX - minX, maxY - minY), 1);
+}
+
+// Walk outward from `pointIndex` collecting up to two off-curve points plus the
+// far on-curve point that closes the side. `dir` is -1 for the arriving side and
+// +1 for the leaving one. Mirrors collectSegmentSide(), but reports empty slots
+// instead of synthesising handles: straightening has to know what is really there.
+function sideHandleSlots(path, pointIndex, dir) {
+  const [contourIndex, contourPointIndex] =
+    path.getContourAndPointIndex(pointIndex);
+  const contourStartIndex = path.getAbsolutePointIndex(contourIndex, 0);
+  const numPoints = path.getNumPointsOfContour(contourIndex);
+  const isClosed = path.contourInfo[contourIndex].isClosed;
+  const at = (rel) => {
+    let r = rel;
+    if (isClosed) {
+      r = modulo(r, numPoints);
+    } else if (r < 0 || r >= numPoints) {
+      return undefined;
+    }
+    return contourStartIndex + r;
+  };
+  const slots = [];
+  for (let step = 1; step <= 2; step++) {
+    const idx = at(contourPointIndex + dir * step);
+    if (idx === undefined) break;
+    const pt = path.getPoint(idx);
+    if (pt && pt.type) {
+      slots.push({ index: idx, point: { x: pt.x, y: pt.y } });
+    } else {
+      break;
+    }
+  }
+  const farIndex = at(contourPointIndex + dir * (slots.length + 1));
+  const farPoint = farIndex !== undefined ? path.getPoint(farIndex) : undefined;
+  return { near: slots[0], far: slots[1], farIndex, farPoint };
+}
+
+// Put this side's handles on the chord node -> farOnCurve, so the side becomes
+// an exactly straight run. Nothing to do when the side carries no handle at all:
+// a bare pair of on-curve points already IS a line.
+// Is this side a STRAIGHT run through the node (zero curvature there)?
+//
+// That is the question "is this side a line?", and the honest answer decides
+// whether smoothing has anything to bend: a smooth node with two straight sides
+// is just a corner wearing an eye icon. Tests the actual second derivative:
+// for a cubic, curvature at an endpoint vanishes exactly when
+// B''=6*(P3-2P2+P1) is parallel to the tangent there.
+function sideIsStraightThroughNode(path, pointIndex, dir) {
+  const slots = sideHandleSlots(path, pointIndex, dir);
+  const far = slots.farPoint;
+  if (!far) {
+    return false; // open end: no geometry to speak of
+  }
+  if (!slots.near) {
+    return true; // a bare pair of on-curve points already IS a line
+  }
+  const node = path.getPoint(pointIndex);
+  if (!slots.far) {
+    // a single-handle (quadratic-ish) side: straight iff the handle is on the chord
+    const chordX = far.x - node.x;
+    const chordY = far.y - node.y;
+    const chordLen = Math.hypot(chordX, chordY);
+    if (!(chordLen > 0)) {
+      return true;
+    }
+    const h = slots.near.point;
+    return (
+      Math.abs(chordX * (h.y - node.y) - chordY * (h.x - node.x)) <=
+      1e-6 * chordLen * chordLen
+    );
+  }
+  const h1 = slots.far.point;
+  const h2 = slots.near.point;
+  const tangentLength = Math.hypot(node.x - h2.x, node.y - h2.y);
+  if (!(tangentLength > 0)) {
+    return false; // degenerate handle
+  }
+  const ddx = node.x - 2 * h2.x + h1.x;
+  const ddy = node.y - 2 * h2.y + h1.y;
+  const ddLength = Math.hypot(ddx, ddy);
+  if (!(ddLength > 0)) {
+    return true;
+  }
+  return (
+    Math.abs((node.x - h2.x) * ddy - (node.y - h2.y) * ddx) <=
+    1e-6 * tangentLength * ddLength
+  );
+}
+
+// Are the two node handles collinear through the node (G1 holds)?
+function handlesCollinearThrough(anchorPoint, handleIn, handleOut) {
+  if (!handleIn || !handleOut) {
+    return false;
+  }
+  const inVec = {
+    x: anchorPoint.x - handleIn.x,
+    y: anchorPoint.y - handleIn.y,
+  };
+  const outVec = {
+    x: handleOut.x - anchorPoint.x,
+    y: handleOut.y - anchorPoint.y,
+  };
+  const scale = Math.hypot(inVec.x, inVec.y) * Math.hypot(outVec.x, outVec.y);
+  return (
+    scale > 0 &&
+    Math.abs(inVec.x * outVec.y - inVec.y * outVec.x) / scale < 1e-4
+  );
+}
+
+function straightenRunThroughNode(path, pointIndex, dir, farOnCurve) {
+  const slots = sideHandleSlots(path, pointIndex, dir);
+  if (!slots.near || !farOnCurve) return false;
+  const node = path.getPoint(pointIndex);
+  const along = (t) => ({
+    x: node.x + (farOnCurve.x - node.x) * t,
+    y: node.y + (farOnCurve.y - node.y) * t,
+  });
+  if (slots.far) {
+    const nearPt = along(1 / 3);
+    const farPt = along(2 / 3);
+    path.setPointPosition(slots.near.index, nearPt.x, nearPt.y);
+    path.setPointPosition(slots.far.index, farPt.x, farPt.y);
+  } else {
+    // a lone handle belongs at the midpoint: still a straight run, and it keeps
+    // the side a legal cubic
+    const mid = along(0.5);
+    path.setPointPosition(slots.near.index, mid.x, mid.y);
+  }
+  return true;
+}
+
+// The same placement as upstream alignHandles(), but without its rounding: we
+// are repairing somebody else's node here, and nudging its fractional handles
+// for no reason is not acceptable.
+function alignHandlesExact(handleIn, anchorPoint, handleOut) {
+  const place = (handle, direction) => {
+    const length = vector.vectorLength(
+      vector.subVectors(handle, anchorPoint)
+    );
+    const v = vector.mulVectorScalar(
+      vector.normalizeVector(direction),
+      length
+    );
+    return { x: anchorPoint.x + v.x, y: anchorPoint.y + v.y };
+  };
+  const inVec = vector.subVectors(anchorPoint, handleIn);
+  const outVec = vector.subVectors(handleOut, anchorPoint);
+  return [
+    place(handleIn, vector.subVectors(outVec, inVec)),
+    place(handleOut, vector.subVectors(inVec, outVec)),
+  ];
+}
+
+// Re-establish a neighbour's continuity after we moved one of its handles.
+// A squircle neighbour is re-solved (FontLab's Genius is a live constraint); if
+// G2 has become impossible we drop the flag rather than let the icon lie, and
+// then re-align for G1. A plain smooth neighbour just gets its tangent back.
+function repairNeighbourContinuity(path, neighbourIndex, opts = {}) {
+  if (neighbourIndex === undefined || neighbourIndex < 0) return;
+  let type = path.pointTypes[neighbourIndex];
+  const inSlots = sideHandleSlots(path, neighbourIndex, -1);
+  const outSlots = sideHandleSlots(path, neighbourIndex, +1);
+  if (!(type & VarPackedPath.SMOOTH_FLAG)) {
+    // A corner has nothing to re-solve, but its two runs may have been bent by
+    // whoever touched this contour -- put them straight again.
+    if (inSlots.farPoint) {
+      straightenRunThroughNode(path, neighbourIndex, -1, inSlots.farPoint);
+    }
+    if (outSlots.farPoint) {
+      straightenRunThroughNode(path, neighbourIndex, +1, outSlots.farPoint);
+    }
+    return;
+  }
+  const handleIn = inSlots.near && inSlots.near.point;
+  const handleOut = outSlots.near && outSlots.near.point;
+  if (!handleIn || !handleOut) {
+    path.pointTypes[neighbourIndex] = VarPackedPath.ON_CURVE;
+    return;
+  }
+  if (type & VarPackedPath.SQUIRCLE_FLAG) {
+    const status = applySquircleAtPoint(path, neighbourIndex, {
+      ...opts,
+      _inNeighbourRepair: true,
+    });
+    // verify the geometry, not the reported status -- see makeSquircle
+    if (SQUIRCLE_APPLIED_STATUSES.has(status) && nodeFlagsAreHonest(path, neighbourIndex)) {
+      return;
+    }
+    // can no longer be G2 here -- stop claiming it
+    path.pointTypes[neighbourIndex] &= ~VarPackedPath.SQUIRCLE_FLAG;
+    type = path.pointTypes[neighbourIndex];
+    if (!(type & VarPackedPath.SMOOTH_FLAG)) {
+      return;
+    }
+  }
+  const node = path.getPoint(neighbourIndex);
+  const prevStraight = sideIsStraightThroughNode(path, neighbourIndex, -1);
+  const nextStraight = sideIsStraightThroughNode(path, neighbourIndex, +1);
+  if (prevStraight || nextStraight) {
+    // A neighbouring corner is holding one of our sides as a straight run, so the
+    // shared tangent IS that line: put both handles on it, keeping their lengths.
+    // That is the straight-through smooth node -- and, crucially, it leaves the
+    // corner's straight side straight. (Aligning onto the bisector instead would
+    // bend an edge a neighbour depends on, and the corner's icon would start
+    // lying all over again.)
+    const straightSlots = prevStraight ? inSlots : outSlots;
+    const farPoint = prevStraight ? inSlots.farPoint : outSlots.farPoint;
+    if (farPoint) {
+      const dirLen = Math.hypot(farPoint.x - node.x, farPoint.y - node.y);
+      if (dirLen > 1e-9) {
+        const dirX = (farPoint.x - node.x) / dirLen;
+        const dirY = (farPoint.y - node.y) / dirLen;
+        for (const [slot, sign] of [
+          [inSlots, -1],
+          [outSlots, 1],
+        ]) {
+          const length = Math.hypot(
+            slot.near.point.x - node.x,
+            slot.near.point.y - node.y
+          );
+          path.setPointPosition(
+            slot.near.index,
+            node.x + sign * dirX * length,
+            node.y + sign * dirY * length
+          );
+        }
+      }
+    }
+  } else if (!(prevStraight && nextStraight)) {
+    // Both sides curve: put the tangent back on their bisector, keeping lengths.
+    const [alignedIn, alignedOut] = alignHandlesExact(
+      handleIn,
+      { x: node.x, y: node.y },
+      handleOut
+    );
+    path.setPointPosition(inSlots.near.index, alignedIn.x, alignedIn.y);
+    path.setPointPosition(outSlots.near.index, alignedOut.x, alignedOut.y);
+  }
+  // (both sides straight: the node is a straight-through node or an honest
+  // corner -- never align, that would bend a straight side)
+  // last word to the geometry: if the tangent still does not line up, the node is
+  // honestly a corner now
+  if (!nodeFlagsAreHonest(path, neighbourIndex)) {
+    path.pointTypes[neighbourIndex] = VarPackedPath.ON_CURVE;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// squircle nodes (curvature-continuous / G2 joins)
+//
+// See ADR-0009 and docs/字体设计图例符号系统设计说明.md §3.2. Glyphs calls this
+// "super-smooth" and draws a five-pointed star; we use the name and the icon
+// "squircle" because the icon is itself a curve of continuously varying
+// curvature -- shape equals meaning.
+//
+// The maths lives in path-curvature.js (makeSuperSmooth etc.), which is
+// verified separately. This function only adapts between the path's point
+// model and the solver's segment model, and writes the result back.
+// ---------------------------------------------------------------------------
+
+// Collect the (up to) four points that describe one side of `pointIndex` as a
+// cubic segment [farOnCurve, farHandle, nodeHandle, node] in the solver's
+// convention, plus the absolute indices needed to write results back.
+//
+// A side may have 0, 1 or 2 off-curve points between the far on-curve point
+// and the node. The solver expects a full cubic, so a missing handle is filled
+// in with the trivial collinear placement (which makes the side a straight
+// line, i.e. curvature 0 -- exactly the case the solver treats as "line").
+function collectSegmentSide(path, pointIndex, direction) {
+  // direction: -1 = the side arriving at the node (prev), +1 = leaving (next)
+  const [contourIndex, contourPointIndex] =
+    path.getContourAndPointIndex(pointIndex);
+  const contourStartIndex = path.getAbsolutePointIndex(contourIndex, 0);
+  const numPoints = path.getNumPointsOfContour(contourIndex);
+  const isClosed = path.contourInfo[contourIndex].isClosed;
+
+  const at = (rel) => {
+    let r = rel;
+    if (isClosed) {
+      r = modulo(r, numPoints);
+    } else if (r < 0 || r >= numPoints) {
+      return undefined;
+    }
+    return contourStartIndex + r;
+  };
+
+  const nodePoint = path.getPoint(pointIndex);
+  const node = { x: nodePoint.x, y: nodePoint.y };
+
+  // walk outward from the node collecting up to 2 off-curve points
+  const nodeHandles = [];
+  const farIndices = [];
+  for (let step = 1; step <= 2; step++) {
+    const idx = at(contourPointIndex + direction * step);
+    if (idx === undefined) {
+      break;
+    }
+    const pt = path.getPoint(idx);
+    if (pt.type) {
+      nodeHandles.push({ x: pt.x, y: pt.y });
+      farIndices.push(idx);
+    } else {
+      break; // reached the far on-curve point
+    }
+  }
+  const farIndex = at(contourPointIndex + direction * (nodeHandles.length + 1));
+  const farPoint = farIndex !== undefined ? path.getPoint(farIndex) : undefined;
+  if (!farPoint) {
+    return undefined; // open path with no neighbour on this side
+  }
+
+  const nodeHandle =
+    nodeHandles.length >= 1
+      ? nodeHandles[0]
+      : // no handle: place it 1/3 along the way, making the side a straight line
+        {
+          x: Math.round((farPoint.x + node.x) / 3 + (node.x * 2) / 3),
+          y: Math.round((farPoint.y + node.y) / 3 + (node.y * 2) / 3),
+        };
+  const farHandle =
+    nodeHandles.length >= 2
+      ? nodeHandles[1]
+      : {
+          x: Math.round((farPoint.x * 2 + node.x) / 3),
+          y: Math.round((farPoint.y * 2 + node.y) / 3),
+        };
+
+  return {
+    // segment in the solver's orientation: always starts at the node
+    nodeHandle,
+    farHandle,
+    far: { x: farPoint.x, y: farPoint.y },
+    nodeHandleIndex: nodeHandles.length >= 1 ? farIndices[0] : undefined,
+    farHandleIndex: nodeHandles.length >= 2 ? farIndices[1] : undefined,
+    farIndex,
+    hasNodeHandle: nodeHandles.length >= 1,
+    hasFarHandle: nodeHandles.length >= 2,
+  };
+}
+
+// Solve the G2 join at `pointIndex` and write the handles (and, when the solve
+// drifted the node, the node itself) back into the path.
+// Returns a short status string for diagnostics/tests.
+//
+// `opts.allowNodeDrift` (default ON) lets the solver slide the node a little
+// and rotate the tangent to find the least-distorted G2 join -- Glyphs' star
+// node / FontLab's Harmonize. It is the in-place closed form when
+// `allowNodeDrift:false`, which is what the pure-geometry tests pin.
+function applySquircleAtPoint(path, pointIndex, opts = {}) {
+  const nodePoint = path.getPoint(pointIndex);
+  const node = { x: nodePoint.x, y: nodePoint.y };
+
+  const inSide = collectSegmentSide(path, pointIndex, -1);
+  const outSide = collectSegmentSide(path, pointIndex, +1);
+  if (!inSide || !outSide) {
+    return "open-end";
+  }
+
+  // solver convention: left = [A, hA, X, P], right = [P, Y, hC, C]
+  // left  = the side ARRIVING at the node, reversed
+  // right = the side LEAVING the node
+  const left = [inSide.far, inSide.farHandle, inSide.nodeHandle, node];
+  const right = [node, outSide.nodeHandle, outSide.farHandle, outSide.far];
+
+  const allowNodeDrift = opts.allowNodeDrift !== false;
+  const result = allowNodeDrift
+    ? makeSuperSmoothWithNodeDrift(node, left, right, opts)
+    : makeSuperSmooth(node, left, right, opts);
+
+  if (result.status === "invalid-input" || result.status === "infeasible") {
+    return result.status;
+  }
+
+  // `handleLeft` belongs to the LEFT segment's node end = our incoming side
+  // `handleRight` belongs to the RIGHT segment's node end = our outgoing side
+  //
+  // NOTE: these positions are deliberately NOT rounded to integers. The whole
+  // point of a squircle node is curvature continuity, and rounding each handle
+  // independently re-introduces a curvature jump (measured: 6.4e-5 instead of
+  // ~1e-19 at rounding, i.e. only a 48x improvement rather than an exact
+  // match). Fontra stores fractional coordinates natively -- dragging a node
+  // produces them too -- so there is nothing to gain by rounding here.
+  const writeHandle = (index, point) => {
+    // `index === undefined`, NOT a falsy test: absolute index 0 is a legitimate
+    // handle (a contour may start with one) and a falsy check silently skipped
+    // writing it -- reporting success while leaving the join unsolved.
+    if (index === undefined || !point) {
+      return true; // nothing to write on this side
+    }
+    if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) {
+      return false;
+    }
+    path.setPointPosition(index, point.x, point.y);
+    return true;
+  };
+
+  // The node itself may have slid (Glyphs-style "effective node"). Writing it is
+  // an ordinary point move -- same index, new coordinates -- so the selection and
+  // the undo step are unaffected.
+  const writeNode = () => {
+    if (
+      !result.node ||
+      !Number.isFinite(result.node.x) ||
+      !Number.isFinite(result.node.y)
+    ) {
+      return true;
+    }
+    if (result.node.x !== node.x || result.node.y !== node.y) {
+      path.setPointPosition(pointIndex, result.node.x, result.node.y);
+    }
+    return true;
+  };
+
+  // A handle may only be inserted on a side that is actually a CURVE. A side
+  // with no handle is a straight line, and the G2 solution for line-curve
+  // deliberately keeps the zero curvature on the LINE side -- adding a handle
+  // there would bend a straight segment that must stay straight, and would
+  // push the node itself out of position.
+  const kind = result.kind || "curve-curve";
+  const insertIn = !inSide.hasNodeHandle && kind !== "line-curve";
+  const insertOut = !outSide.hasNodeHandle && kind !== "curve-line";
+
+  if (insertIn || insertOut) {
+    // Insert as cubic off-curve points adjacent to the node. The OUTGOING
+    // handle goes in at rel+1 and the INCOMING at rel, so inserting the
+    // outgoing one FIRST keeps the incoming insertion index valid (same
+    // descending-index discipline as toggleSmooth).
+    const [contourIndex, contourPointIndex] =
+      path.getContourAndPointIndex(pointIndex);
+    if (insertOut) {
+      path.insertPoint(
+        contourIndex,
+        contourPointIndex + 1,
+        {
+          x: result.handleRight.x,
+          y: result.handleRight.y,
+          type: "cubic",
+        }
+      );
+    }
+    if (insertIn) {
+      path.insertPoint(
+        contourIndex,
+        contourPointIndex,
+        {
+          x: result.handleLeft.x,
+          y: result.handleLeft.y,
+          type: "cubic",
+        }
+      );
+    }
+    writeNode();
+    return result.status === "ok" ? "inserted-handles" : result.status;
+  }
+
+  let ok = true;
+  // Which sides the solver actually re-placed depends on the join kind. For a
+  // line-curve G2 the STRAIGHT side must be left exactly as it is -- its handle
+  // belongs to a neighbouring node's side, and moving it bends a line that has
+  // to stay straight (which is how a corner next door would silently stop being
+  // a corner). The solver returns the line's far handle there as a "don't touch"
+  // sentinel, so only the curve side may be written.
+  if (kind !== "curve-line") {
+    ok = writeHandle(inSide.nodeHandleIndex, result.handleLeft) && ok;
+  }
+  if (kind !== "line-curve") {
+    ok = writeHandle(outSide.nodeHandleIndex, result.handleRight) && ok;
+  }
+  ok = writeNode() && ok;
+  return ok ? result.status : "write-failed";
+}
+
+// Convert the given on-curve points into squircle nodes (curvature-continuous /
+// G2 joins), solving the geometry as needed. Returns true when at least one
+// point ended up as a squircle node.
+//
+// This is an ESCALATION, not a toggle: an already-squircle point is left exactly
+// as it is, so repeating the gesture is a harmless no-op the user can rely on.
+// De-escalation goes through toggleSmooth (plain double-click), which turns a
+// squircle node into a corner and drops both flags -- and a second plain
+// double-click then makes it a plain smooth node:
+//
+//   squircle --dbl--> corner --dbl--> smooth
+//
+// `force` may be passed as false to explicitly clear the flag; the gesture
+// itself always escalates.
+//
+// `opts.allowNodeDrift` (default true) lets the G2 solve slide the node a
+// little to find the least-distorted join -- see ADR-0010. Pass
+// `{allowNodeDrift:false}` for the pure in-place closed form.
+export function makeSquircle(path, pointIndices, force, opts = {}) {
+  const squircleFlag = VarPackedPath.SQUIRCLE_FLAG;
+  const smoothFlag = VarPackedPath.SMOOTH_FLAG;
+
+  // pass 1: collect the points that can carry the flag
+  const eligible = [];
+  for (const pointIndex of pointIndices) {
+    const pointType = path.pointTypes[pointIndex];
+    if ((pointType & VarPackedPath.POINT_TYPE_MASK) !== VarPackedPath.ON_CURVE) {
+      continue; // off-curve handles never carry the flag
+    }
+    const [prevIndex, , nextIndex] = neighborPoints(path, pointIndex);
+    if (prevIndex === undefined || nextIndex === undefined) {
+      continue; // open path endpoint
+    }
+    eligible.push(pointIndex);
+  }
+
+  if (force === false) {
+    // explicit de-escalation: a squircle node becomes a plain smooth node
+    for (const pointIndex of eligible) {
+      path.pointTypes[pointIndex] &= ~squircleFlag;
+    }
+    return false;
+  }
+
+  // pass 2/3 (turning ON): solve the geometry FIRST and only set the flag where
+  // the solve actually succeeded. Setting the flag on a join that cannot be made
+  // curvature-continuous (e.g. an inflection, where the two sides bend in
+  // opposite senses) would draw a squircle icon for geometry that is not G2 --
+  // the icon would lie about the outline.
+  //
+  // Each solve can INSERT handle points, which shifts the indices of later
+  // points in the same contour, so work in descending absolute-index order: a
+  // lower-index point's index is never disturbed by a higher one's insertion.
+  // (SQUIRCLE_APPLIED_STATUSES is the module-level list, shared with the
+  // neighbour repair in reconstructCornerGeometry)
+  const ordered = [...eligible].sort((a, b) => b - a);
+  let anyApplied = false;
+  for (const pointIndex of ordered) {
+    const pointTypeBefore = path.pointTypes[pointIndex];
+    if (pointTypeBefore & squircleFlag) {
+      // already a squircle node -- leave its geometry exactly as it is, so
+      // repeating the gesture is a true no-op
+      anyApplied = true;
+      continue;
+    }
+    let index = pointIndex;
+    let establishedG1 = false;
+
+    // ADR-0012: a line<->curve join keeps the stored outline -- the line and
+    // the curve keep meeting at the node, and the G2 transition is derived at
+    // render/export. The gesture therefore must NOT establish G1 here (that
+    // would bend the straight side the whole feature is about): verify the
+    // derivation and set the flag, or honestly refuse with zero geometry
+    // change (不落标志、不派生、不改文件).
+    const lineCurveJoin = findLineCurveJoin(path, pointIndex);
+    if (lineCurveJoin) {
+      if (deriveLineCurveTransition(lineCurveJoin).status === "ok") {
+        path.pointTypes[pointIndex] |= smoothFlag | squircleFlag;
+        anyApplied = true;
+      }
+      continue;
+    }
+
+    // A squircle node is by definition a SMOOTH node too (G2 implies G1). A
+    // plain corner between two straight lines does not even have matching
+    // tangents, so the solver would report "no-change" -- curvature is 0 on
+    // both sides -- and the flag would end up set on a node that is still a
+    // hard corner. The squircle icon would then lie about the outline.
+    //
+    // So establish G1 first, exactly as a plain double-click does: that bends
+    // the two straight sides onto a shared tangent and creates their handles.
+    // Then solve for G2 on the resulting curves.
+    if (!(pointTypeBefore & smoothFlag)) {
+      const nodePos = path.getPointPosition(pointIndex);
+      toggleSmooth(path, [pointIndex], smoothFlag);
+      establishedG1 = true;
+      // toggleSmooth INSERTS handles around the node, which shifts the node's
+      // own index (a corner becomes 1 far handle + 1 near handle on each side).
+      // Re-locate it by position, otherwise the G2 solve below would be applied
+      // to whatever point now happens to sit at the old index.
+      for (let i = pointIndex; i < path.pointTypes.length; i++) {
+        if (path.pointTypes[i] & VarPackedPath.POINT_TYPE_MASK) {
+          continue; // off-curve
+        }
+        const pos = path.getPointPosition(i);
+        if (pos[0] === nodePos[0] && pos[1] === nodePos[1]) {
+          index = i;
+          break;
+        }
+      }
+    }
+
+    const status = applySquircleAtPoint(path, index, opts);
+    if (SQUIRCLE_APPLIED_STATUSES.has(status)) {
+      // Trust the GEOMETRY, not the solver's status: re-measure the join we just
+      // wrote. A status of "ok" only means a solution existed -- for a cusp
+      // (the two sides curving opposite ways with equal magnitudes) the
+      // curvature vector still jumps, and no icon may claim that. ADR-0009 §4:
+      // the icon must not lie.
+      if (nodeFlagsAreHonest(path, index)) {
+        path.pointTypes[index] |= smoothFlag | squircleFlag;
+        anyApplied = true;
+        // This solve moved handles that belong to the NEIGHBOURING nodes, so their
+        // tangents -- and possibly their own G2 -- may no longer hold. Repair what
+        // we broke, unless we are already inside a repair (that would recurse).
+        if (!opts._inNeighbourRepair) {
+          repairBrokenNeighbours(path, index, opts);
+          enforceContourHonesty(
+            path,
+            path.getContourAndPointIndex(index)[0],
+            opts
+          );
+        }
+      } else {
+        // keep whatever smoothness was established, drop the G2 claim
+        path.pointTypes[index] &=
+          VarPackedPath.SMOOTH_FLAG | (establishedG1 ? 0 : ~VarPackedPath.SMOOTH_FLAG);
+        if (!establishedG1 && (pointTypeBefore & VarPackedPath.SMOOTH_FLAG) === 0) {
+          path.pointTypes[index] = pointTypeBefore;
+        }
+      }
+    } else if (establishedG1) {
+      // G2 could not be achieved, but the node has already been converted to a
+      // smooth node (with its handles). Leave it as that valid plain-smooth
+      // node rather than restoring "corner" on a point that now carries
+      // handles -- that state would be inconsistent.
+      path.pointTypes[index] |= smoothFlag;
+    } else {
+      // nothing was attempted beyond the solve; leave the node untouched
+      path.pointTypes[index] = pointTypeBefore;
+    }
+  }
+
+  return anyApplied;
+}
+
+// Advance on-curve points along the node-kind cycle, which is what a plain
+// double-click does:
+//
+//     corner --> smooth --> squircle --> corner --> ...
+//
+// The order is increasing continuity (sharp, tangent-continuous,
+// curvature-continuous), so repeatedly double-clicking walks "up" through the
+// kinds and wraps around. Note this is deliberately NOT a two-state toggle:
+// double-clicking is no longer its own inverse, and stepping from smooth to
+// squircle genuinely reshapes the outline (that is what making a join
+// curvature-continuous means). Use Shift+double-click for a direct jump to
+// squircle from anywhere, and the undo stack to step back.
+//
+// The target is derived from the first eligible point and applied to all of
+// them, matching toggleSmooth's convention for multi-point selections.
+// Returns the target kind ("corner" | "smooth" | "squircle"), or undefined when
+// nothing was eligible.
+// `opts` is forwarded to makeSquircle (and thus to the G2 solve): by default
+// the squircle step may slide the node a little -- see ADR-0010.
+export function advanceNodeKind(path, pointIndices, opts = {}) {
+  const onCurve = VarPackedPath.ON_CURVE;
+  const smoothFlag = VarPackedPath.SMOOTH_FLAG;
+  const squircleFlag = VarPackedPath.SQUIRCLE_FLAG;
+
+  let target;
+  for (const pointIndex of pointIndices) {
+    const pointType = path.pointTypes[pointIndex];
+    if ((pointType & VarPackedPath.POINT_TYPE_MASK) !== onCurve) {
+      continue; // off-curve handles never carry a node kind
+    }
+    const [prevIndex, , nextIndex] = neighborPoints(path, pointIndex);
+    if (prevIndex === undefined || nextIndex === undefined) {
+      continue; // open path endpoint
+    }
+    if (pointType & squircleFlag) {
+      target = "corner";
+    } else if (pointType & smoothFlag) {
+      target = "squircle";
+    } else {
+      target = "smooth";
+    }
+    break;
+  }
+
+  if (target === undefined) {
+    return undefined;
+  }
+  if (target === "smooth") {
+    toggleSmooth(path, pointIndices, smoothFlag, opts);
+  } else if (target === "squircle") {
+    makeSquircle(path, pointIndices, undefined, opts);
+  } else {
+    // corner: assigning ON_CURVE clears the smooth and squircle flags both, and
+    // reconstructs the geometry so the node really is a corner (pass 4)
+    toggleSmooth(path, pointIndices, onCurve, opts);
+  }
+  return target;
 }
 
 function neighborPoints(path, pointIndex) {

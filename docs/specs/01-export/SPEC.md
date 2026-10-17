@@ -1,22 +1,22 @@
-# R1 · 浏览器内导出字体 · 技术规范
+# R1 · In-Browser Font Export · Technical Specification
 
-## 1. 架构与数据流
+## 1. Architecture and Data Flow
 ```
-File 菜单项（fontra-menus.js:126，已有，按 export-as 特性条件渲染）
-  └─ action.export-as.<format>（view-controller.js:88，已有注册）
-      └─ fontController.exportAs({format})（font-controller.js:1065，远程调用）
-          └─ fonthandler.exportAs（fonthandler.py:605，已有，委托 exportManager）
-              └─ EngramFontExportManager.exportAs（本需求新增）
-                    ├─ backend 读取（getGlyphMap/getGlyph/getFeatures/getSources）
-                    ├─ fontTools FontBuilder 编译（含 FEA→GSUB）
-                    ├─ 落盘 <工程目录>/.exports/<ts>/<name>.<ext>
+File menu item (fontra-menus.js:126, existing, rendered conditionally on the export-as feature)
+  └─ action.export-as.<format> (view-controller.js:88, registration exists)
+      └─ fontController.exportAs({format}) (font-controller.js:1065, remote call)
+          └─ fonthandler.exportAs (fonthandler.py:605, existing, delegates to exportManager)
+              └─ EngramFontExportManager.exportAs (new in this requirement)
+                    ├─ backend reads (getGlyphMap/getGlyph/getFeatures/getSources)
+                    ├─ fontTools FontBuilder compilation (incl. FEA→GSUB)
+                    ├─ write to disk <project dir>/.exports/<ts>/<name>.<ext>
                     └─ return {"downloadPath": "/exports/<ts>/<name>.<ext>"}
-  ← 前端回调 [新增] window.open(downloadPath) 触发浏览器下载
+  ← frontend callback [new] window.open(downloadPath) triggers a browser download
 ```
 
-## 2. 接口契约
+## 2. Interface Contracts
 
-### ExportManager（实现 core/protocols.py:183 Protocol）
+### ExportManager (implements the core/protocols.py:183 Protocol)
 ```python
 class EngramFontExportManager:
     def getSupportedExportFormats(self) -> list[str]:
@@ -24,56 +24,56 @@ class EngramFontExportManager:
 
     async def exportAs(self, projectIdentifier: str, options: dict) -> dict:
         # options: {"format": "ttf"|"otf"|"woff2"}
-        # 返回: {"downloadPath": "/exports/<ts>/<safe-name>.<ext>"}
-        # 异常: ValueError("unknown format") / RuntimeError("compile failed: ...")
+        # returns: {"downloadPath": "/exports/<ts>/<safe-name>.<ext>"}
+        # exceptions: ValueError("unknown format") / RuntimeError("compile failed: ...")
 ```
 
-### 前端改动（view-controller.js:94，一行）
+### Frontend change (view-controller.js:94, one line)
 ```js
 (event) => this.fontController.exportAs({ format })
   .then((r) => r.downloadPath && window.open(r.downloadPath))
 ```
 
-## 3. 编译管线（demo-liga/compile-bridge.py 已验证路径的产品化）
-1. `glyphMap = await backend.getGlyphMap()`；glyphOrder = sorted(keys)
-2. 每字形：`getGlyph(name)` → 取 default layer StaticGlyph
-   - 轮廓：`sg.path.drawPoints(PointToSegmentPen(pen))`
-   - 组件展平：`sg.components` 逐个 → `getGlyph(comp.name)` 递归同上，
-     经 `TransformPointPen(PointToSegmentPen(pen), Transform().translate(tx, ty))`
-   - 度量：`xAdvance`
-3. `FontBuilder(upem, isTTF=fmt=="ttf")`：setupGlyphOrder/CharacterMap/Glyf/
+## 3. Compilation Pipeline (productization of the verified demo-liga/compile-bridge.py path)
+1. `glyphMap = await backend.getGlyphMap()`; glyphOrder = sorted(keys)
+2. Per glyph: `getGlyph(name)` → take the default layer StaticGlyph
+   - Outlines: `sg.path.drawPoints(PointToSegmentPen(pen))`
+   - Component flattening: `sg.components` one by one → `getGlyph(comp.name)` recursively as above,
+     via `TransformPointPen(PointToSegmentPen(pen), Transform().translate(tx, ty))`
+   - Metrics: `xAdvance`
+3. `FontBuilder(upem, isTTF=fmt=="ttf")`: setupGlyphOrder/CharacterMap/Glyf/
    HorizontalMetrics/HorizontalHeader(ascent,descent)/NameTable/OS2/Post
-4. FEA：`fea = await backend.getFeatures()` →
-   `addOpenTypeFeaturesFromString(fb.font, fea.text)`（GSUB；backtrack 类由
-   compile-bridge 的自动生成逻辑注入——所有 `*ance` 结尾字形）
-5. WOFF2：`fb.save(path)` 前 `fb.font.flavor = "woff2"`（依赖 brotli）
-6. OTF：`isTTF=False`（CFF 表由 fontTools 转换）
+4. FEA: `fea = await backend.getFeatures()` →
+   `addOpenTypeFeaturesFromString(fb.font, fea.text)` (GSUB; backtrack-class rules are injected
+   by compile-bridge's auto-generation logic — all glyphs ending in `*ance`)
+5. WOFF2: set `fb.font.flavor = "woff2"` before `fb.save(path)` (requires brotli)
+6. OTF: `isTTF=False` (CFF table converted by fontTools)
 
-## 4. 文件清单
-| 文件 | 操作 | 内容 |
+## 4. File Inventory
+| File | Operation | Content |
 |---|---|---|
-| `src/fontra/filesystem/exportmanager.py` | 新增 | EngramFontExportManager 类 |
-| `src/fontra/filesystem/projectmanager.py` | 修改 1 行 | filesystem 工厂构造 PM 时传入 exportManager |
-| `src-js/fontra-core/src/view-controller.js` | 修改 1 行 | export 回调加下载 |
-| `requirements.txt` | 修改 1 行 | + brotli |
+| `src/fontra/filesystem/exportmanager.py` | new | EngramFontExportManager class |
+| `src/fontra/filesystem/projectmanager.py` | 1-line change | pass exportManager when the filesystem factory constructs the PM |
+| `src-js/fontra-core/src/view-controller.js` | 1-line change | add download to the export callback |
+| `requirements.txt` | 1-line change | + brotli |
 
-## 5. 错误处理矩阵
-| 场景 | 行为 |
+## 5. Error Handling Matrix
+| Scenario | Behavior |
 |---|---|
-| 未知 format | 400 {"error": "unknown format"} |
-| 编译异常（字形数据损坏） | 500 {"error": "compile failed", "detail": 前 200 字符}，不落盘 |
-| exports 目录不可写 | 500 + 明确信息 |
-| 只读工程（TTF 直开） | exportAs 前检查 backend 可写性，返回 400 |
+| Unknown format | 400 {"error": "unknown format"} |
+| Compilation exception (corrupt glyph data) | 500 {"error": "compile failed", "detail": first 200 chars}, nothing written to disk |
+| exports directory not writable | 500 + explicit message |
+| Read-only project (TTF opened directly) | check backend writability before exportAs, return 400 |
 
-## 6. 安全
-- exports 目录路径由服务端生成（时间戳+工程名 sanitize），无用户可控路径穿越
-- 下载路由沿用 PM authorize（会话校验），不公开匿名访问
+## 6. Security
+- The exports directory path is generated server-side (timestamp + sanitized project name); no user-controllable path traversal
+- The download route reuses PM authorize (session validation); no anonymous public access
 
-## 7. 性能
-- 编译在 asyncio executor 中执行（`asyncio.to_thread`），不阻塞事件循环
-- 大字体（>5000 字形）首版接受秒级耗时；进度事件留 P2 接口
+## 7. Performance
+- Compilation runs in an asyncio executor (`asyncio.to_thread`) and does not block the event loop
+- Large fonts (>5000 glyphs): the first version accepts second-scale latency; progress events are left as a P2 interface
 
-## 8. ExportManager 实现骨架（Python，新增文件起点）
+## 8. ExportManager Implementation Skeleton (Python, starting point for the new file)
 ```python
 # src/fontra/filesystem/exportmanager.py
 import asyncio, time, uuid
@@ -98,33 +98,33 @@ class EngramFontExportManager:
         if fmt not in self.getSupportedExportFormats():
             raise ValueError(f"unknown format: {fmt}")
         backend = self.projectManager.getBackend(projectIdentifier)
-        # 编译在 executor 中执行，不阻塞事件循环
+        # compile in an executor so the event loop is not blocked
         outPath = await asyncio.to_thread(self._compileSync, backend, projectIdentifier, fmt)
-        return {"downloadPath": f"/exports/{outPath.name}"}  # 路由由 webRoutes 静态挂载
+        return {"downloadPath": f"/exports/{outPath.name}"}  # route mounted statically by webRoutes
 
     def _compileSync(self, backend, projectIdentifier, fmt):
-        # 逐字形展平绘制 + FontBuilder + feaLib（详见 demo-liga/compile-bridge.py 已验证实现）
-        ...  # 见 SPEC §3 管线 1-5 步
+        # per-glyph flattened drawing + FontBuilder + feaLib (see the verified implementation in demo-liga/compile-bridge.py)
+        ...  # see SPEC §3 pipeline steps 1-5
 ```
-- 静态路由挂载：server.py 的 staticContentHandler 惯例（exports 目录加 authorize 校验）
+- Static route mounting: the server.py staticContentHandler convention (add authorize validation to the exports directory)
 
-## 9. E2E 骨架（e2e/export.spec.mjs，Playwright）
+## 9. E2E Skeleton (e2e/export.spec.mjs, Playwright)
 ```js
 import { test, expect } from "@playwright/test";
-// playwright.config.mjs: testDir "../e2e"（相对 EngramFont 根）, use.baseURL 8800
-// 前置：venv fontra server 于 8800 + MicroTon.ttf 工程（见 VERIFICATION-ENV.md）
+// playwright.config.mjs: testDir "../e2e" (relative to the EngramFont root), use.baseURL 8800
+// Prerequisites: venv fontra server on 8800 + MicroTon.ttf project (see VERIFICATION-ENV.md)
 
 test("File menu shows Export As formats", async ({ page }) => {
   await page.goto("/editor.html?project=MicroTon.ttf");
-  // TODO: 打开 File 菜单 → 断言三项格式
+  // TODO: open the File menu → assert the three formats
 });
 test("export ttf downloads valid TTF", async ({ page }) => {
-  // TODO: 触发导出 → download 事件 → 文件头断言 00010000
-  // TODO: 进阶——下载后用 harfbuzzjs shape("ton") == 1 字形（连字进产物）
+  // TODO: trigger export → download event → assert file header 00010000
+  // TODO: advanced — after download, harfbuzzjs shape("ton") == 1 glyph (liga makes it into the artifact)
 });
 ```
 
-## 10. 导出对话框 UI 规范（1:1 复刻 meshfont，结构已从行为探针捕获）
+## 10. Export Dialog UI Spec (1:1 replica of meshfont; structure already captured from behavior probes)
 ```
 ┌ Export your font ────────────────────────────────┐
 │ Choose a name and file format.                   │
@@ -145,20 +145,21 @@ test("export ttf downloads valid TTF", async ({ page }) => {
 │           [Download proof] [Download font]       │
 └──────────────────────────────────────────────────┘
 ```
-- 字段/文案/顺序按 meshfont 行为探针记录 1:1（test-export-formats 会话）
-- 前端未捕获项：Download proof 的产物内容（proof sheet）——实现前需行为捕获
+- Fields/copy/order are 1:1 per the meshfont behavior probe records (test-export-formats session)
+- Not captured on the frontend: the artifact content of Download proof (proof sheet) — needs behavior capture before implementation
 
-## 11. A/B 对比验收（"一模一样"的工程化定义）
+## 11. A/B Comparison Acceptance (an engineering definition of "identical")
 ```
-同一工程（MicroTon：ton/dance/vance/lovely 连字）
-  ├─ meshfont (8124) 导出 → reference.ttf/.otf/.woff2
-  └─ EngramFont 导出   → candidate.ttf/.otf/.woff2
-对比（ttx -t glyf -t name -t GSUB -t kern 语义 diff）：
-  ├─ glyphOrder 完全一致
-  ├─ 每字形轮廓坐标一致（浮点容差 ≤1 单位；meshfont 与 EngramFont
-  │   编译器不同 → 允许曲线表示差异，渲染像素级对比兜底）
-  ├─ name 表（family/style/uniqueID）/OS2 权重一致
-  ├─ GSUB：liga 规则（ton/dance/vance/lovely）shaping 结果一致
-  └─ 安装测试：系统安装后任意软件打 "ton/advanced" 连字生效
+Same project (MicroTon: ton/dance/vance/lovely ligatures)
+  ├─ export from meshfont (8124) → reference.ttf/.otf/.woff2
+  └─ export from EngramFont      → candidate.ttf/.otf/.woff2
+Compare (ttx -t glyf -t name -t GSUB -t kern semantic diff):
+  ├─ glyphOrder fully identical
+  ├─ per-glyph outline coordinates identical (float tolerance ≤1 unit; meshfont and
+  │   EngramFont use different compilers → curve representation differences allowed,
+  │   with pixel-level rendered comparison as the fallback)
+  ├─ name table (family/style/uniqueID) / OS2 weights identical
+  ├─ GSUB: liga rules (ton/dance/vance/lovely) produce identical shaping results
+  └─ install test: after OS install, typing "ton/advanced" in any app applies the ligature
 ```
-- 二进制逐字节相同**不承诺**（编译器不同，含时间戳）；以 ttx 语义等价 + 渲染像素对比为准
+- Byte-for-byte binary identity is **not promised** (different compilers, includes timestamps); ttx semantic equivalence + rendered pixel comparison is the standard

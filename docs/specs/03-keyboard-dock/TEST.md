@@ -1,30 +1,30 @@
-# R3 · 测试验收与回归
+# R3 · Test Acceptance and Regression
 
-## 单元测试（vitest，src-js/views-editor/tests/）
-| ID | 用例 | 期望 |
+## Unit tests (vitest, src-js/views-editor/tests/)
+| ID | Case | Expected |
 |---|---|---|
-| UT3.1 | 键位表常量完整性 | 每键有 key/label/action |
-| UT3.2 | modifier 状态切换 | alt 态字母键输出大写 glyphName |
-| UT3.3 | 折叠持久化 | localStorage 读写 |
+| UT3.1 | keymap constant table completeness | every key has key/label/action |
+| UT3.2 | modifier state switching | in alt state letter keys output the uppercase glyphName |
+| UT3.3 | collapsed-state persistence | localStorage read/write |
 
-## E2E（e2e/keyboard-dock.spec.mjs）
-| ID | 步骤 | 期望 |
+## E2E (e2e/keyboard-dock.spec.mjs)
+| ID | Steps | Expected |
 |---|---|---|
-| E2E-1 | 打开编辑器 | Dock 可见，28+ 键 aria-label 齐全 |
-| E2E-2 | 点 g | selectedGlyph.glyphName=="g"，画布渲染 g |
-| E2E-3 | 点未创建字形 | 创建对话框出现 → 创建后画布显示 |
-| E2E-4 | DEL/space | characterLines 变化断言 |
-| E2E-5 | proof/edit 键 | canvasMode 切换断言（依赖 R5） |
-| E2E-6 | 折叠 → reload | 折叠态保持 |
-| E2E-7 | 暗色主题 | 截图对照（无硬编码色值） |
+| E2E-1 | open the editor | dock visible, 28+ keys with complete aria-labels |
+| E2E-2 | click g | selectedGlyph.glyphName=="g", canvas renders g |
+| E2E-3 | click an uncreated glyph | create dialog appears → after creating, canvas shows it |
+| E2E-4 | DEL/space | assert characterLines changes |
+| E2E-5 | proof/edit keys | canvasMode switch assertion (depends on R5) |
+| E2E-6 | collapse → reload | collapsed state persists |
+| E2E-7 | dark theme | screenshot comparison (no hardcoded colors) |
 
-## 回归矩阵
-| 项 | 断言 |
+## Regression matrix
+| Item | Assertion |
 |---|---|
-| 物理键盘快捷键 | 原有编辑/导航行为不变 |
-| 画布编辑 | Dock 展开时 pen/point 工具可正常作用于可视区 |
-| 性能 | Dock 静态渲染，canvas 帧率无回退 |
-| glyph-search 面板 | 与 Dock 并存不冲突 |
+| Physical keyboard shortcuts | existing editing/navigation behavior unchanged |
+| Canvas editing | with the dock expanded, pen/point tools still work on the visible area |
+| Performance | dock renders statically; no canvas framerate regression |
+| glyph-search panel | coexists with the dock without conflict |
 
-## 对照基准
-meshfont 行为基准与本地克隆启动见 [../VERIFICATION-ENV.md](../VERIFICATION-ENV.md)（端口 8124；连字/proof 行为逐项对照）。
+## Reference baseline
+For the meshfont behavior baseline and local clone startup, see [../VERIFICATION-ENV.md](../VERIFICATION-ENV.md) (port 8124; compare ligature/proof behavior item by item).

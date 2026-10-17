@@ -1,19 +1,19 @@
-# R9 · 任务分解（施工单）
+# R9 · Task Breakdown (Work Orders)
 
-## T9.1 · 状态机（edit-tools-pointer.js）
-`handleRectSelect` 三态（矩形 / 角度模式 / 定角缩放）；`makeSelectionParallelogram` +
-`offsetSelectionParallelogram` helper；`sceneController.selectionParallelogram` 存取。
-DoD：不碰 Ctrl 行为与旧实现一致。
+## T9.1 · State Machine (edit-tools-pointer.js)
+`handleRectSelect` three states (rectangle / angle mode / fixed-angle resize); `makeSelectionParallelogram` +
+`offsetSelectionParallelogram` helpers; `sceneController.selectionParallelogram` access.
+DoD: behavior without touching Ctrl matches the old implementation.
 
-## T9.2 · 命中测试（scene-model.js）
-`selectionAtParallelogram`（剪切空间法）+ `componentIntersectsShearedRect` +
-背景图 `paraGlyph` 分支；controlBounds 剪切预滤。
-DoD：四类元素命中与矩形模式口径逐条对齐。
+## T9.2 · Hit Testing (scene-model.js)
+`selectionAtParallelogram` (shear space method) + `componentIntersectsShearedRect` +
+background image `paraGlyph` branch; controlBounds shear prefilter.
+DoD: hit testing for the four element types aligns item by item with rectangle-mode semantics.
 
-## T9.3 · 绘制（visualization-layer-definitions.js）
-`fontra.rect.select` 平行四边形分支（黑实线 + 白虚线，复用 strokePolygon）。
-DoD：拖拽中虚线平行四边形正确渲染（亮/暗主题）。
+## T9.3 · Drawing (visualization-layer-definitions.js)
+`fontra.rect.select` parallelogram branch (black solid line + white dashed line, reusing strokePolygon).
+DoD: the dashed parallelogram renders correctly during dragging (light/dark themes).
 
-## T9.4 · 验证
-headless 交互测试（拖拽 + keyboard.down Control + 松开 + 交叉校验）+ 全量 e2e。
-DoD：TEST.md 全绿。
+## T9.4 · Verification
+Headless interaction tests (drag + keyboard.down Control + release + cross-check) + full e2e.
+DoD: TEST.md all green.

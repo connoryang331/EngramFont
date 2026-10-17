@@ -1,36 +1,36 @@
-# R10 · 起始点方向指示改为尖角箭头（> / <）· 需求文档（PRD）
+# R10 · Start Point Direction Indicator Changed to a Chevron (> / <) · Requirements Document (PRD)
 
-## 背景
+## Background
 
-画布上每个轮廓的**起始点**（contour start point，轮廓第 0 个点）会画一个方向指示：
-当前实现是**以起始点为圆心的圆弧**，圆弧的缺口朝向轮廓的下一个点方向
-（`fontra.startpoint.indicator` 图层，`START_POINT_ARC_GAP_ANGLE = 0.25π`）。
+The **start point** (contour start point, the 0th point of a contour) of every contour on the canvas gets a direction indicator:
+the current implementation is an **arc centered on the start point**, with the arc's gap facing the direction of the contour's next point
+(the `fontra.startpoint.indicator` layer, `START_POINT_ARC_GAP_ANGLE = 0.25π`).
 
-用户反馈（2026-10-14，附截图）：起始点被选中时呈"方框 + 圆弧"，方向语义不够醒目，
-希望把方向指示改成**尖角箭头**——沿轮廓前进方向指向右时是 `>`，指向左时是 `<`。
+User feedback (2026-10-14, with screenshot): when the start point is selected it shows as "square box + arc", which does not make the direction semantics prominent enough.
+The user wants the direction indicator changed to a **chevron** — showing `>` when the contour's forward direction points right, and `<` when it points left.
 
-## 目标
+## Goals
 
-1. 起始点方向指示由**圆弧**改为**尖角箭头**（chevron，`>` / `<` 形状）；
-2. 箭头**沿轮廓前进方向**摆放：顺时针/逆时针、任意曲线方向都正确
-   （即箭头指向轮廓的下一个点方向，与旧圆弧缺口方向一致）；
-3. 方向朝右 → `>`、朝左 → `<`，斜向则相应旋转；
-4. 颜色、线宽、可见性（仅编辑态）、随主题的表现与旧实现一致；
-5. 选中态（方框/眼形）与箭头共存不冲突。
+1. Change the start point direction indicator from an **arc** to a **chevron** (`>` / `<` shape);
+2. Place the chevron **along the contour's forward direction**: correct for clockwise/counterclockwise and any curve direction
+   (i.e., the chevron points toward the contour's next point, matching the old arc's gap direction);
+3. Facing right → `>`, facing left → `<`; diagonals are rotated accordingly;
+4. Color, stroke width, visibility (editing state only), and theme behavior stay identical to the old implementation;
+5. The selection state (square box / eye shape) coexists with the chevron without conflict.
 
-## 用户故事
+## User Story
 
-- 我点选一条轮廓的起始点 → 它上面显示一个 `>` 或 `<`，我一眼看出轮廓从哪开始、往哪走。
+- I click-select a contour's start point → a `>` or `<` appears on it, and I can tell at a glance where the contour starts and where it goes.
 
-## 非目标
+## Non-Goals
 
-- 改起始点本身的判定/重排逻辑（只改方向指示的**画法**）；
-- 多个起始点的排序可视化；箭头大小做成可配置项（沿用现有 `screenParameters`）。
+- Changing the start point's own detection/reordering logic (only the direction indicator's **drawing** changes);
+- Visualizing the ordering of multiple start points; making the chevron size configurable (keep using the existing `screenParameters`).
 
-## 验收标准（概览）
+## Acceptance Criteria (Overview)
 
-- 起始点处显示 chevron，不再显示圆弧；
-- 箭头朝向 = 轮廓前进方向（下一段切线方向），四个象限与斜向均正确；
-- 左右方向分别呈 `>` / `<`（含镜像关系正确，非简单平移）；
-- 亮/暗主题下颜色与旧实现一致；非编辑态不显示；
-- 不影响其余图层与交互（e2e 全量回归通过）。
+- A chevron is shown at the start point; the arc is no longer shown;
+- The chevron's orientation = the contour's forward direction (the next segment's tangent direction), correct in all four quadrants and on diagonals;
+- Right and left directions render as `>` / `<` respectively (including a correct mirrored relationship, not a simple translation);
+- Colors match the old implementation in light/dark themes; not shown outside the editing state;
+- No impact on the remaining layers and interactions (full e2e regression passes).

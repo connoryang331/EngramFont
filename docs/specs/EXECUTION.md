@@ -1,69 +1,69 @@
-# EngramFont · 过夜执行手册（EXECUTION RUNBOOK）
+# EngramFont · Overnight Execution Runbook (EXECUTION RUNBOOK)
 
-> 本文是执行会话的主入口。治理枢纽：[../../AGENTS.md](../../AGENTS.md)（每个 agent 必读——
-> 需求执行顺序 / 测试标准 / 判例速查 / 硬约束）；文档地图：[../README.md](../README.md)。
-> 配合：README.md（需求索引）、VERIFICATION-ENV.md（对照环境）、
-> 各需求 SPEC/TASKS/TEST、SYNC.md（同步）、ENGRAM-CHANGES.md（贴片台账）。
+> This document is the main entry point for execution sessions. Governance hub: [../../AGENTS.md](../../AGENTS.md) (required reading for every agent —
+> requirement execution order / test standards / precedent quick reference / hard constraints); document map: [../README.md](../README.md).
+> Works with: README.md (requirement index), VERIFICATION-ENV.md (comparison environment),
+> each requirement's SPEC/TASKS/TEST, SYNC.md (sync), ENGRAM-CHANGES.md (patch ledger).
 
-## 0. 环境自检（执行前 5 分钟）
+## 0. Environment Self-Check (5 minutes before execution)
 ```bash
 cd E:\engram-dev\EngramFont
-git status                        # 干净、位于 engramfont-main
+git status                        # clean, on engramfont-main
 venv\Scripts\python -c "import fontTools; print('fontTools ok')"
 node --version                    # ≥ 24
-ls docs\specs\                    # 9 个需求目录 + EXECUTION.md
-netstat -ano | findstr :8800      # 无占用（有则先停）
+ls docs\specs\                    # 9 requirement directories + EXECUTION.md
+netstat -ano | findstr :8800      # nothing listening (stop it first if occupied)
 ```
-对照环境：`E:\visee-template\meshfont-clone` → `node serve.mjs`（8124，详见 VERIFICATION-ENV.md）
+Comparison environment: `E:\visee-template\meshfont-clone` → `node serve.mjs` (8124; see VERIFICATION-ENV.md for details)
 
-## 1. 执行顺序与提交点
+## 1. Execution Order and Commit Points
 ```
-R1 导出（T1.1→T1.5）     gate: E2E 导出三格式 + ton 连字进产物
+R1 Export (T1.1→T1.5)     gate: E2E exports three formats + the ton ligature makes it into the artifact
   ↓ commit "R1: ..."
-R2 导入（T2.1→T2.4）     gate: E2E 导入 Inter → 编辑 → 保存
+R2 Import (T2.1→T2.4)     gate: E2E imports Inter → edit → save
   ↓ commit "R2: ..."
-R5 Proof/Edit（T5.1→T5.4）gate: E2E 模式切换 + 导线宽度断言
+R5 Proof/Edit (T5.1→T5.4) gate: E2E mode switching + guide width assertion
   ↓ commit "R5: ..."
-R3 键盘 Dock（T3.1→T3.6）gate: E2E 键盘导航 + 模式键
+R3 Keyboard Dock (T3.1→T3.6) gate: E2E keyboard navigation + mode keys
   ↓ commit "R3: ..."
-R7 背景图增强（T7.1→T7.4）   gate: E2E Edit image 激活 + Replace 换图
+R7 Background image enhancements (T7.1→T7.4)   gate: E2E Edit image activation + Replace swaps the image
   ↓ commit "R7: ..."
-R4 模板流（T4.1→T4.4）   gate: E2E 新建→模板→编辑
+R4 Template flow (T4.1→T4.4)   gate: E2E new font → template → edit
   ↓ commit "R4: ..."
-最终：push origin engramfont-main + 更新 ENGRAM-CHANGES.md 贴片台账
+Finally: push origin engramfont-main + update the ENGRAM-CHANGES.md patch ledger
 ```
 
-## 2. 每个任务的执行模板
-1. 读对应 SPEC 章节 + TASKS 条目（涉及文件/步骤/DoD）
-2. 实现（贴片纪律：新增文件优先；原文件单行改动）
-3. DoD 验证（对应 TEST.md 用例）
-4. `npm run bundle`（动了前端源码时）+ 重启服务（**用 `start-EngramFont.bat`**，步骤见
-   [AGENTS.md](../../AGENTS.md) 的「重启服务器」节：先停旧实例 → 先构建 → 跑脚本 → 验 `/serverinfo`）
-5. E2E/手动验收 → git commit（消息前缀 "R<n>.T<x.y>:"）
+## 2. Per-Task Execution Template
+1. Read the corresponding SPEC section + TASKS entry (files involved / steps / DoD)
+2. Implement (patch discipline: prefer new files; single-line changes to existing files)
+3. Verify the DoD (the corresponding TEST.md cases)
+4. `npm run bundle` (when frontend source was touched) + restart the service (**use `start-EngramFont.bat`**; steps in
+   the "Restarting the server" section of [AGENTS.md](../../AGENTS.md): stop the old instance first → build first → run the script → verify `/serverinfo`)
+5. E2E/manual acceptance → git commit (message prefix "R<n>.T<x.y>:")
 
-## 3. 接线速查（改代码时对照）
-| 需要做什么 | 去哪里接 |
+## 3. Wiring Quick Reference (consult while changing code)
+| What needs doing | Where to wire it |
 |---|---|
-| 切换当前字形 | `sceneSettings.selectedGlyph = {...sel, glyphName, isEditing:true}`（editor.js:864 同款）|
-| 字形缺失→创建 | editor.js:860 起的对话框流程（抽成函数复用）|
-| 改文本 | `sceneSettingsController.model.characterLines`（行×字符数组）|
-| 缩放复位 | editor.js `_zoom` / viewBox 直设（:3420）|
-| 全宽导线 | visualization-layer-definitions.js `fontra.lineMetrics` 层宽度参数化 |
-| 导出菜单亮起 | ExportManager 注入（projectmanager.py:63 参数）|
-| 新 webAPI 端点 | projectManager.setupWebRoutes(server) 内挂载（server.py:63 惯例）|
-| 持久化键 | localStorage 前缀 `engramfont-`（theme-settings.js 模式）|
-| UI 零件 | fontra-webcomponents：modal-dialog/menu-panel/glyph-cell-view/grouped-settings/icon-button |
+| Switch the current glyph | `sceneSettings.selectedGlyph = {...sel, glyphName, isEditing:true}` (same as editor.js:864) |
+| Glyph missing → create | The dialog flow starting at editor.js:860 (extract into a function and reuse) |
+| Change text | `sceneSettingsController.model.characterLines` (array of lines × characters) |
+| Reset zoom | editor.js `_zoom` / set viewBox directly (:3420) |
+| Full-width guides | Width-parameterize the `fontra.lineMetrics` layer in visualization-layer-definitions.js |
+| Light up the export menu | ExportManager injection (projectmanager.py:63 parameter) |
+| New webAPI endpoint | Mount inside projectManager.setupWebRoutes(server) (server.py:63 convention) |
+| Persistence keys | localStorage prefix `engramfont-` (theme-settings.js pattern) |
+| UI parts | fontra-webcomponents: modal-dialog/menu-panel/glyph-cell-view/grouped-settings/icon-button |
 
-## 4. 红线
-- 改 Untitled.fontra 前停 8800 服务（双写互踩）
-- 不碰 canvas-controller.js / scene-model.js 核心绘制逻辑（除非 SPEC 明确要求）
-- 不抄 meshfont 代码（闭源）；行为对照即可
-- 每完成一个 T：commit（小步提交，冲突可回退）
+## 4. Red Lines
+- Stop the 8800 service before modifying Untitled.fontra (concurrent writes stomp each other)
+- Do not touch canvas-controller.js / scene-model.js core drawing logic (unless the SPEC explicitly requires it)
+- Do not copy meshfont code (closed source); comparing behavior is enough
+- Commit after finishing each T (small steps, so conflicts can be rolled back)
 
-## 5. 卡住时的降级路径
-| 问题 | 降级 |
+## 5. Fallback Paths When Stuck
+| Problem | Fallback |
 |---|---|
-| feaLib 编译报错（FEA 语法） | 检查 glyph 名存在性（compile-bridge 的 auto class 逻辑）|
-| calt/liga 规则不触发 | 检查 lookup 顺序（规则在 liga 内的先后=优先级，见 demo-liga 教训）|
-| opentype.js 渲染异常 | 改用 glyph-paths.json（fontTools SVGPathPen 已导出）|
-| selectedGlyph 结构不符 | 打印 sceneSettings.selectedGlyph 现值对齐（结构可能随版本微变）|
+| feaLib compile errors (FEA syntax) | Check glyph name existence (compile-bridge's auto class logic) |
+| calt/liga rules not firing | Check lookup order (rule order within liga = priority; see the demo-liga lesson) |
+| opentype.js rendering issues | Switch to glyph-paths.json (already exported by fontTools SVGPathPen) |
+| selectedGlyph structure mismatch | Print the current sceneSettings.selectedGlyph value and align with it (the structure may vary slightly between versions) |

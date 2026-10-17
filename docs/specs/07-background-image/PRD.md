@@ -1,30 +1,30 @@
-# R7 · 背景图控制增强 · 需求文档（PRD）
+# R7 · Background Image Control Enhancement · Requirements Document (PRD)
 
-## 背景
-Fontra 已有背景图全套底层能力（Add Background Image / putBackgroundImage /
-selection backgroundImage/0 / selection-info 的 Opacity+Colorize+Transformation 滑块 /
-fontra.background-image 可视化层）。
+## Background
+Fontra already has a full set of underlying background image capabilities (Add Background Image /
+putBackgroundImage / selection backgroundImage/0 / the Opacity+Colorize+Transformation sliders in
+selection-info / the fontra.background-image visualization layer).
 
-**但交互模型与 meshfont 不同**：
-- Fontra：全局 Unlock/Lock Background Images 菜单动作（手动解锁→选中→改→手动锁回）
-- meshfont：工具栏 **Edit image 按钮**（字形有背景图时出现）→ 点击激活图片（弹控制菜单：
-  透明度滑块/replace/remove）→ **不点就自动锁定**（无全局开关，上下文自动）
+**But the interaction model differs from meshfont**:
+- Fontra: a global Unlock/Lock Background Images menu action (manually unlock → select → edit → manually lock back)
+- meshfont: a toolbar **Edit image button** (appears when the glyph has a background image) → click to activate the image (a control menu pops up:
+  opacity slider / replace / remove) → **auto-locks when you click away** (no global switch; contextual and automatic)
 
-## 目标（学习 meshfont 行为）
-1. **Edit image 上下文按钮**：当前字形有背景图时出现，点击 = 激活图片编辑上下文
-   （解锁 + 选中 backgroundImage/0 + selection-info 出现 Opacity/Colorize/Transformation + Replace 按钮）
-2. **自动锁定**：选中离开背景图（点击画布其它处/切换工具）→ 自动 re-lock
-3. **Replace 按钮**：换图保留 transformation/opacity/colorize（R7 原需求保留）
-4. 移除全局 Unlock/Lock Background Images 菜单项（被上下文行为取代）
+## Goals (learn from meshfont behavior)
+1. **Edit image context button**: appears when the current glyph has a background image; clicking = activating the image editing context
+   (unlock + select backgroundImage/0 + selection-info shows Opacity/Colorize/Transformation + a Replace button)
+2. **Auto-lock**: when the selection leaves the background image (clicking elsewhere on the canvas / switching tools) → automatically re-lock
+3. **Replace button**: replacing the image preserves transformation/opacity/colorize (original R7 requirement kept)
+4. Remove the global Unlock/Lock Background Images menu item (superseded by contextual behavior)
 
-## 用户故事
-- 我给字形加了背景图 → 工具栏出现 Edit image → 点击 → 图片激活（控制菜单弹出）→
-  调透明度/换图/移动 → 点画布其它处 → 自动锁定回到编辑
+## User Story
+- I add a background image to a glyph → the toolbar shows Edit image → click → the image activates (control menu pops up) →
+  adjust opacity / replace image / move → click elsewhere on the canvas → auto-lock returns to editing
 
-## 非目标
-- 自动描图（Trace 是手动描）；多张背景图管理
+## Non-Goals
+- Auto-tracing (Trace is manual tracing); managing multiple background images
 
-## 验收标准（概览）
-- Edit image 按钮上下文出现/消失
-- 激活→滑块+Replace 可用；失焦→自动锁定
-- 全局 Unlock/Lock 菜单项移除，行为由上下文接管
+## Acceptance Criteria (Overview)
+- The Edit image button appears/disappears contextually
+- Activated → sliders + Replace available; on blur → auto-lock
+- The global Unlock/Lock menu item is removed; behavior is taken over by the context

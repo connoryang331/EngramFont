@@ -1,29 +1,29 @@
-# R11 · 任务分解（施工单）
+# R11 · Task Breakdown (Work Order)
 
-## T11.1 · 数学核心
-推导 G2 条件并实现 `path-curvature.js`（闭式解 + 直线↔曲线 + 可行性判定 + 空间判定）。
-DoD：自带 138 条断言全过，且**本仓独立复跑确认**（不轻信子任务报告）。
+## T11.1 · Math Core
+Derive the G2 condition and implement `path-curvature.js` (closed-form solution + line↔curve + feasibility check + room check).
+DoD: the bundled 138 assertions all pass, and **this repo independently re-runs and confirms them** (never take the subtask report on faith).
 
-## T11.2 · 数据层
-`SQUIRCLE_FLAG = 0x10` + `getPoint`/`setPointType`/`packPointType`/`packContour` 支持。
-DoD：flag 序列化往返不丢；squircle 点同时是 smooth。
+## T11.2 · Data Layer
+`SQUIRCLE_FLAG = 0x10` + support in `getPoint`/`setPointType`/`packPointType`/`packContour`.
+DoD: the flag survives a serialization round trip; a squircle point is also smooth.
 
-## T11.3 · 几何适配
-`collectSegmentSide` + `applySquircleAtPoint` + `makeSquircle` + `advanceNodeKind`。
-DoD：曲线↔曲线曲率跳变降到机器精度；直线侧不插手柄；不可行时不置标志。
+## T11.3 · Geometry Adapter
+`collectSegmentSide` + `applySquircleAtPoint` + `makeSquircle` + `advanceNodeKind`.
+DoD: curve↔curve curvature jump drops to machine precision; no handle inserted on the line side; the flag is not set when infeasible.
 
-## T11.4 · 渲染层
-`squirclePath` + `fill/strokeSquircleNode` + 三图层接线 + 独立配色。
-DoD：画布上 `lineTo` ×72 证明超椭圆在绘制；**与方块共用同一尺寸盒**。
+## T11.4 · Rendering Layer
+`squirclePath` + `fill/strokeSquircleNode` + wiring of the three layers + dedicated color.
+DoD: `lineTo` ×72 on the canvas proves the superellipse is being drawn; **shares the same size box as the square**.
 
-## T11.5 · 设置层
-`nodeSquircleColor` + `nodeSquircleExponent`（默认 3）+ 面板新行 + `.swatch-squircle`。
-DoD：指数可调、持久化、**不随缩放变化**；色块与其它色块同尺寸。
+## T11.5 · Settings Layer
+`nodeSquircleColor` + `nodeSquircleExponent` (default 3) + new panel row + `.swatch-squircle`.
+DoD: the exponent is adjustable, persisted, and **does not change with zoom**; the swatch is the same size as the other swatches.
 
-## T11.6 · 交互
-普通双击三档循环 + Shift+双击直达 + 撤销标签（14 语言）。
-DoD：两种手势的**全部切换序列**都有断言（状态位 + 几何双重校验）。
+## T11.6 · Interaction
+Plain double-click three-tier cycle + Shift+double-click direct + undo label (14 languages).
+DoD: **every transition sequence** of both gestures has assertions (state flags + geometry, both verified).
 
-## T11.7 · 验证与文档
-单元测试、8801 画布/面板核实、e2e 全量、ADR-0009、台账、AGENTS 判例速查。
-DoD：全部通过并记账。
+## T11.7 · Verification and Documentation
+Unit tests, 8801 canvas/panel checks, full e2e, ADR-0009, ledger, AGENTS precedent quick reference.
+DoD: everything passes and is recorded.

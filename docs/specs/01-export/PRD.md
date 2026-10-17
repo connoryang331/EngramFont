@@ -1,31 +1,31 @@
-# R1 · 浏览器内导出字体 · 需求文档（PRD）
+# R1 · In-Browser Font Export · Requirements Document (PRD)
 
-## 背景
-Fontra 的导出机制是完整的，但开源仓库**没有 ExportManager 的实现**，导致
-`fontra --launch filesystem` 模式下 File 菜单里 Export As 完全缺失。
+## Background
+Fontra's export mechanism is complete, but the open-source repository **has no ExportManager implementation**, so in
+`fontra --launch filesystem` mode the Export As entry in the File menu is entirely missing.
 
-### 根因链（源码实证）
-1. `core/protocols.py:183` — `ExportManager` 只是 Protocol（`exportAs` + `getSupportedExportFormats` 两个方法），仓库内无任何实现类
-2. `filesystem/projectmanager.py:63` — `FileSystemProjectManager(exportManager=None)`，filesystem 命令创建 PM 时不传
-3. `core/fonthandler.py:175` — 仅当 `exportManager is not None` 时 `projectManagerFeatures["export-as"]` 才有值
-4. `fontra-menus.js:126` — 前端 File 菜单按 `backendInfo.projectManagerFeatures["export-as"]` 条件渲染，空 → 菜单无导出项
-5. `view-controller.js:88` — 有导出 action 也会注册并调用 `fontController.exportAs({format})`，但**前端拿到结果后没有下载逻辑**（需小补）
+### Root-cause chain (verified against source)
+1. `core/protocols.py:183` — `ExportManager` is only a Protocol (`exportAs` + `getSupportedExportFormats`, two methods); the repo contains no implementing class
+2. `filesystem/projectmanager.py:63` — `FileSystemProjectManager(exportManager=None)`; the filesystem command does not pass one when constructing the PM
+3. `core/fonthandler.py:175` — `projectManagerFeatures["export-as"]` only gets a value when `exportManager is not None`
+4. `fontra-menus.js:126` — the frontend File menu renders conditionally on `backendInfo.projectManagerFeatures["export-as"]`; empty → the menu has no export item
+5. `view-controller.js:88` — the export action is registered and calls `fontController.exportAs({format})`, but **the frontend has no download logic after receiving the result** (needs a small patch)
 
-## 目标
-- filesystem 模式下 File → Export As 菜单出现并可导出
-- 支持格式：TTF / OTF / WOFF2（首版）；家族导出（多 source → Light/Regular/Bold）；proof 打样页（P2）
-- 导出的字体包含全部字形轮廓 + FEA 编译产物（GSUB 等）+ 字距
+## Goals
+- In filesystem mode, a File → Export As menu appears and can export
+- Supported formats: TTF / OTF / WOFF2 (first version); family export (multiple sources → Light/Regular/Bold); proof sheet (P2)
+- Exported fonts contain all glyph outlines + FEA compilation output (GSUB etc.) + kerning
 
-## 用户故事
-- 作为字体设计者，我在本地 EngramFont 里编辑字形后，直接 File → Export As → TTF，浏览器下载成品字体文件
-- 作为拥有多 source（字重）工程的设计者，我可以一次导出整个家族
+## User stories
+- As a font designer, after editing glyphs in local EngramFont I can go File → Export As → TTF and the browser downloads the finished font file
+- As a designer with a multi-source (weight) project, I can export the whole family in one go
 
-## 非目标
-- 云端分享/发布（另立项）
-- hinting（暂不做）
-- 可变字体导出（P2，designspace 工程才有意义）
+## Non-goals
+- Cloud sharing/publishing (separate project)
+- hinting (not for now)
+- Variable font export (P2, only meaningful for designspace projects)
 
-## 验收标准（概览）
-- 菜单出现且列出 ttf/otf/woff2
-- 导出产物：字形数正确、轮廓与编辑器一致、GSUB（liga 等）存在、可在系统安装并生效
-- 导出不阻塞编辑（异步）、有进度/完成反馈
+## Acceptance criteria (overview)
+- Menu appears and lists ttf/otf/woff2
+- Export artifacts: correct glyph count, outlines match the editor, GSUB (liga etc.) present, installs at the OS level and takes effect
+- Export does not block editing (async), with progress/completion feedback

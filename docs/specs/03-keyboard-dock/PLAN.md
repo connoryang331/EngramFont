@@ -1,6 +1,6 @@
-# R3 · 计划
+# R3 · Plan
 
-- M1（T3.1-T3.2）：Dock 出现 + 字母导航可用（核心价值闭环）
-- M2（T3.3-T3.6）：特殊键/主题/无障碍补齐
-- 依赖：T3.4 模式键依赖 R5.T5.1（canvasMode 状态机）
-- 回滚：新文件为主，editor.js 一处注册，revert 单提交
+- M1 (T3.1-T3.2): dock appears + letter navigation works (core value loop)
+- M2 (T3.3-T3.6): special keys/theme/accessibility completion
+- Dependency: T3.4 mode keys depend on R5.T5.1 (canvasMode state machine)
+- Rollback: mostly new files plus one registration in editor.js; a single-commit revert

@@ -1,106 +1,106 @@
-# R11 · 技术规范（SPEC）
+# R11 · Technical Specification (SPEC)
 
-## 数学核心（`src-js/fontra-core/src/path-curvature.js`，新增文件）
+## Math Core (`src-js/fontra-core/src/path-curvature.js`, new file)
 
-三次贝塞尔 `B(t)` 的端点导数：
+Endpoint derivatives of the cubic Bézier `B(t)`:
 
 ```
 B'(0)  = 3(P1-P0)        B''(0) = 6(P2-2P1+P0)
 B'(1)  = 3(P3-P2)        B''(1) = 6(P3-2P2+P1)
 ```
 
-带符号曲率 `k = (v × a)/|v|³`；**曲率向量** `κ⃗ = k · leftNormal(v)`（指向曲率中心，
-不是沿切线——沿切线算出来的东西跨节点不可比）。
+Signed curvature `k = (v × a)/|v|³`; the **curvature vector** `κ⃗ = k · leftNormal(v)` (it points at the center of curvature,
+not along the tangent — anything computed along the tangent is not comparable across nodes).
 
-G2 ⟺ `κ⃗_left == κ⃗_right`。把两侧都朝**离开节点**的方向取向，G1 成立时切线分量已相等，
-于是 G2 退化为一个标量方程 `k_L = k_R`。
+G2 ⟺ `κ⃗_left == κ⃗_right`. Orient both sides **away from the node**; when G1 holds, the tangential components are already equal,
+so G2 reduces to the scalar equation `k_L = k_R`.
 
-**闭式解**：令 `X = P - a·n`、`Y = P + b·n`（`n` = 单位**前进**切线，`a,b` = 两侧手柄长）：
+**Closed-form solution**: let `X = P - a·n`, `Y = P + b·n` (`n` = the unit **forward** tangent, `a,b` = the handle lengths on the two sides):
 
 ```
 k_L = (2/3)·cross(n, hA-P)/a²      k_R = (2/3)·cross(n, hC-P)/b²
 G2  ⟺  b/a = sqrt(C_/A_),   A_ = cross(n,hA-P),  C_ = cross(n,hC-P)
 ```
 
-- **尺度自由**：曲率 ∝ 1/a²，G2 只定**比值**；实现取 `a+b` = 原手柄长之和（改动最小）。
-- **可行性**：要求 `A_·C_ > 0`，即两侧**同向弯曲**；异向弯曲（拐点）时 G2 在 G1 下
-  **数学不可能**，返回 `infeasible`。
-- **"节点移动"**：本解**不需要**移动节点（Glyphs 另会重优化切线方向，属可选增量）。
+- **Scale freedom**: curvature ∝ 1/a², so G2 only fixes the **ratio**; the implementation takes `a+b` = the sum of the original handle lengths (the minimal change).
+- **Feasibility**: requires `A_·C_ > 0`, i.e., both sides **bend in the same direction**; with opposite bending (an inflection), G2 under G1 is
+  **mathematically impossible** — return `infeasible`.
+- **"Node movement"**: this solution does **not** need to move the node (Glyphs additionally re-optimizes the tangent direction, an optional increment).
 
-**直线↔曲线**：直线曲率恒为 0，故 G2 要求曲线侧在节点处曲率也为 0 ⟺
+**Line↔curve**: a line's curvature is always 0, so G2 requires the curve side to also have zero curvature at the node ⟺
 
 ```
 line→curve:  curve[1] = (curve[0] + curve[2]) / 2
 curve→line:  curve[2] = (curve[3] + curve[1]) / 2
 ```
 
-⚠ **关键结论**：**不能给直线侧"倒圆角"**——在直线端点强制零曲率会把圆角塌回直线。
-零曲率必须落在**曲线侧**。另有 `lineToCurveRoom()` 报告"直线是否够长"。
+⚠ **Key conclusion**: **the line side must not be "rounded"** — forcing zero curvature at the line's endpoint would collapse the rounding back into the line.
+The zero curvature must land on the **curve side**. `lineToCurveRoom()` additionally reports "whether the line is long enough".
 
-> 该模块由独立子任务推导实现，自带 138 条断言；本仓**另行独立复跑确认通过**后才接入。
+> This module was derived and implemented by an independent subtask and ships with 138 assertions; it was wired in only after this repo **independently re-ran it and confirmed it passes**.
 
-## 数据层（`src-js/fontra-core/src/var-path.js`）
+## Data Layer (`src-js/fontra-core/src/var-path.js`)
 
-- 新增 `static SQUIRCLE_FLAG = 0x10`，位于 `POINT_TYPE_MASK(0x07)` **之外**
-  （与 `SMOOTH_FLAG = 0x08` 同构：是 on-curve 的注解，不是曲线类型）；
-- squircle 点**同时**带 `SMOOTH_FLAG`（G1 蕴含于 G2），`getPoint()` 优先判
-  `SQUIRCLE_FLAG`，返回 `{smooth: true, squircle: true}`；
-- `setPointType(idx, type, smooth, squircle)`、`packPointType(type, smooth, squircle)`、
-  `packContour` 同步支持。
+- Add `static SQUIRCLE_FLAG = 0x10`, **outside** `POINT_TYPE_MASK(0x07)`
+  (isomorphic to `SMOOTH_FLAG = 0x08`: an annotation on an on-curve point, not a curve type);
+- A squircle point **also** carries `SMOOTH_FLAG` (G1 is implied by G2); `getPoint()` checks
+  `SQUIRCLE_FLAG` first and returns `{smooth: true, squircle: true}`;
+- `setPointType(idx, type, smooth, squircle)`, `packPointType(type, smooth, squircle)`, and
+  `packContour` are updated to support it as well.
 
-## 几何层（`src-js/fontra-core/src/path-functions.js`）
+## Geometry Layer (`src-js/fontra-core/src/path-functions.js`)
 
-- `collectSegmentSide(path, pointIndex, direction)`：把路径点翻译成求解器的
-  `[far, farHandle, nodeHandle, node]` 段模型。一侧可有 0/1/2 个 off-curve；
-  缺手柄时按 1/3 处补（使该侧成为直线，曲率 0 —— 正是求解器要的 "line" 情形）。
-- `applySquircleAtPoint(path, pointIndex)`：调 `makeSuperSmooth` 求解并回写。
-  - 回写**不取整**：整数取整会破坏解（实测曲率跳变 8.674e-19 → 6.4e-5），
-    而 Fontra 原生支持小数坐标（拖拽节点本就产生小数）。
-  - **插入限制**：只在**曲线侧**插入缺失手柄。直线侧插手柄会弯掉本应笔直的段、
-    并把节点挤走（实测节点位移、节点变成手柄）。
-- `makeSquircle(path, pointIndices, force)`：**升格**语义（不是开关）——已是 squircle 的点原样不动（幂等）；
-  - 关：只清 `SQUIRCLE_FLAG`（保留 smooth）；
-  - 开：**先求解、成功才落标志**。不可行时**还原点类型与几何**——
-    否则会显示超椭圆图标而几何并非 G2，等于图标撒谎；
-  - 多点时按**绝对索引降序**处理（插入会使后面的索引偏移）。
+- `collectSegmentSide(path, pointIndex, direction)`: translates path points into the solver's
+  `[far, farHandle, nodeHandle, node]` segment model. One side may have 0/1/2 off-curve points;
+  a missing handle is synthesized at the 1/3 position (making that side a line with curvature 0 — exactly the solver's "line" case).
+- `applySquircleAtPoint(path, pointIndex)`: calls `makeSuperSmooth` to solve and writes the result back.
+  - The write-back does **not round**: integer rounding breaks the solution (measured curvature jump went 8.674e-19 → 6.4e-5),
+    while Fontra natively supports decimal coordinates (dragging nodes already produces decimals).
+  - **Insertion restriction**: missing handles are inserted only on the **curve side**. Inserting a handle on the line side bends what should be a straight segment
+    and squeezes the node away (observed: node displacement, node turning into a handle).
+- `makeSquircle(path, pointIndices, force)`: **upgrade** semantics (not a toggle) — points that are already squircle are left untouched (idempotent);
+  - Off: only clears `SQUIRCLE_FLAG` (smooth is kept);
+  - On: **solve first; set the flag only on success**. When infeasible, **restore the point type and geometry** —
+    otherwise the superellipse icon would show while the geometry is not G2, i.e., the icon would lie;
+  - With multiple points, process them in **descending absolute index order** (insertions shift later indices).
 
-## 渲染层（`src-js/views-editor/src/visualization-layer-definitions.js`）
+## Rendering Layer (`src-js/views-editor/src/visualization-layer-definitions.js`)
 
-- `squircleHalfExtent(nodeSize) => nodeSize / 2`：超椭圆**内接于角点方块的同尺寸盒**
-  （a squircle is a rounded square）。**不用等面积**——等面积会让它在 n=3 时只占盒子的
-  58%，比方块明显小一圈（用户当场指出）。
-- `squirclePath(context, pt, nodeSize, exponent)`：`|x/a|^n + |y/b|^n = 1` 的
-  参数化折线（72 段），`x = sign(cos t)·|cos t|^(2/n)`；
-- `fillSquircleNode` / `strokeSquircleNode` 导出；`fillNode`/`strokeNode` 在
-  `pt.squircle` 分支调用，颜色用 `squircleColor`（`nodeTypeColors` 新增，亮 #D6336C / 暗 #F472B6（玫红，与 smooth 的紫、corner 的琥珀、handle 的灰都拉开色相））；
-- 指数经 `glyphParameters` 下发，**不走 `screenParameters`**——后者会被
-  `buildLayers()` 按缩放因子整体相乘，指数会随缩放变形（实测 3 → 3.92 @1.31x）。
+- `squircleHalfExtent(nodeSize) => nodeSize / 2`: the superellipse is **inscribed in the same-size box as the corner square**
+  (a squircle is a rounded square). **Do not use equal area** — equal area would make it occupy only 58% of the box at n=3,
+  visibly a size smaller than the square (the user pointed this out on the spot).
+- `squirclePath(context, pt, nodeSize, exponent)`: a parametric polyline (72 segments) of `|x/a|^n + |y/b|^n = 1`,
+  `x = sign(cos t)·|cos t|^(2/n)`;
+- `fillSquircleNode` / `strokeSquircleNode` are exported; `fillNode`/`strokeNode` call them in the
+  `pt.squircle` branch, with color from `squircleColor` (newly added to `nodeTypeColors`; light #D6336C / dark #F472B6 (rose, with its hue clearly separated from smooth's purple, corner's amber, and handle's gray));
+- The exponent is passed down via `glyphParameters`, **not through `screenParameters`** — the latter gets
+  multiplied wholesale by the zoom factor in `buildLayers()`, which would distort the exponent as the view zooms (measured 3 → 3.92 @1.31x).
 
-## 设置（`theme-settings.js` + `panel-theme-settings.js` + `simple-settings.js`）
+## Settings (`theme-settings.js` + `panel-theme-settings.js` + `simple-settings.js`)
 
-- 模型键：`nodeSquircleColor`（默认 `#D6336C`）、`nodeSquircleExponent`（默认 **3**）；
-- 面板新增一行 `Squircle node` = 色块 + 指数滑轮（1–8，步长 1）；
-  **无独立 size**（沿用统一 `nodeSize`）；
-- `.swatch-squircle` 的 `clip-path` 由 `squircleClipPath(exponent)` **内联生成**
-  （指数可变，CSS 静态多边形做不到），与画布同 72 步采样、**填满 1.7em 盒子**，
-  与方形/圆形/眼形色块同尺寸。
+- Model keys: `nodeSquircleColor` (default `#D6336C`), `nodeSquircleExponent` (default **3**);
+- The panel gains a new row `Squircle node` = swatch + exponent dial (1–8, step 1);
+  **no separate size** (reuses the unified `nodeSize`);
+- The `clip-path` of `.swatch-squircle` is **generated inline** by `squircleClipPath(exponent)`
+  (the exponent is variable, which a static CSS polygon cannot express), sampled in the same 72 steps as the canvas and **filling the 1.7em box**,
+  the same size as the square/circle/eye-shape swatches.
 
-## 交互（`edit-tools-pointer.js`）
+## Interaction (`edit-tools-pointer.js`)
 
-**普通双击 = 三档循环** `corner → smooth → squircle → corner`（`advanceNodeKind`）；**Shift+双击 = 直达 squircle**，在 squircle 上幂等（不降级）；降格走普通双击（`squircle --dbl--> corner --dbl--> smooth`）。注意普通双击**不再自逆**，且 smooth→squircle 会真的弯轮廓；
-撤销标签 `edit-tools-pointer.undo.toggle-squircle`，14 个语言文件已补。
+**Plain double-click = three-tier cycle** `corner → smooth → squircle → corner` (`advanceNodeKind`); **Shift+double-click = straight to squircle**, idempotent on a squircle (no downgrade); downgrades go through the plain double-click (`squircle --dbl--> corner --dbl--> smooth`). Note that the plain double-click is **no longer self-inverse**, and smooth→squircle genuinely bends the outline;
+undo label `edit-tools-pointer.undo.toggle-squircle`, added to all 14 language files.
 
-## 涉及文件
+## Files Involved
 
-| 文件 | 性质 |
+| File | Nature |
 |---|---|
-| `fontra-core/src/path-curvature.js` | 新增（数学核心） |
-| `fontra-core/src/var-path.js` | 新 flag + 读写 |
-| `fontra-core/src/path-functions.js` | `makeSquircle` + `advanceNodeKind` + 适配层 |
-| `fontra-core/src/theme-settings.js` | 两个新模型键 |
+| `fontra-core/src/path-curvature.js` | New (math core) |
+| `fontra-core/src/var-path.js` | New flag + read/write |
+| `fontra-core/src/path-functions.js` | `makeSquircle` + `advanceNodeKind` + adapter layer |
+| `fontra-core/src/theme-settings.js` | Two new model keys |
 | `fontra-webcomponents/src/simple-settings.js` | `squircleClipPath` + `.swatch-squircle` |
-| `views-applicationsettings/src/panel-theme-settings.js` | 新设置行 |
-| `views-editor/src/visualization-layer-definitions.js` | 超椭圆图标 + 图层接线 |
-| `views-editor/src/edit-tools-pointer.js` | 双击循环 / Shift+双击直达 |
-| `fontra-core/tests/test-squircle.js` | 新增测试 |
-| `fontra-core/assets/lang/*.js` | 14 个语言文件补撤销词条 |
+| `views-applicationsettings/src/panel-theme-settings.js` | New settings row |
+| `views-editor/src/visualization-layer-definitions.js` | Superellipse icon + layer wiring |
+| `views-editor/src/edit-tools-pointer.js` | Double-click cycle / Shift+double-click direct |
+| `fontra-core/tests/test-squircle.js` | New tests |
+| `fontra-core/assets/lang/*.js` | Undo entry added to 14 language files |

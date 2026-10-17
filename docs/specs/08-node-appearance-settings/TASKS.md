@@ -1,19 +1,19 @@
-# R8 · 任务分解（施工单）
+# R8 · Task Breakdown (Work Orders)
 
-## T8.1 · 行组件重排（simple-settings.js）
-行统一「文字在前控件在后」；`combined` ui + `controlBuilders` 抽取；radio 数组展平
-（BUG-001）；`disabledWhen` + `refreshDisabledStates`（BUG-002）。
-DoD：三面板渲染正常、radio 文字正常。
+## T8.1 · Row Component Rework (simple-settings.js)
+Unify rows as "text first, controls after"; extract `combined` ui + `controlBuilders`; flatten radio arrays
+(BUG-001); `disabledWhen` + `refreshDisabledStates` (BUG-002).
+DoD: the three panels render correctly and radio text is correct.
 
-## T8.2 · 面板接线（panel-theme-settings.js）+ 限宽
-`nodeAppearanceRow()` 三行；总开关删除；五面板 `max-width: 32em`。
-DoD：Node appearance 三行结构正确；面板不再全窗拉伸。
+## T8.2 · Panel Wiring (panel-theme-settings.js) + Width Cap
+Three rows via `nodeAppearanceRow()`; master switch removed; `max-width: 32em` on five panels.
+DoD: the Node appearance three-row structure is correct; panels no longer stretch across the full window.
 
-## T8.3 · 常开化 + 监听修复
-`applyNodeAppearanceSettings` 无条件应用；editor.js 监听传 `themeController.model`
-（BUG-004）；theme-settings.js 删 `nodeAppearanceCustom`。
-DoD：改设置画布即时变、重开仍生效。
+## T8.3 · Always-On + Listener Fix
+`applyNodeAppearanceSettings` applies unconditionally; editor.js listener passes `themeController.model`
+(BUG-004); theme-settings.js removes `nodeAppearanceCustom`.
+DoD: the canvas changes immediately when settings change, and still holds after reopening.
 
-## T8.4 · 色块形状 + reset 图标
-`shape` 字段（round/square）；行级 reset（icon-button 属性赋值，BUG-003）。
-DoD：三形状正确、reset 往返 14/#ff0000 → 8/#7a4fe8 落盘。
+## T8.4 · Color Swatch Shape + Reset Icon
+`shape` field (round/square); row-level reset (icon-button attribute assignment, BUG-003).
+DoD: three shapes correct; reset round-trips 14/#ff0000 → 8/#7a4fe8 and persists.

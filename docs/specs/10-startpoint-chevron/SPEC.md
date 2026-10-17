@@ -1,46 +1,45 @@
-# R10 · 技术规范（SPEC）
+# R10 · Technical Specification (SPEC)
 
-## 落点
+## Change Location
 
 `src-js/views-editor/src/visualization-layer-definitions.js`
-→ `fontra.startpoint.indicator` 图层（唯一改动点）。
+→ the `fontra.startpoint.indicator` layer (the only change point).
 
-## 现状（旧实现）
+## Current State (Old Implementation)
 
 ```js
 screenParameters: { radius: 9, strokeWidth: 2 }
-colors: { color: "#989898A0" } / colorsDarkMode 同值
+colors: { color: "#989898A0" } / colorsDarkMode has the same value
 draw:
-  对每个轮廓取 startPoint（轮廓第 0 点）
-  若轮廓有下一个点：angle = atan2(next - start)      // 前进方向
-  以 startPoint 为圆心画圆弧 radius，缺口对准 angle（± START_POINT_ARC_GAP_ANGLE）
+  for each contour, take startPoint (the contour's 0th point)
+  if the contour has a next point: angle = atan2(next - start)      // forward direction
+  draw an arc of the given radius centered on startPoint, with the gap aligned to angle (± START_POINT_ARC_GAP_ANGLE)
   START_POINT_ARC_GAP_ANGLE = 0.25 * Math.PI
 ```
 
-## 新实现（chevron）
+## New Implementation (chevron)
 
-1. **方向**：仍取前进方向 `d = normalize(next - start)`，`angle = atan2(d.y, d.x)`；
-   轮廓只有一个点时无方向，退化为不画（旧实现画整圆，新实现画一个不朝向的
-   闭合小箭头或跳过——取**跳过**，保持语义清晰）。
-2. **形状**：在局部坐标画尖角折线（chevron），再按 `angle` 旋转、平移到起始点：
-   - 顶点朝 `+x`（即前进方向）：`tip = (r, 0)`，
-     `upper = (-r*cos(θ), -r*sin(θ))`、`lower = (-r*cos(θ), +r*sin(θ))`
-     （θ = 半个张角，取 ~50°，使 `>` 的夹角清晰）；
-   - 连线 `upper → tip → lower`，只描边不填充（与旧圆弧一致，`strokeWidth` 沿用）。
-   - **左右对称性**：旋转是刚体变换，方向朝左时自然呈 `<`（顶点朝左、开口朝右），
-     不是镜像翻转，符合"大于号/小于号"的直觉。
-3. **旋转实现**：`context.save()` → `translate(startPoint)` → `rotate(angle)` →
-   画顶点朝 +x 的 chevron → `restore()`。避免手算每点旋转坐标。
-4. **参数**：`screenParameters: { radius: 9, strokeWidth: 2 }` 沿用（`radius` 现在
-   表示 chevron 的半高/半宽尺度）；颜色与亮暗两套沿用不变。
-5. **不变**：`selectionFunc: glyphSelector("editing")`（仅编辑态）、`zIndex: 500`、
-   轮廓遍历与 `startPointIndex` 推进逻辑不变。
+1. **Direction**: still take the forward direction `d = normalize(next - start)`, `angle = atan2(d.y, d.x)`;
+   a contour with a single point has no direction and degrades to drawing nothing (the old implementation drew a full circle; the new one would either draw a small closed chevron with no orientation or skip — we choose **skip**, to keep the semantics clear).
+2. **Shape**: draw a chevron polyline in local coordinates, then rotate by `angle` and translate to the start point:
+   - Tip facing `+x` (i.e., the forward direction): `tip = (r, 0)`,
+     `upper = (-r*cos(θ), -r*sin(θ))`, `lower = (-r*cos(θ), +r*sin(θ))`
+     (θ = half the opening angle, ~50°, so the `>` angle reads clearly);
+   - Connect `upper → tip → lower`, stroke only, no fill (same as the old arc; `strokeWidth` is reused).
+   - **Left/right symmetry**: rotation is a rigid transform, so when the direction faces left it naturally renders as `<` (tip facing left, opening facing right) —
+     not a mirror flip, matching the "greater-than / less-than" intuition.
+3. **Rotation implementation**: `context.save()` → `translate(startPoint)` → `rotate(angle)` →
+   draw the chevron with the tip facing +x → `restore()`. Avoids hand-computing rotated coordinates for every point.
+4. **Parameters**: keep `screenParameters: { radius: 9, strokeWidth: 2 }` (`radius` now
+   denotes the chevron's half-height/half-width scale); the colors and the light/dark pair stay unchanged.
+5. **Unchanged**: `selectionFunc: glyphSelector("editing")` (editing state only), `zIndex: 500`,
+   and the contour iteration / `startPointIndex` advancement logic.
 
-## 常量
+## Constants
 
-- 删除 `START_POINT_ARC_GAP_ANGLE`（不再需要）；
-- 新增 `START_POINT_CHEVRON_HALF_ANGLE`（≈ 50° = 0.28π），控制 `>` 的张角。
+- Delete `START_POINT_ARC_GAP_ANGLE` (no longer needed);
+- Add `START_POINT_CHEVRON_HALF_ANGLE` (≈ 50° = 0.28π), controlling the opening angle of `>`.
 
-## 涉及文件
+## Files Involved
 
-`src-js/views-editor/src/visualization-layer-definitions.js`（单文件）
+`src-js/views-editor/src/visualization-layer-definitions.js` (single file)

@@ -1,53 +1,53 @@
-# 视觉层可设置项清单（Settings Inventory）
+# Visual Layer Settings Inventory
 
-> 源文件：`src-js/views-editor/src/visualization-layer-definitions.js`（另含 `edit-tools-pointer.js` 的 `fontra.transform.selection`）
-> 基线：commit `ea0e3f67b` + 本会话未提交修改（R4-T4.28 ~ R4-T4.35）
-> 用途：把视觉层里**所有可调的颜色 / 尺寸 / 样式**整理成设置面板的分类清单，经确认后再逐批实现。
-> 图层标识符（identifier）是稳定锚点，全文用它索引，不写行号。
+> Source files: `src-js/views-editor/src/visualization-layer-definitions.js` (plus `fontra.transform.selection` from `edit-tools-pointer.js`)
+> Baseline: commit `ea0e3f67b` + uncommitted changes from this session (R4-T4.28 ~ R4-T4.35)
+> Purpose: organize **all adjustable colors / sizes / styles** in the visual layer into a categorized settings-panel inventory; after confirmation, implement them in batches.
+> Layer identifiers are the stable anchor; this document indexes by identifier throughout and does not cite line numbers.
 
 ---
 
-## 1. 设置项如何生效（机制速查）
+## 1. How a setting takes effect (mechanism quick reference)
 
 ```
-themeController.model（theme-settings.js，localStorage 前缀 "engramfont-"）
-        │  keyListener（editor.js）
+themeController.model (theme-settings.js, localStorage prefix "engramfont-")
+        │  keyListener (editor.js)
         ▼
-apply<Feature>Settings(model)（visualization-layer-definitions.js）
-        │  写 layerDef.colors / .screenParameters / .glyphParameters
+apply<Feature>Settings(model) (visualization-layer-definitions.js)
+        │  writes layerDef.colors / .screenParameters / .glyphParameters
         ▼
-buildLayers() 合并：parameters = {...mulScalar(screenParameters, zoom), ...glyphParameters, ...colors}
+buildLayers() merge: parameters = {...mulScalar(screenParameters, zoom), ...glyphParameters, ...colors}
         ▼
 layer.draw(context, parameters, ...)
 ```
 
-- `colors` / 布尔 / 字符串**原样**进入 parameters（不随缩放）；
-- `screenParameters` 是**屏幕像素**，会被 zoom 缩放 —— 所有新增的尺寸/宽度/字号设置都必须放这里；
-- 无量纲形状参数（如 squircle 指数 n）必须放 `glyphParameters`（不缩放）。
+- `colors` / booleans / strings enter parameters **as-is** (not scaled with zoom);
+- `screenParameters` are **screen pixels**, scaled by zoom — all newly added size/width/font-size settings must go here;
+- Dimensionless shape parameters (e.g. the squircle exponent n) must go in `glyphParameters` (not scaled).
 
-**既定政策（新增项一律遵守）：**
-1. 颜色一律 hex（原生 `<input type="color">`，RGB 拾色器）；**亮暗主题共用一个值**（apply 时同时写 colors 与 colorsDarkMode）。
-2. 默认值自带透明度的颜色（如 `#0004`、`#00BFFF18`）→ 面板用「颜色 + α 数字轮(0-100)」组合行，apply 时合成 8 位 hex；α=0 → `"transparent"`（模式已在 editingLayerNodes 上验证）。
-3. 尺寸/宽度 → number-wheel（min/max/step/default）；布尔 → checkbox；每行带 reset。
-4. 面板卡片用现有 `nodeAppearanceRow()` / `grouped-settings` 机制，不引新控件。
+**Established policy (every new entry must follow):**
+1. Colors are always hex (native `<input type="color">`, RGB picker); **light and dark themes share one value** (apply writes both colors and colorsDarkMode).
+2. Colors whose defaults carry alpha (e.g. `#0004`, `#00BFFF18`) → the panel uses a combined "color + α number-wheel (0-100)" row; apply composes the 8-digit hex; α=0 → `"transparent"` (the pattern is already verified on editingLayerNodes).
+3. Sizes/widths → number-wheel (min/max/step/default); booleans → checkbox; every row gets a reset.
+4. Panel cards reuse the existing `nodeAppearanceRow()` / `grouped-settings` mechanism; no new controls are introduced.
 
 ---
 
-## 2. 已上线设置项（现状，共 5 卡 19 键）
+## 2. Shipped settings (current state: 5 cards, 19 keys)
 
-| 卡片 | 模型键 | 默认 | 控件 |
+| Card | Model key | Default | Control |
 |---|---|---|---|
 | Theme | `theme` | automatic | radio |
 | Node appearance | `nodeSize` | 8 | number-wheel 4-24 |
 | | `nodeSmoothColor` | #7A4FE8 | color |
 | | `nodeSquircleColor` | #0D9488 | color |
-| | `nodeSquircleExponent` | 3 | number-wheel 1-8 步 0.5 |
+| | `nodeSquircleExponent` | 3 | number-wheel 1-8 step 0.5 |
 | | `nodeCornerColor` | #C2410C | color |
 | | `nodeHandleColor` | #A0A0B0 | color |
 | | `nodeHandleSize` | 6 | number-wheel 3-24 |
 | | `nodeHandleShapeDiamond` | false | checkbox |
 | | `editingLayerNodesColor` | #BBBBFF | color |
-| | `editingLayerNodesAlpha` | 0 | number-wheel 0-100 步 5 |
+| | `editingLayerNodesAlpha` | 0 | number-wheel 0-100 step 5 |
 | Transform selection | `transformHandleFillColor` | #BBBBFF | color |
 | | `transformHandleSize` | 8 | number-wheel |
 | | `transformBorderColor` | #AAAAAA | color |
@@ -58,373 +58,373 @@ layer.draw(context, parameters, ...)
 | | `crosshairStrokeWidth` | 1 | number-wheel |
 | | `crosshairDashed` | true | checkbox |
 
-受这些设置驱动的图层：`fontra.nodes`、`fontra.selected.nodes`、`fontra.component.nodes`、`fontra.startpoint.indicator`、`fontra.transform.selection`、`fontra.edit.editing.layers.nodes-and-handles`、`fontra.crosshair`。
+Layers driven by these settings: `fontra.nodes`, `fontra.selected.nodes`, `fontra.component.nodes`, `fontra.startpoint.indicator`, `fontra.transform.selection`, `fontra.edit.editing.layers.nodes-and-handles`, `fontra.crosshair`.
 
-## 3. 现状勘误（盘点时发现，随本批一起修）
+## 3. Corrections to the current state (found during the inventory, fixed together with this batch)
 
-| # | 问题 | 修法 |
+| # | Issue | Fix |
 |---|---|---|
-| E1 | `canvasBackgroundColor`：模型键 + `setupCanvasBackgroundOverride` + editor.js 监听都在，**但面板里没有对应行**（台账 T4.33 称有，现文件无） | Canvas background 卡补一行 color |
-| E2 | `selectedHandleColor`：`applyNodeAppearanceSettings` 读取它（`?? "#A0A0B0"`），但**模型无默认键、面板无行** | theme-settings.js 补键 + Node appearance 卡补「Selected handle」行 |
+| E1 | `canvasBackgroundColor`: the model key + `setupCanvasBackgroundOverride` + the editor.js listener all exist, **but the panel has no corresponding row** (ledger entry T4.33 claims there is one; the current file has none) | Add a color row to the Canvas background card |
+| E2 | `selectedHandleColor`: `applyNodeAppearanceSettings` reads it (`?? "#A0A0B0"`), but **the model has no default key and the panel has no row** | Add the key in theme-settings.js + add a "Selected handle" row to the Node appearance card |
 
 ---
 
-## 4. 待新增设置项（按面板卡片分类）
+## 4. Settings to be added (grouped by panel card)
 
-优先级：**P1** = 本轮用户点名的颜色片段；**P2** = 常用、一眼可见；**P3** = 长尾/完整覆盖。
-控件列：**C** = color；**C+α** = color + α 轮（默认值带透明度）；**N** = number-wheel；**☑** = checkbox。
-「现值 亮/暗」= 图层定义里的 `colors` / `colorsDarkMode`。
+Priority: **P1** = color items the user explicitly called out this round; **P2** = commonly used, visible at a glance; **P3** = long tail / full coverage.
+Control column: **C** = color; **C+α** = color + α wheel (default value carries alpha); **N** = number-wheel; **☑** = checkbox.
+"Current value light/dark" = `colors` / `colorsDarkMode` in the layer definitions.
 
-### 4.1 画布与网格（Card：Canvas & grid）
+### 4.1 Canvas and grid (Card: Canvas & grid)
 
-| 图层 | 属性 | 现值 亮/暗 | 建议模型键 | 控件 | 优先级 |
+| Layer | Property | Current value light/dark | Suggested model key | Control | Priority |
 |---|---|---|---|---|---|
-| （全局） | 画布背景色 | #FFFFFF（CSS 变量） | `canvasBackgroundColor` ✅键 | C | **E1 补行** |
-| `fontra.upm.grid` | UPM 网格线颜色 | #E6E6E6 / #3C3C3C | `upmGridColor` | C | P2 |
-| `fontra.upm.grid` | UPM 网格线宽 | 2 | `upmGridStrokeWidth` | N | P3 |
+| (global) | Canvas background color | #FFFFFF (CSS variable) | `canvasBackgroundColor` ✅ key exists | C | **E1: add row** |
+| `fontra.upm.grid` | UPM grid line color | #E6E6E6 / #3C3C3C | `upmGridColor` | C | P2 |
+| `fontra.upm.grid` | UPM grid line width | 2 | `upmGridStrokeWidth` | N | P3 |
 
-### 4.2 节点与手柄（扩展 Node appearance 卡）
+### 4.2 Nodes and handles (extends the Node appearance card)
 
-| 图层 | 属性 | 现值 亮/暗 | 建议模型键 | 控件 | 优先级 |
+| Layer | Property | Current value light/dark | Suggested model key | Control | Priority |
 |---|---|---|---|---|---|
-| `fontra.selected.nodes` | 选中手柄颜色 | （现读 handleColor） | `selectedHandleColor` | C | **E2 补键补行** |
-| `fontra.selected.nodes` | 选中节点填充色 | #000 / #FFF | `selectedNodeColor` | C | P2 |
-| `fontra.selected.nodes` | 选中节点光晕色 | #FFFA / #0008 | `selectedNodeUnderColor` | C+α | P3 |
-| `fontra.handles` | 手柄连线颜色 | #BBB / #777 | `handleLineColor` | C | P2 |
-| `fontra.handles` | 手柄连线宽 | 1 | `handleLineStrokeWidth` | N | P3 |
-| `fontra.edit.background.layers.nodes-and-handles` | 背景层节点颜色 | #DDDF / #555F | `bgLayerNodesColor` | C+α | P2 |
-| 同上 | 背景层节点三尺寸 | 5.5/5.5/4.5 | `bgLayerNodeSize` / `bgLayerHandleSize` | N×2（corner=smooth 共用） | P3 |
+| `fontra.selected.nodes` | Selected handle color | (currently reads handleColor) | `selectedHandleColor` | C | **E2: add key + row** |
+| `fontra.selected.nodes` | Selected node fill color | #000 / #FFF | `selectedNodeColor` | C | P2 |
+| `fontra.selected.nodes` | Selected node halo color | #FFFA / #0008 | `selectedNodeUnderColor` | C+α | P3 |
+| `fontra.handles` | Handle line color | #BBB / #777 | `handleLineColor` | C | P2 |
+| `fontra.handles` | Handle line width | 1 | `handleLineStrokeWidth` | N | P3 |
+| `fontra.edit.background.layers.nodes-and-handles` | Background layer node color | #DDDF / #555F | `bgLayerNodesColor` | C+α | P2 |
+| Same layer | Background layer node sizes (3) | 5.5/5.5/4.5 | `bgLayerNodeSize` / `bgLayerHandleSize` | N×2 (corner=smooth shared) | P3 |
 
-> `fontra.component.nodes` 已并入 Node appearance 设置（apply 时三层统一下发），无需新键。
+> `fontra.component.nodes` has been merged into the Node appearance settings (apply pushes to all three layers at once); no new key is needed.
 
-### 4.3 路径颜色（Card：Path —— 本轮用户点名 "#0004"）
+### 4.3 Path colors (Card: Path — user-requested "#0004" this round)
 
-| 图层 | 属性 | 现值 亮/暗 | 建议模型键 | 控件 | 优先级 |
+| Layer | Property | Current value light/dark | Suggested model key | Control | Priority |
 |---|---|---|---|---|---|
-| `fontra.edit.path.stroke` | 主轮廓描边色 | #000 / #FFF | `editPathStrokeColor` | C | **P1** |
-| `fontra.edit.path.stroke` | 主轮廓描边宽 | 1 | `editPathStrokeWidth` | N | P2 |
-| `fontra.edit.path.under.stroke` | 轮廓底层描边色 | **#FFF6 / #0004** | `editPathUnderStrokeColor` | C+α | **P1** |
-| `fontra.edit.path.under.stroke` | 底层描边宽 | 3 | `editPathUnderStrokeWidth` | N | P3 |
-| `fontra.edit.path.fill` | 轮廓填充色 | #0001 / #FFF3 | `editPathFillColor` | C+α | P2 |
+| `fontra.edit.path.stroke` | Main outline stroke color | #000 / #FFF | `editPathStrokeColor` | C | **P1** |
+| `fontra.edit.path.stroke` | Main outline stroke width | 1 | `editPathStrokeWidth` | N | P2 |
+| `fontra.edit.path.under.stroke` | Outline under-stroke color | **#FFF6 / #0004** | `editPathUnderStrokeColor` | C+α | **P1** |
+| `fontra.edit.path.under.stroke` | Under-stroke width | 3 | `editPathUnderStrokeWidth` | N | P3 |
+| `fontra.edit.path.fill` | Outline fill color | #0001 / #FFF3 | `editPathFillColor` | C+α | P2 |
 
-> 澄清：用户贴的 `strokeColor: "#0004"` 在**亮色模式是 baseline / lineMetrics 的现值**；`fontra.edit.path.under.stroke` 亮色是 `#FFF6`、暗色才是 `#0004`。两处都会做成设置项。
+> Clarification: the `strokeColor: "#0004"` the user pasted is the **current light-mode value of baseline / lineMetrics**; for `fontra.edit.path.under.stroke`, light mode is `#FFF6` and only dark mode is `#0004`. Both places will become settings.
 
-### 4.4 字形填充与高亮（Card：Glyph display）
+### 4.4 Glyph fills and highlights (Card: Glyph display)
 
-| 图层 | 属性 | 现值 亮/暗 | 建议模型键 | 控件 | 优先级 |
+| Layer | Property | Current value light/dark | Suggested model key | Control | Priority |
 |---|---|---|---|---|---|
-| `fontra.context.glyphs` | 上下文字形填充 | #000 / #FFF | `contextGlyphColor` | C | P2 |
-| `fontra.context.glyphs` 等 3 层 | 出错字形颜色 | #AAA / #999 | `glyphErrorColor`（三层共用） | C | P3 |
-| `fontra.selected.glyph` | 选中字形填充 | #000 / #FFF | `selectedGlyphColor` | C | P2 |
-| `fontra.selected.glyph` | 选中字形外描边 | #7778 / #FFF8 | `selectedGlyphOutlineColor` | C+α | P2 |
-| `fontra.hovered.glyph` | 悬停字形填充 | #000 / #FFF | `hoveredGlyphColor` | C | P3 |
-| `fontra.hovered.glyph` | 悬停字形外描边 | #BBB8 / #CCC8 | `hoveredGlyphOutlineColor` | C+α | P3 |
-| `fontra.undefined.glyph` | 未定义字形占位 | #0006 / #FFF6 | `undefinedGlyphColor` | C+α | P3 |
-| `fontra.undefined.glyph` | 空（未编辑）字形占位 | #0002 / #FFF2 | `emptyGlyphColor` | C+α | P3 |
-| `fontra.empty.selected.glyph` | 空选中字形底色 | #D8D8D8 / #585858 | `emptySelectedGlyphColor` | C | P3 |
-| `fontra.empty.hovered.glyph` | 空悬停字形底色 | #E8E8E8 / #484848 | `emptyHoveredGlyphColor` | C | P3 |
-| `fontra.all.glyphs`（干净显示） | 全字形填充 | #000 / #FFF | `cleanGlyphColor` | C | P3 |
-| selected/hovered.glyph | 内/外描边宽 | 10 / 3 | `glyphOuterStrokeWidth` / `glyphInnerStrokeWidth` | N×2 | P3 |
+| `fontra.context.glyphs` | Context glyph fill | #000 / #FFF | `contextGlyphColor` | C | P2 |
+| `fontra.context.glyphs` etc. (3 layers) | Error glyph color | #AAA / #999 | `glyphErrorColor` (shared by the 3 layers) | C | P3 |
+| `fontra.selected.glyph` | Selected glyph fill | #000 / #FFF | `selectedGlyphColor` | C | P2 |
+| `fontra.selected.glyph` | Selected glyph outer stroke | #7778 / #FFF8 | `selectedGlyphOutlineColor` | C+α | P2 |
+| `fontra.hovered.glyph` | Hovered glyph fill | #000 / #FFF | `hoveredGlyphColor` | C | P3 |
+| `fontra.hovered.glyph` | Hovered glyph outer stroke | #BBB8 / #CCC8 | `hoveredGlyphOutlineColor` | C+α | P3 |
+| `fontra.undefined.glyph` | Undefined glyph placeholder | #0006 / #FFF6 | `undefinedGlyphColor` | C+α | P3 |
+| `fontra.undefined.glyph` | Empty (un-edited) glyph placeholder | #0002 / #FFF2 | `emptyGlyphColor` | C+α | P3 |
+| `fontra.empty.selected.glyph` | Empty selected glyph background | #D8D8D8 / #585858 | `emptySelectedGlyphColor` | C | P3 |
+| `fontra.empty.hovered.glyph` | Empty hovered glyph background | #E8E8E8 / #484848 | `emptyHoveredGlyphColor` | C | P3 |
+| `fontra.all.glyphs` (clean display) | All-glyphs fill | #000 / #FFF | `cleanGlyphColor` | C | P3 |
+| selected/hovered.glyph | Inner/outer stroke width | 10 / 3 | `glyphOuterStrokeWidth` / `glyphInnerStrokeWidth` | N×2 | P3 |
 
-### 4.5 标签与序号（Card：Labels —— 本轮用户点名 boxColor）
+### 4.5 Labels and indices (Card: Labels — user-requested boxColor this round)
 
-> 五个标签层同构：底色 boxColor + 文字 color + 字号 fontSize。**建议先用共享底/字两键 + 逐层字号**（面板不爆炸）；表里给出逐层键名备选，确认时定夺。
+> The five label layers are isomorphic: background boxColor + text color + fontSize. **Recommendation: start with the shared background/text key pair + per-layer font sizes** (keeps the panel from exploding); per-layer key-name alternatives are given in the table, to be decided at confirmation.
 
-| 图层 | 属性 | 现值 亮/暗 | 建议模型键（共享方案） | 控件 | 优先级 |
+| Layer | Property | Current value light/dark | Suggested model key (shared scheme) | Control | Priority |
 |---|---|---|---|---|---|
-| `fontra.coordinates` | 坐标标签底色 | #FFFB / #1118 | `labelBoxColor` | C+α | **P1** |
-| `fontra.coordinates` | 坐标标签文字色 | #000 / #FFF | `labelTextColor` | C | **P1** |
-| `fontra.point.index` | 点序号底/字 | 同上 | （共享） | — | P2 |
-| `fontra.contour.index` | 轮廓序号底/字 | 同上 | （共享） | — | P2 |
-| `fontra.component.index` | 部件序号底/字 | 同上 | （共享） | — | P2 |
-| `fontra.anchor.names` | 锚点名底/字 | 同上 | （共享） | — | P3 |
-| 五层各自 | 字号 | 10/10/11/11/10 | `labelFontSizeCoordinates` 等 5 键 | N×5 | P3 |
+| `fontra.coordinates` | Coordinate label box color | #FFFB / #1118 | `labelBoxColor` | C+α | **P1** |
+| `fontra.coordinates` | Coordinate label text color | #000 / #FFF | `labelTextColor` | C | **P1** |
+| `fontra.point.index` | Point index box/text | same as above | (shared) | — | P2 |
+| `fontra.contour.index` | Contour index box/text | same as above | (shared) | — | P2 |
+| `fontra.component.index` | Component index box/text | same as above | (shared) | — | P2 |
+| `fontra.anchor.names` | Anchor name box/text | same as above | (shared) | — | P3 |
+| Each of the five layers | Font size | 10/10/11/11/10 | `labelFontSizeCoordinates` etc., 5 keys | N×5 | P3 |
 
-逐层方案备选键：`coordinatesBoxColor/coordinatesTextColor`、`pointIndexBoxColor/…`、`contourIndexBoxColor/…`、`componentIndexBoxColor/…`、`anchorNamesBoxColor/…`。
+Per-layer alternative keys: `coordinatesBoxColor/coordinatesTextColor`, `pointIndexBoxColor/…`, `contourIndexBoxColor/…`, `componentIndexBoxColor/…`, `anchorNamesBoxColor/…`.
 
-### 4.6 参考线（Card：Guidelines —— 本轮用户点名整段颜色）
+### 4.6 Guidelines (Card: Guidelines — user requested the whole color set this round)
 
-| 属性 | 现值 亮/暗 | 建议模型键 | 控件 | 优先级 |
+| Property | Current value light/dark | Suggested model key | Control | Priority |
 |---|---|---|---|---|
-| 字形参考线（常态） | #0006 / #FFF8 | `guidelineColor` | C+α | **P1** |
-| 字体参考线 | #00BFFF / #00BFFFC0 | `fontGuidelineColor` | C+α | **P1** |
-| 悬停参考线 | #0001 / #FFFFFF18 | `guidelineHoveredColor` | C+α | P2 |
-| 选中参考线 | #0002 / #FFF3 | `guidelineSelectedColor` | C+α | P2 |
-| 悬停+选中 | #0000002B / #FFF4 | `guidelineHoveredSelectedColor` | C+α | P3 |
-| 选中参考线节点 | #000 / #FFF | `guidelineNodeSelectedColor` | C | P2 |
-| 悬停参考线节点 | #BBB | `guidelineNodeHoveredColor` | C | P3 |
-| 节点光晕 | #FFFA / #0008 | `guidelineNodeUnderColor` | C+α | P3 |
-| 锁图标补色×2 | #F6F6F6/#333、#0006/#BBB | `guidelineIconUnderColor` / `guidelineIconHoveredColor` | C×2 | P3 |
-| 线宽 | 1 | `guidelineStrokeWidth` | N | P2 |
-| 字号 / 端点圆半径 / 虚线段 | 10 / 4 / 3 | `guidelineFontSize` / `guidelineMarkerRadius` / `guidelineDash` | N×3 | P3 |
+| Glyph guidelines (normal state) | #0006 / #FFF8 | `guidelineColor` | C+α | **P1** |
+| Font guidelines | #00BFFF / #00BFFFC0 | `fontGuidelineColor` | C+α | **P1** |
+| Hovered guideline | #0001 / #FFFFFF18 | `guidelineHoveredColor` | C+α | P2 |
+| Selected guideline | #0002 / #FFF3 | `guidelineSelectedColor` | C+α | P2 |
+| Hovered + selected | #0000002B / #FFF4 | `guidelineHoveredSelectedColor` | C+α | P3 |
+| Selected guideline node | #000 / #FFF | `guidelineNodeSelectedColor` | C | P2 |
+| Hovered guideline node | #BBB | `guidelineNodeHoveredColor` | C | P3 |
+| Node halo | #FFFA / #0008 | `guidelineNodeUnderColor` | C+α | P3 |
+| Lock icon complementary colors ×2 | #F6F6F6/#333, #0006/#BBB | `guidelineIconUnderColor` / `guidelineIconHoveredColor` | C×2 | P3 |
+| Stroke width | 1 | `guidelineStrokeWidth` | N | P2 |
+| Font size / marker circle radius / dash segment | 10 / 4 / 3 | `guidelineFontSize` / `guidelineMarkerRadius` / `guidelineDash` | N×3 | P3 |
 
-### 4.7 度量线（Card：Metrics —— 本轮用户点名 zoneColor）
+### 4.7 Metrics lines (Card: Metrics — user-requested zoneColor this round)
 
-| 图层 | 属性 | 现值 亮/暗 | 建议模型键 | 控件 | 优先级 |
+| Layer | Property | Current value light/dark | Suggested model key | Control | Priority |
 |---|---|---|---|---|---|
-| `fontra.baseline` | 基线颜色 | #0004 / #FFF6 | `baselineColor` | C+α | **P1** |
-| `fontra.lineMetrics` | 度量线/字框颜色 | #0004 / #FFF6 | `lineMetricsColor` | C+α | **P1** |
-| `fontra.lineMetrics` | 对齐区域填充 | #00BFFF18 | `lineMetricsZoneColor` | C+α | **P1** |
-| `fontra.lineMetrics` | 区域端线颜色 | #00608018 / #80DFFF18 | `lineMetricsZoneStrokeColor` | C+α | P2 |
-| 两层各自 | 线宽 | 1 | `baselineStrokeWidth` / `lineMetricsStrokeWidth` | N×2 | P3 |
+| `fontra.baseline` | Baseline color | #0004 / #FFF6 | `baselineColor` | C+α | **P1** |
+| `fontra.lineMetrics` | Metrics line / font box color | #0004 / #FFF6 | `lineMetricsColor` | C+α | **P1** |
+| `fontra.lineMetrics` | Alignment zone fill | #00BFFF18 | `lineMetricsZoneColor` | C+α | **P1** |
+| `fontra.lineMetrics` | Zone end-line color | #00608018 / #80DFFF18 | `lineMetricsZoneStrokeColor` | C+α | P2 |
+| Each of the two layers | Stroke width | 1 | `baselineStrokeWidth` / `lineMetricsStrokeWidth` | N×2 | P3 |
 
-### 4.8 锚点（Card：Anchors）
+### 4.8 Anchors (Card: Anchors)
 
-| 图层 | 属性 | 现值 亮/暗 | 建议模型键 | 控件 | 优先级 |
+| Layer | Property | Current value light/dark | Suggested model key | Control | Priority |
 |---|---|---|---|---|---|
-| `fontra.anchors` | 锚点圈颜色 | #999 | `anchorColor` | C | P2 |
-| `fontra.anchors` | 锚点圈半径 | 4 | `anchorMarkerRadius` | N | P3 |
-| `fontra.selected.anchors` | 悬停锚点圈 | #BBB | `anchorHoveredColor` | C | P3 |
-| `fontra.selected.anchors` | 选中锚点填充 | #000 / #FFF | `anchorSelectedColor` | C | P3 |
-| `fontra.selected.anchors` | 选中锚点光晕 | #FFFA / #0008 | `anchorUnderColor` | C+α | P3 |
+| `fontra.anchors` | Anchor circle color | #999 | `anchorColor` | C | P2 |
+| `fontra.anchors` | Anchor circle radius | 4 | `anchorMarkerRadius` | N | P3 |
+| `fontra.selected.anchors` | Hovered anchor circle | #BBB | `anchorHoveredColor` | C | P3 |
+| `fontra.selected.anchors` | Selected anchor fill | #000 / #FFF | `anchorSelectedColor` | C | P3 |
+| `fontra.selected.anchors` | Selected anchor halo | #FFFA / #0008 | `anchorUnderColor` | C+α | P3 |
 
-### 4.9 部件（Card：Components）
+### 4.9 Components (Card: Components)
 
-| 图层 | 属性 | 现值 亮/暗 | 建议模型键 | 控件 | 优先级 |
+| Layer | Property | Current value light/dark | Suggested model key | Control | Priority |
 |---|---|---|---|---|---|
-| `fontra.component.selection` | 悬停部件描边 | #CCC / #666 | `componentHoveredColor` | C | P2 |
-| `fontra.component.selection` | 选中部件描边 | #888 / #AAA | `componentSelectedColor` | C | P2 |
-| `fontra.component.selection` | 部件原点十字 | #BBB | `componentOriginColor` | C | P3 |
-| `fontra.component.selection` | 变换中心标记 | #777 / #DDD | `componentTCenterColor` | C | P3 |
+| `fontra.component.selection` | Hovered component stroke | #CCC / #666 | `componentHoveredColor` | C | P2 |
+| `fontra.component.selection` | Selected component stroke | #888 / #AAA | `componentSelectedColor` | C | P2 |
+| `fontra.component.selection` | Component origin cross | #BBB | `componentOriginColor` | C | P3 |
+| `fontra.component.selection` | Transform center marker | #777 / #DDD | `componentTCenterColor` | C | P3 |
 
-### 4.10 多层轮廓（Card：Layer outlines）
+### 4.10 Multi-layer outlines (Card: Layer outlines)
 
-| 图层 | 属性 | 现值 亮/暗 | 建议模型键 | 控件 | 优先级 |
+| Layer | Property | Current value light/dark | Suggested model key | Control | Priority |
 |---|---|---|---|---|---|
-| `fontra.edit.background.layers` | 背景层轮廓 | #CCCF / #666F | `bgLayerOutlineColor` | C+α | P2 |
-| `fontra.edit.background.layers` | 背景层锚点圈 | #DDDF / #555F | `bgLayerAnchorColor` | C+α | P3 |
-| `fontra.edit.editing.layers` | 编辑层（其他 layer）轮廓 | #99FF / #559F | `editingLayerOutlineColor` | C+α | P2 |
-| `fontra.edit.editing.layers` | 编辑层锚点圈 | #AAFF / #558F | `editingLayerAnchorColor` | C+α | P3 |
+| `fontra.edit.background.layers` | Background layer outline | #CCCF / #666F | `bgLayerOutlineColor` | C+α | P2 |
+| `fontra.edit.background.layers` | Background layer anchor circle | #DDDF / #555F | `bgLayerAnchorColor` | C+α | P3 |
+| `fontra.edit.editing.layers` | Editing layer (other layers) outline | #99FF / #559F | `editingLayerOutlineColor` | C+α | P2 |
+| `fontra.edit.editing.layers` | Editing layer anchor circle | #AAFF / #558F | `editingLayerAnchorColor` | C+α | P3 |
 
-### 4.11 交互辅助（Card：Interaction aids）
+### 4.11 Interaction aids (Card: Interaction aids)
 
-| 图层 | 属性 | 现值 亮/暗 | 建议模型键 | 控件 | 优先级 |
+| Layer | Property | Current value light/dark | Suggested model key | Control | Priority |
 |---|---|---|---|---|---|
-| `fontra.ghostpath` | 拖拽幽灵路径 | #AAA6 / #8886 | `ghostPathColor` | C+α | P2 |
-| `fontra.connect-insert.point` | 连接/插入提示 | #3080FF80 / #50A0FF80 | `connectInsertColor` | C+α | P3 |
-| `fontra.background-image` | 背景图边框（选中） | #888 / #FFF | `backgroundImageColor` | C | P3 |
-| `fontra.background-image` | 背景图边框（悬停） | #8885 / #FFF5 | `backgroundImageHoverColor` | C+α | P3 |
-| `fontra.glyph.locking` + `.non-editing` | 锁图标颜色 | #000C / #FFFC | `lockIconColor`（两层共用） | C | P3 |
+| `fontra.ghostpath` | Drag ghost path | #AAA6 / #8886 | `ghostPathColor` | C+α | P2 |
+| `fontra.connect-insert.point` | Connect/insert hint | #3080FF80 / #50A0FF80 | `connectInsertColor` | C+α | P3 |
+| `fontra.background-image` | Background image border (selected) | #888 / #FFF | `backgroundImageColor` | C | P3 |
+| `fontra.background-image` | Background image border (hovered) | #8885 / #FFF5 | `backgroundImageHoverColor` | C+α | P3 |
+| `fontra.glyph.locking` + `.non-editing` | Lock icon color | #000C / #FFFC | `lockIconColor` (shared by 2 layers) | C | P3 |
 
-### 4.12 工具图层（Card：Tools）
+### 4.12 Tool layers (Card: Tools)
 
-> 六个工具自有图层，同样走 apply*Settings + keyListeners 模式（它们都在 visualizationLayerDefinitions 数组里，机制无差别）。kerning / sidebearings 各有孪生 identifier，共用同一组键。
+> The six tools have their own layers and follow the same apply*Settings + keyListeners pattern (they all sit in the visualizationLayerDefinitions array; the mechanism is no different). kerning / sidebearings each have twin identifiers that share one set of keys.
 
-| 图层 | 属性 | 现值 亮/暗 | 建议模型键 | 控件 | 优先级 |
+| Layer | Property | Current value light/dark | Suggested model key | Control | Priority |
 |---|---|---|---|---|---|
-| `fontra.power.ruler` | 标尺线颜色 | #0004 / #FFF6 | `powerRulerStrokeColor` | C+α | P2 |
-| 同上 | 距离框内底色 | #FFFB / #444B | `powerRulerInsideBlobColor` | C+α | P2 |
-| 同上 | 距离框内文字色 | #000B / #FFFB | `powerRulerInsideTextColor` | C+α | P3 |
-| 同上 | 距离框外底色 | #000B / #FFFB | `powerRulerOutsideBlobColor` | C+α | P3 |
-| 同上 | 距离框外文字色 | #FFFB / #444B | `powerRulerOutsideTextColor` | C+α | P3 |
-| 同上 | 曲线交点色 | #F085 / #F696 | `powerRulerIntersectionColor` | C+α | P2 |
-| 同上 | 线宽 / 字号 / 交点半径 | 1 / 12 / 4 | `powerRulerStrokeWidth` / `powerRulerFontSize` / `powerRulerIntersectionRadius` | N×3 | P3 |
-| `fontra.knifetool.line` | 切割线颜色 | #1118 / #FFFB | `knifeLineColor` | C+α | P2 |
-| 同上 | 切割交点圆色 | #3080FF80 / #50A0FF80 | `knifeNodeColor` | C+α | P3 |
-| 同上 | 线宽 / 交点圆尺寸 | 1 / 10 | `knifeStrokeWidth` / `knifeNodeSize` | N×2 | P3 |
-| `fontra.sidebearings.*`（3 个孪生层共用） | 边距线颜色 | #0004 / #FFF6 | `sidebearingColor` | C+α | P2 |
-| 同上 | 线宽 / 伸缩长度 | 1 / 16 | `sidebearingStrokeWidth` / `sidebearingExtent` | N×2 | P3 |
-| `fontra.kerning-indicators.*`（2 个孪生层共用） | 负字距色带 | #F1175933 / #FF336655 | `kernNegativeColor` | C+α | P3 |
-| 同上 | 正字距色带 | #1759F133 / #3366FF55 | `kernPositiveColor` | C+α | P3 |
-| `fontra.cjk.design.frame` | 设计框线色 | #0004 / #FFF6 | `cjkFrameStrokeColor` | C+α | P3 |
-| 同上 | 出血区（overshoot）色 | #00BFFF26 | `cjkFrameOvershootColor` | C+α | P3 |
-| 同上 | 第二线色 | #A6296344 / #A62963AA | `cjkFrameSecondLineColor` | C+α | P3 |
-| 同上 | 线宽 | 1 | `cjkFrameStrokeWidth` | N | P3 |
-| `fontra.shapetool.shape` | 形状预览填充 | #FFFB / #1118 | `shapeToolFillColor` | C+α | P3 |
-| 同上 | 形状预览描边 | #000 / #FFF | `shapeToolStrokeColor` | C | P3 |
-| 同上 | 线宽 | 1 | `shapeToolStrokeWidth` | N | P3 |
-| `fontra.reference.font` | 参考字体填充 | #AAA6 | `referenceFontColor` | C+α | P2 |
-| 同上 | 参考字体描边宽 | 1 | `referenceFontStrokeWidth` | N | P3 |
+| `fontra.power.ruler` | Ruler line color | #0004 / #FFF6 | `powerRulerStrokeColor` | C+α | P2 |
+| Same layer | Distance box inner background | #FFFB / #444B | `powerRulerInsideBlobColor` | C+α | P2 |
+| Same layer | Distance box inner text color | #000B / #FFFB | `powerRulerInsideTextColor` | C+α | P3 |
+| Same layer | Distance box outer background | #000B / #FFFB | `powerRulerOutsideBlobColor` | C+α | P3 |
+| Same layer | Distance box outer text color | #FFFB / #444B | `powerRulerOutsideTextColor` | C+α | P3 |
+| Same layer | Curve intersection color | #F085 / #F696 | `powerRulerIntersectionColor` | C+α | P2 |
+| Same layer | Stroke width / font size / intersection radius | 1 / 12 / 4 | `powerRulerStrokeWidth` / `powerRulerFontSize` / `powerRulerIntersectionRadius` | N×3 | P3 |
+| `fontra.knifetool.line` | Knife line color | #1118 / #FFFB | `knifeLineColor` | C+α | P2 |
+| Same layer | Knife intersection circle color | #3080FF80 / #50A0FF80 | `knifeNodeColor` | C+α | P3 |
+| Same layer | Stroke width / intersection circle size | 1 / 10 | `knifeStrokeWidth` / `knifeNodeSize` | N×2 | P3 |
+| `fontra.sidebearings.*` (shared by 3 twin layers) | Sidebearing line color | #0004 / #FFF6 | `sidebearingColor` | C+α | P2 |
+| Same layer | Stroke width / extent length | 1 / 16 | `sidebearingStrokeWidth` / `sidebearingExtent` | N×2 | P3 |
+| `fontra.kerning-indicators.*` (shared by 2 twin layers) | Negative kerning band color | #F1175933 / #FF336655 | `kernNegativeColor` | C+α | P3 |
+| Same layer | Positive kerning band color | #1759F133 / #3366FF55 | `kernPositiveColor` | C+α | P3 |
+| `fontra.cjk.design.frame` | Design frame line color | #0004 / #FFF6 | `cjkFrameStrokeColor` | C+α | P3 |
+| Same layer | Overshoot area color | #00BFFF26 | `cjkFrameOvershootColor` | C+α | P3 |
+| Same layer | Second line color | #A6296344 / #A62963AA | `cjkFrameSecondLineColor` | C+α | P3 |
+| Same layer | Stroke width | 1 | `cjkFrameStrokeWidth` | N | P3 |
+| `fontra.shapetool.shape` | Shape preview fill | #FFFB / #1118 | `shapeToolFillColor` | C+α | P3 |
+| Same layer | Shape preview stroke | #000 / #FFF | `shapeToolStrokeColor` | C | P3 |
+| Same layer | Stroke width | 1 | `shapeToolStrokeWidth` | N | P3 |
+| `fontra.reference.font` | Reference font fill | #AAA6 | `referenceFontColor` | C+α | P2 |
+| Same layer | Reference font stroke width | 1 | `referenceFontStrokeWidth` | N | P3 |
 
-### 4.13 状态色条（Card：Status bar —— `fontra.status.color`）
+### 4.13 Status color bar (Card: Status bar — `fontra.status.color`)
 
-| 属性 | 现值 | 建议模型键 | 控件 | 优先级 |
+| Property | Current value | Suggested model key | Control | Priority |
 |---|---|---|---|---|
-| 色条最小厚度 | 3 | `statusBarMinThickness` | N | P3 |
-| 色条最大厚度 | 15 | `statusBarMaxThickness` | N | P3 |
-| 编辑态不透明度 | 40%（draw 里硬编码 ×0.4） | `statusBarEditingOpacity` | N 0-100 | P3 |
+| Color bar minimum thickness | 3 | `statusBarMinThickness` | N | P3 |
+| Color bar maximum thickness | 15 | `statusBarMaxThickness` | N | P3 |
+| Editing-state opacity | 40% (hardcoded ×0.4 in draw) | `statusBarEditingOpacity` | N 0-100 | P3 |
 
-> 颜色本体来自字体 customData（`fontra.sourceStatusFieldDefinitions`，每个状态一个颜色）——属于**项目数据**，全局覆盖会破坏"按状态区分颜色"这个功能本身。这是功能约束，不是遗漏；以上 3 项外观参数全部可设。
+> The colors themselves come from font customData (`fontra.sourceStatusFieldDefinitions`, one color per status) — this is **project data**, and a global override would break the "color per status" feature itself. This is a functional constraint, not an omission; all 3 appearance parameters above can be set.
 
-### 4.14 框选矩形（Card：Rect select —— `fontra.rect.select`）⚠ 需改 draw
+### 4.14 Rect-select rectangle (Card: Rect select — `fontra.rect.select`) ⚠ requires a draw change
 
-| 属性 | 现值 | 建议模型键 | 控件 | 优先级 |
+| Property | Current value | Suggested model key | Control | Priority |
 |---|---|---|---|---|
-| 实线颜色（内层） | #000（硬编码） | `rectSelectSolidColor` | C | P3 |
-| 虚线颜色（外层） | #FFF（硬编码） | `rectSelectDashColor` | C | P3 |
-| 线宽 | 1 | `rectSelectStrokeWidth` | N | P3 |
-| 虚线段长 | 10 | `rectSelectDashLength` | N | P3 |
+| Solid line color (inner) | #000 (hardcoded) | `rectSelectSolidColor` | C | P3 |
+| Dashed line color (outer) | #FFF (hardcoded) | `rectSelectDashColor` | C | P3 |
+| Stroke width | 1 | `rectSelectStrokeWidth` | N | P3 |
+| Dash segment length | 10 | `rectSelectDashLength` | N | P3 |
 
-> "⚠ 需改 draw"的含义：这个图层的黑白两色没有像其他图层那样放在 colors 表里，而是写死在 draw 函数代码里（`context.strokeStyle = "#000"` / `"#FFF"`）。接入设置管道前必须先做一个 ~10 行的小改动：把两个颜色挪进 colors 表、draw 改为读 `parameters`。改完即与普通图层无异。
+> What "⚠ requires a draw change" means: this layer's black/white pair is not in the colors table like other layers; it is hardcoded in the draw function code (`context.strokeStyle = "#000"` / `"#FFF"`). Before wiring into the settings pipeline, a ~10-line change is required first: move the two colors into the colors table and make draw read from `parameters`. After that it is no different from an ordinary layer.
 
-### 4.15 微调尺寸（Card：Fine tuning —— 长尾 screenParameters，全部 P3）
+### 4.15 Fine-tuning sizes (Card: Fine tuning — long-tail screenParameters, all P3)
 
-| 图层 | 参数 | 现值 | 建议模型键 |
+| Layer | Parameter | Current value | Suggested model key |
 |---|---|---|---|
-| `fontra.guidelines` | 文字边距 margin | 5 | `guidelineMargin` |
-| 同上 | 锁图标尺寸 iconSize | 12 | `guidelineIconSize` |
-| 同上 | 参考线节点尺寸 smoothSize | 8 | `guidelineNodeSize` |
-| 同上 | 悬停外扩 hoverStrokeOffset | 4 | `guidelineHoverStrokeOffset` |
-| 同上 | 光晕外扩 underlayOffset | 2 | `guidelineUnderlayOffset` |
-| `fontra.selected.anchors` | 锚点尺寸 smoothSize | 8 | `anchorSelectedSize` |
-| 同上 | 线宽 / 悬停外扩 / 光晕外扩 | 1 / 4 / 2 | `anchorSelectedStrokeWidth` / `anchorHoverStrokeOffset` / `anchorUnderlayOffset` |
-| `fontra.selected.nodes` | 悬停外扩 / 光晕外扩 | 4 / 2 | `nodeHoverStrokeOffset` / `nodeUnderlayOffset` |
-| `fontra.component.selection` | 悬停/选中描边宽 | 3 / 3 | `componentHoverStrokeWidth` / `componentSelectedStrokeWidth` |
-| 同上 | 原点/中心标记线宽 | 1 / 2 | `componentOriginMarkerStrokeWidth` / `componentOriginMarkerSelectedStrokeWidth` |
-| 同上 | 标记半臂长 / 圆半径 | 10 / 4 | `componentOriginMarkerSize` / `componentOriginMarkerRadius` |
-| `fontra.connect-insert.point` | 连接半径 / 插入手柄半径 | 11 / 5 | `connectInsertRadius` / `connectInsertHandlesRadius` |
-| 同上 | 删除指示臂长 / 可拖指示半径 / 线宽 | 7 / 9 / 2 | `connectInsertDeleteIndicatorLength` / `connectInsertDragIndicatorRadius` / `connectInsertStrokeWidth` |
-| `fontra.glyph.locking` ×2 | 锁图标尺寸 | 19 | `lockIconSize` |
-| `fontra.background-image` | 边框线宽 | 2 | `backgroundImageStrokeWidth` |
-| `fontra.edit.background.layers` | 轮廓线宽 / 锚点圈半径 | 1 / 4 | `bgLayerOutlineStrokeWidth` / `bgLayerAnchorRadius` |
-| `fontra.edit.editing.layers` | 轮廓线宽 / 锚点圈半径 | 1 / 4 | `editingLayerOutlineStrokeWidth` / `editingLayerAnchorRadius` |
-| `fontra.anchor.names` | 顶部边距 | 6 | `anchorNamesMarginFromTop` |
-| `fontra.startpoint.indicator` | 箭头与节点间隙 gap | 5 | `startpointChevronGap`（设计上刻意恒定、不随节点尺寸缩放——可调，默认保持） |
-| 同上 | 箭头线宽 | 2 | `startpointChevronStrokeWidth` |
-| `fontra.crosshair` | 虚线段长（[4,4]） | 4 | `crosshairDashLength` |
+| `fontra.guidelines` | Text margin | 5 | `guidelineMargin` |
+| Same layer | Lock icon size iconSize | 12 | `guidelineIconSize` |
+| Same layer | Guideline node size smoothSize | 8 | `guidelineNodeSize` |
+| Same layer | Hover stroke offset hoverStrokeOffset | 4 | `guidelineHoverStrokeOffset` |
+| Same layer | Underlay offset underlayOffset | 2 | `guidelineUnderlayOffset` |
+| `fontra.selected.anchors` | Anchor size smoothSize | 8 | `anchorSelectedSize` |
+| Same layer | Stroke width / hover stroke offset / underlay offset | 1 / 4 / 2 | `anchorSelectedStrokeWidth` / `anchorHoverStrokeOffset` / `anchorUnderlayOffset` |
+| `fontra.selected.nodes` | Hover stroke offset / underlay offset | 4 / 2 | `nodeHoverStrokeOffset` / `nodeUnderlayOffset` |
+| `fontra.component.selection` | Hovered/selected stroke width | 3 / 3 | `componentHoverStrokeWidth` / `componentSelectedStrokeWidth` |
+| Same layer | Origin/center marker stroke width | 1 / 2 | `componentOriginMarkerStrokeWidth` / `componentOriginMarkerSelectedStrokeWidth` |
+| Same layer | Marker half-arm length / circle radius | 10 / 4 | `componentOriginMarkerSize` / `componentOriginMarkerRadius` |
+| `fontra.connect-insert.point` | Connect radius / insert handle radius | 11 / 5 | `connectInsertRadius` / `connectInsertHandlesRadius` |
+| Same layer | Delete indicator arm length / draggable indicator radius / stroke width | 7 / 9 / 2 | `connectInsertDeleteIndicatorLength` / `connectInsertDragIndicatorRadius` / `connectInsertStrokeWidth` |
+| `fontra.glyph.locking` ×2 | Lock icon size | 19 | `lockIconSize` |
+| `fontra.background-image` | Border stroke width | 2 | `backgroundImageStrokeWidth` |
+| `fontra.edit.background.layers` | Outline stroke width / anchor circle radius | 1 / 4 | `bgLayerOutlineStrokeWidth` / `bgLayerAnchorRadius` |
+| `fontra.edit.editing.layers` | Outline stroke width / anchor circle radius | 1 / 4 | `editingLayerOutlineStrokeWidth` / `editingLayerAnchorRadius` |
+| `fontra.anchor.names` | Top margin | 6 | `anchorNamesMarginFromTop` |
+| `fontra.startpoint.indicator` | Chevron-to-node gap | 5 | `startpointChevronGap` (deliberately constant by design, does not scale with node size — adjustable, default preserved) |
+| Same layer | Chevron stroke width | 2 | `startpointChevronStrokeWidth` |
+| `fontra.crosshair` | Dash segment length ([4,4]) | 4 | `crosshairDashLength` |
 
 ---
 
-## 5. 排除项（更新：无）
+## 5. Exclusions (updated: none)
 
-按用户要求**全量纳入，不再有排除项**。原拟"暂不做"的四类的处理方式：
+At the user's request **everything is included — there are no exclusions anymore**. How the four categories originally marked "not for now" are handled:
 
-| 原拟排除项 | 处理 |
+| Originally excluded | Handling |
 |---|---|
-| `fontra.status.color` 状态色条 | 3 项外观参数做成设置（§4.13）；颜色本体来自字体 customData，属项目数据，全局覆盖会破坏功能本身——功能约束，非遗漏 |
-| `fontra.rect.select` 框选矩形 | 改 draw 读 colors（~10 行）后全量接入，4 项（§4.14） |
-| 工具自有图层 | 全部纳入（§4.12）：power ruler 9、刀具 4、边距 3、字距色带 2、CJK 框 4、形状 3、参考字体 2 |
-| 长尾 screenParameters | 全部纳入（§4.15）：33 项微调尺寸 |
+| `fontra.status.color` status color bar | The 3 appearance parameters become settings (§4.13); the colors themselves come from font customData and are project data — a global override would break the feature itself. Functional constraint, not an omission |
+| `fontra.rect.select` rect-select rectangle | After changing draw to read colors (~10 lines), fully wired in — 4 items (§4.14) |
+| Tool-owned layers | All included (§4.12): power ruler 9, knife 4, sidebearings 3, kerning bands 2, CJK frame 4, shape 3, reference font 2 |
+| Long-tail screenParameters | All included (§4.15): 33 fine-tuning sizes |
 
 ---
 
-## 6. 数量与分期
+## 6. Counts and phasing
 
-**新增合计：71 个颜色 + 68 个数值 = 139 项**（不含已上线 20 键与 2 项勘误）。
+**Total to add: 71 colors + 68 numeric values = 139 items** (not counting the 20 shipped keys and the 2 corrections).
 
-| 期 | 内容 | 规模 |
+| Phase | Content | Size |
 |---|---|---|
-| 第 0 期（勘误） | E1 画布背景补行、E2 selectedHandleColor 补键补行 | 2 项 |
-| 第 1 期（P1） | 路径 3 色 + 标签共享 2 色 + 参考线 2 色 + 度量线 4 色（含 baseline） | 10 键 |
-| 第 2 期（P2） | §4.1-4.12 的 P2 项（网格/手柄线/选中节点字形/标签/参考线交互/锚点/部件/多层轮廓/工具主色） | 25 键 |
-| 第 3 期（P3） | 其余全部颜色 + 全部尺寸/字号（§4.13-4.15 与各表 P3 项，含 rect.select 改码） | 104 键 |
+| Phase 0 (corrections) | E1 add canvas background row; E2 add the selectedHandleColor key and row | 2 items |
+| Phase 1 (P1) | Path 3 colors + labels 2 shared colors + guidelines 2 colors + metrics 4 colors (including baseline) | 10 keys |
+| Phase 2 (P2) | P2 items from §4.1-4.12 (grid / handle lines / selected node glyph / labels / guideline interaction / anchors / components / multi-layer outlines / tool primary colors) | 25 keys |
+| Phase 3 (P3) | All remaining colors + all sizes/font sizes (§4.13-4.15 and the P3 items in each table, including the rect.select code change) | 104 keys |
 
-**全部做完的面板规模**：现有 18 行 + 勘误 2 行 + 新增 139 行 ≈ **159 行设置**（模型键约 200，含 40 个 α 伴随键）。
-分期只是实现顺序，最终都进同一个设置页；以各表"优先级"列为准。
+**Final panel size once everything is done**: current 18 rows + 2 correction rows + 139 new rows ≈ **159 setting rows** (about 200 model keys, including 40 α companion keys).
+Phasing only fixes the implementation order; in the end everything lands in the same settings page; the "Priority" column in each table is authoritative.
 
-**每键接线步骤（固定四步）**：
-1. `theme-settings.js` 模型加默认键；
-2. `visualization-layer-definitions.js` 加/扩展 `apply<Feature>Settings(model)`（同时写 colors + colorsDarkMode；尺寸进 screenParameters）；
-3. `editor.js` keyListeners 数组加键名；
-4. `panel-theme-settings.js` 对应卡片加行（`nodeAppearanceRow` 或 checkbox），α 色用组合行。
+**Per-key wiring steps (fixed four steps)**:
+1. Add a default key to the `theme-settings.js` model;
+2. Add/extend `apply<Feature>Settings(model)` in `visualization-layer-definitions.js` (write colors + colorsDarkMode at the same time; sizes go into screenParameters);
+3. Add the key name to the keyListeners array in `editor.js`;
+4. Add a row to the corresponding card in `panel-theme-settings.js` (`nodeAppearanceRow` or checkbox); α colors use the combined row.
 
-> ~~实现建议：第 1 期起把 4 个 apply 函数收敛为表驱动~~ → **已定为硬性前置**，见 §8 主题架构。
+> ~~Suggestion: starting from Phase 1, consolidate the 4 apply functions into a table-driven implementation~~ → **now settled as a hard prerequisite**, see §8 theme architecture.
 
-**验证（每期同流程）**：重建 bundle → Ctrl+F5 → Playwright 面板冒烟（行数、默认值、无 pageerror）→ 编辑器冒烟（图层注册、抽样改值即时生效截图）→ `ENGRAM-CHANGES.md` 记台账。
-
----
-
-## 7. 已确认的决定（2026-10-15）
-
-1. 标签五层用**共享**底色/文字两键（先共享，需要时再拆逐层）。
-2. **全量纳入**，包括原 §5 全部项（状态色条 / 框选矩形 / 工具图层 / 长尾尺寸）；分期只为实现顺序。
-3. `rect.select` 改 draw（~10 行）后接入设置。
-4. 主题能力按**四层架构**执行（明暗切换 → 预设包 → 元素级自定义 → 导入导出），L3 为分水岭必须做全，L4 的地基（token 表）从现在开始搭——见 §8。
+**Verification (same process every phase)**: rebuild bundle → Ctrl+F5 → Playwright panel smoke test (row count, default values, no pageerror) → editor smoke test (layer registration, sampled value changes taking effect immediately, screenshots) → record the entry in the `ENGRAM-CHANGES.md` ledger.
 
 ---
 
-## 8. 主题架构：四层能力与 token 表
+## 7. Confirmed decisions (2026-10-15)
 
-### 8.1 四层现状对照
+1. The five label layers use the **shared** background/text key pair (share first; split per layer later if needed).
+2. **Include everything**, including all items originally in §5 (status color bar / rect-select rectangle / tool layers / long-tail sizes); phasing only fixes the implementation order.
+3. `rect.select` gets wired into settings after the draw change (~10 lines).
+4. Theme capability follows the **four-layer architecture** (light/dark switching → preset packs → element-level customization → import/export); L3 is the watershed and must be done in full, and the foundation of L4 (the token table) is built starting now — see §8.
 
-| 层 | 现状 | 动作 |
+---
+
+## 8. Theme architecture: four capability layers and the token table
+
+### 8.1 Current state of the four layers
+
+| Layer | Current state | Action |
 |---|---|---|
-| 1. 明/暗切换 | 已有（theme radio + light/dark CSS 类 + 图层 colorsDarkMode） | 保留 |
-| 2. 预设主题包 | 无 | = token 表的具名快照，表建好后即得 |
-| 3. 元素级自定义 | **进行中**（本清单 139 项就是 L3） | 继续实现 |
-| 4. 完整主题系统 | 无 | token 表第一天即支持；导入/导出 UI 后做 |
+| 1. Light/dark switching | Present (theme radio + light/dark CSS classes + per-layer colorsDarkMode) | Keep |
+| 2. Preset theme packs | None | = named snapshots of the token table; available as soon as the table exists |
+| 3. Element-level customization | **In progress** (the 139 items in this inventory are L3) | Continue implementing |
+| 4. Full theme system | None | Supported by the token table from day one; import/export UI comes later |
 
-### 8.2 VISUAL_TOKENS 表（单一事实源）
+### 8.2 The VISUAL_TOKENS table (single source of truth)
 
-每行 = 一个语义 token（token id 沿用现有 camelCase 模型键，localStorage 兼容，不改名）：
+Each row = one semantic token (token ids reuse the existing camelCase model keys; localStorage-compatible, no renaming):
 
 ```js
 {
-  key: "nodeSmoothColor",              // token id = 模型键
-  category: "node",                    // 面板卡片
+  key: "nodeSmoothColor",              // token id = model key
+  category: "node",                    // panel card
   displayName: "Smooth node",
   control: { ui: "color" },            // color | color-alpha | number | checkbox
   defaultLight: "#7A4FE8",
-  defaultDark: "#A78BFA",              // 手工调过的双主题默认，不派生
-  apply: { layer: "fontra.nodes", colors: { smoothColor: 1 } },  // 1 = 引用本 token
+  defaultDark: "#A78BFA",              // hand-tuned dual-theme defaults, not derived
+  apply: { layer: "fontra.nodes", colors: { smoothColor: 1 } },  // 1 = reference to this token
 }
 ```
 
-全部派生物由表生成，不再手工同步：
-- `applyVisualLayerSettings(model)`：遍历表 → 写 layerDef 的 colors / colorsDarkMode / screenParameters / glyphParameters
-- editor.js 的 keyListeners 键列表 = 表的 keys
-- 设置面板按 category 分卡生成行（nodeAppearanceRow 机制不变）
-- 污染迁移的颜色键列表 = 表的颜色 token keys
-- L4 导入/导出 = 表的 `{key: value}` JSON 序列化
+All derivatives are generated from the table; no more manual syncing:
+- `applyVisualLayerSettings(model)`: iterate the table → write layerDef's colors / colorsDarkMode / screenParameters / glyphParameters
+- The keyListeners key list in editor.js = the table's keys
+- The settings panel generates rows into cards by category (nodeAppearanceRow mechanism unchanged)
+- The pollution-migration color key list = the table's color token keys
+- L4 import/export = JSON serialization of the table's `{key: value}`
 
-### 8.3 颜色解析规则（亮暗 + 用户覆盖）
+### 8.3 Color resolution rules (light/dark + user overrides)
 
-1. **无覆盖**：用手工调的 defaultLight / defaultDark（比公式派生准）。
-2. **有覆盖**：亮色主题用覆盖值；暗色主题 = OKLCH 派生——**H、C 保持，L 重映射到对暗画布的目标对比度**。"同一种颜色，只为暗底调了明度"；切换主题时用户的选择不丢失。
-   ⚠ 方向勘误：暗底上的**前景**元素（节点/描边）要**提高** L（#7A4FE8 → #A78BFA 正是这个方向），"变暗"的是画布底色本身。
-3. **存储始终 sRGB hex**（原生拾色器）；OKLCH 只用于内部派生（hex→OKLCH→hex 纯函数模块，~100 行，无 UI）——不复活 OKLCH 拾色器。
-4. 数值 / 布尔 token 双主题共用，无派生。
-5. 带 α 的 token = 色 + α 两键；派生只动 RGB 的 L，α 原样保留。
+1. **No override**: use the hand-tuned defaultLight / defaultDark (more accurate than formula derivation).
+2. **With override**: the light theme uses the override value; the dark theme = OKLCH derivation — **H and C preserved, L remapped to the target contrast against the dark canvas**. "The same color, with only its lightness tuned for the dark background"; the user's choice is not lost when switching themes.
+   ⚠ Direction correction: **foreground** elements on a dark background (nodes/strokes) need a **higher** L (#7A4FE8 → #A78BFA is exactly this direction); what "darkens" is the canvas background itself.
+3. **Storage is always sRGB hex** (native color picker); OKLCH is used only for internal derivation (a hex→OKLCH→hex pure-function module, ~100 lines, no UI) — the OKLCH picker is not being revived.
+4. Numeric / boolean tokens are shared across both themes, no derivation.
+5. Tokens with α = two keys, color + α; derivation only touches the RGB's L; α is preserved as-is.
 
-### 8.4 预设包（L2，已实现）
+### 8.4 Preset packs (L2, implemented)
 
-- **内置四套**：High contrast / Low noise (muted) / Warm paper / Cool paper
-  （全色键快照，尺寸保留用户值），`theme-presets.js` + `registerThemePreset()`。
-- **自定义预设**（面板 Preset 卡）：Save as new（快照当前全部 token 值，命名）/
-  Rename / Delete（存 `themeCustomPresets` 模型键，JSON 持久化 + 跨标签同步）/
-  **Restore defaults**（全 token 回出厂默认，保留明暗模式偏好）。
-- **发布前质检**：三层 WCAG 矩阵（Tier A 主标记 ≥3:1 / Tier B 次要注释 ≥1.5 /
-  Tier C 刻意淡雅仅报告）+ 节点四色 ΔE —— `test-preset-contrast.mjs`。
+- **Four built-in packs**: High contrast / Low noise (muted) / Warm paper / Cool paper
+  (all color keys snapshotted, sizes keep user values), `theme-presets.js` + `registerThemePreset()`.
+- **Custom presets** (panel Preset card): Save as new (snapshot all current token values, name it) /
+  Rename / Delete (stored in the `themeCustomPresets` model key, JSON persistence + cross-tab sync) /
+  **Restore defaults** (all tokens back to factory defaults, light/dark mode preference preserved).
+- **Pre-release QA**: three-tier WCAG matrix (Tier A primary markers ≥3:1 / Tier B secondary annotations ≥1.5 /
+  Tier C intentionally muted, report only) + ΔE over the four node colors — `test-preset-contrast.mjs`.
 
-### 8.5 两个专业坑的落点
+### 8.5 How the two expert pitfalls are handled
 
-- **极值点对比**：节点类型已是形状编码（眼/方/超椭圆/菱形），不单靠颜色 ✓；预设质检矩阵兜底。
-- **主题 vs 文档数据**：`status.color` 颜色本体来自字体 customData（§4.13 已标），不入主题；画布轮廓/预览色是"预览墨色"（可主题化），不是文档数据 ✓。UI chrome（侧栏/工具栏）不在此轮范围。
+- **Extremum point contrast**: node types are already shape-encoded (eye/square/superellipse/diamond), not color alone ✓; the preset QA matrix provides the backstop.
+- **Theme vs document data**: the `status.color` colors come from font customData (flagged in §4.13) and do not enter the theme; canvas outline/preview colors are "preview ink" (themeable), not document data ✓. UI chrome (sidebar/toolbar) is out of scope for this round.
 
-### 8.6 实施顺序（R4-T4.40 起执行）
+### 8.6 Implementation order (executed from R4-T4.40 onward)
 
-1. ✅ **token 表重构**（R4-T4.38）：`fontra-core/src/visual-tokens.js`（token 表）+
-   `visualization-layer-definitions.js` 的表驱动 `applyVisualTokenSettings()`（懒初始化
-   pristine 快照 + 触碰层从 pristine 重放）；模型默认值、污染迁移颜色键、editor.js
-   监听、面板卡片全部由表派生；4 个旧 apply 函数删除。
-2. ✅ **OKLCH 派生模块**（R4-T4.38）：`fontra-core/src/color-derive.js`——翻边规则
-   （暗底取反侧：黑墨→白），亮度解析解 + L 二分 + 色域 chroma 收缩；单元测试
-   `qa/node-icons/test-color-derive.mjs`（紫 #7A4FE8 → #a996ff，与手调参考
-   #A78BFA 同族验证）。
-3. ✅ **第 1 期 P1**（R4-T4.38）：10 token 进表（路径 3、标签 2、参考线 2、度量线 3）。
-4. ✅ **L4 主题包导入导出**（R4-T4.38，提前）：面板 Theme packs 卡。
-5. ✅ **Schema + token 目录 + 注册 API**（R4-T4.39）：schema/目录由表生成
-   （scripts/dump-visual-tokens.mjs → docs/schemas/）；导入校验同源；架构定案
-   "引擎内置 + 注册 API"（§8.8）。
-6. ✅ **第 2 期 P2**（R4-T4.40）：25 token 进表（UPM 网格/选中节点/手柄线/背景层
-   节点/字形显示 3/轮廓线宽/参考线交互 4/区域端线/锚点/部件 2/多层轮廓 2/幽灵
-   路径/工具 6），新增 6 分类；4 位 hex nibble 审计修正（#DDDF 类实为不透明）。
-   现状：**59 token / 面板 61 行 / schema 79 键**。
-7. ✅ **L2 预设包**（R4-T4.41）：四套内置预设（High contrast / Low noise / Warm
-   paper / Cool paper，全色键快照、尺寸保留用户值）+ 面板 Preset 下拉 +
-   **三层 WCAG 质检矩阵**（Tier A 主标记 ≥3:1 / Tier B 次要注释 ≥1.5 / Tier C
-   刻意淡雅仅报告；框选查 dash↔solid 对、标签查 text↔box 对；节点四色 ΔE 报告）——
-   `qa/node-icons/test-preset-contrast.mjs`，5 套 × 46 检查全过。
-8. ✅ **第 3 期 P3**（R4-T4.42）：72 token（长尾颜色 25 + 全部尺寸/字号 47，
-   含状态色条 3 项与 clean-display 特例图层支持）。
+1. ✅ **Token table refactor** (R4-T4.38): `fontra-core/src/visual-tokens.js` (token table) +
+   the table-driven `applyVisualTokenSettings()` in `visualization-layer-definitions.js` (lazy-initialized
+   pristine snapshot + touched layers replay from pristine); model defaults, pollution-migration color keys,
+   editor.js listeners, and panel cards are all derived from the table; the 4 old apply functions are deleted.
+2. ✅ **OKLCH derivation module** (R4-T4.38): `fontra-core/src/color-derive.js` — flip rule
+   (dark background takes the opposite side: black ink → white), analytic lightness solution + L bisection +
+   gamut chroma reduction; unit tests `qa/node-icons/test-color-derive.mjs`
+   (purple #7A4FE8 → #a996ff, verified same-family as the hand-tuned reference #A78BFA).
+3. ✅ **Phase 1 P1** (R4-T4.38): 10 tokens enter the table (path 3, labels 2, guidelines 2, metrics 3).
+4. ✅ **L4 theme pack import/export** (R4-T4.38, moved up): panel Theme packs card.
+5. ✅ **Schema + token catalog + registration API** (R4-T4.39): schema/catalog generated from the table
+   (scripts/dump-visual-tokens.mjs → docs/schemas/); import validation generated from the same source;
+   architecture settled as "built-in engine + registration API" (§8.8).
+6. ✅ **Phase 2 P2** (R4-T4.40): 25 tokens enter the table (UPM grid / selected nodes / handle lines / background layer
+   nodes / glyph display 3 / outline stroke width / guideline interaction 4 / zone end-line / anchors / components 2 /
+   multi-layer outlines 2 / ghost path / tools 6), 6 new categories added; 4-digit hex nibble audit corrections
+   (#DDDF-style values are actually opaque).
+   Current state: **59 tokens / 61 panel rows / 79 schema keys**.
+7. ✅ **L2 preset packs** (R4-T4.41): four built-in presets (High contrast / Low noise / Warm
+   paper / Cool paper, all color keys snapshotted, sizes keep user values) + panel Preset dropdown +
+   **three-tier WCAG QA matrix** (Tier A primary markers ≥3:1 / Tier B secondary annotations ≥1.5 / Tier C
+   intentionally muted, report only; rect-select checks the dash↔solid pair, labels check the text↔box pair;
+   ΔE report over the four node colors) —
+   `qa/node-icons/test-preset-contrast.mjs`, 5 packs × 46 checks, all passing.
+8. ✅ **Phase 3 P3** (R4-T4.42): 72 tokens (25 long-tail colors + 47 sizes/font sizes,
+   including the 3 status color bar items and clean-display special-case layer support).
 
-**最终状态：131 token / 面板 134 行 / schema 162 键，全部图层覆盖率 100%，
-四层架构 L1-L4 全部落地。**（清单原估 139 项，实际 131 —— 部分合并与命名去重；
-squircle 指数设置已于 R4-T4.45 移除，固定 n=3。）
+**Final state: 131 tokens / 134 panel rows / 162 schema keys, 100% coverage of all layers, all four architecture layers L1-L4 landed.** (The inventory originally estimated 139 items; the actual count is 131 — some merged and some names deduplicated; the squircle exponent setting was removed in R4-T4.45, fixed at n=3.)
 
-### 8.7 主题包文件格式（L4，已实现；JSON + JSON Schema）
+### 8.7 Theme pack file format (L4, implemented; JSON + JSON Schema)
 
-**格式：JSON**（`.engramfont-theme.json`，`format: "engramfont-theme"`，`version: 1`）。
+**Format: JSON** (`.engramfont-theme.json`, `format: "engramfont-theme"`, `version: 1`).
 
 ```json
 {
@@ -435,45 +435,44 @@ squircle 指数设置已于 R4-T4.45 移除，固定 n=3。）
 }
 ```
 
-**Schema 从 token 表生成，不手写**（防漂移）：
-- `buildThemePackSchema()`（visual-tokens.js）→ JSON Schema draft 2020-12：
-  `values.additionalProperties: false`、每键按 token 类型给出
-  type/pattern（hex 3/4/6/8 位）/minimum/maximum/default，附 `x-category`、
-  `x-dark-default`、`x-alpha-key` 等扩展元数据
-- `buildTokenCatalog()` → **token 目录**（34 token：类型/分类/双主题默认值/
-  控件范围/形状/应用图层清单）——"token 呢"的答案：目录即 token 的 schema 化清单
-- 快照：`docs/schemas/engramfont-theme-pack.schema.json` +
-  `docs/schemas/visual-tokens.catalog.json`，由 `node scripts/dump-visual-tokens.mjs`
-  再生成（改表后必跑）
-- 导入校验 `validateThemePack()`（与 schema 同源生成）：容器错误（format/version/
-  values 缺失）→ 拒绝；未知键（新版包在旧版上）与坏值键 → **跳过并报告**，
-  其余照常应用——前向兼容策略：部分应用 + 明细提示
+**The schema is generated from the token table, not hand-written** (drift prevention):
+- `buildThemePackSchema()` (visual-tokens.js) → JSON Schema draft 2020-12:
+  `values.additionalProperties: false`; per key, type/pattern (hex with 3/4/6/8 digits)/minimum/maximum/default
+  according to the token type, plus extension metadata such as `x-category`,
+  `x-dark-default`, `x-alpha-key`
+- `buildTokenCatalog()` → **token catalog** (34 tokens: type/category/dual-theme defaults/
+  control range/shape/list of applied layers) — the answer to "where are the tokens": the catalog is the tokens' schema-backed inventory
+- Snapshots: `docs/schemas/engramfont-theme-pack.schema.json` +
+  `docs/schemas/visual-tokens.catalog.json`, regenerated by `node scripts/dump-visual-tokens.mjs`
+  (must be run after any table change)
+- Import validation `validateThemePack()` (generated from the same source as the schema): container errors (missing format/version/
+  values) → reject; unknown keys (a newer pack on an older version) and keys with bad values → **skip and report**,
+  the rest apply as usual — forward-compatibility strategy: partial apply + itemized reporting
 
-### 8.8 内置 vs 插件（架构决定，2026-10-15）
+### 8.8 Built-in vs plugin (architecture decision, 2026-10-15)
 
-**结论：引擎内置，表开放注册，内容（主题包/预设）天然是数据。**
+**Conclusion: the engine is built in, the table is open for registration, and content (theme packs/presets) is naturally data.**
 
-依据（Fontra 实际插件面，`docs/plugin-structure.md` + `src/fontra/core/server.py`）：
-entry-points 四类——projectmanagers / **views** / filesystem.backends / **webcontent**，
-全是"整页级"扩展（新视图、项目管理器、存储后端、静态文件）。源码证实：
-webcontent 仅注册静态路由 `/{name}/{path}`（server.py L64-74），核心视图 HTML
-**没有任何插件脚本加载点**；views 只在 serverInfo 里列名字（L230-232）。
-即：第三方 JS 今天根本进不了编辑器视图。而主题引擎必须：
-1. 在任何图层绘制前生效（buildLayers 的 colors/screenParameters 合并）；
-2. 在模型物化前完成 localStorage 迁移（时序）；
-3. 被所有画布视图共用；
-4. 插件禁用/损坏时画布照常工作（核心功能不依赖可选件）。
+Basis (Fontra's actual plugin surface, `docs/plugin-structure.md` + `src/fontra/core/server.py`):
+four entry-points categories — projectmanagers / **views** / filesystem.backends / **webcontent** —
+all "whole-page-level" extensions (new views, project managers, storage backends, static files). The source code confirms:
+webcontent only registers static routes `/{name}/{path}` (server.py L64-74), and the core view HTML
+has **no plugin script loading point at all**; views only list names in serverInfo (L230-232).
+In other words: third-party JS simply cannot enter the editor view today. The theme engine, however, must:
+1. Take effect before any layer is drawn (the colors/screenParameters merge in buildLayers);
+2. Complete the localStorage migration before the model materializes (timing);
+3. Be shared by all canvas views;
+4. Keep the canvas working when a plugin is disabled/broken (core functionality must not depend on optional components).
 
-→ 引擎（token 表解析、applier、OKLCH 派生、schema、迁移）**内置 fontra-core**。
-→ 扩展点 = **注册 API**（与 `registerVisualizationLayerDefinition` 同构的第二个
-  注册表），已实现：
-  - `registerVisualTokens(tokens, {category})`：追加 token 行（键去重）；
-    keys/迁移键/schema/面板行经 live binding 自动更新；
-  - `registerTokenCategory(id, displayName)`：新增面板卡片；
-  - `onVisualTokensRegistered(listener)`：theme-settings 订阅后把新 token 默认值
-    物化进模型（免刷新）。
-  我们自己的后续批次（P2/P3 工具图层色、L2 预设）就是第一批注册者——API 由
-  内部使用先行验证；第三方等 Fontra 插件机制进化出"核心视图注入"能力后，
-  经 webcontent JS + 约定加载协议即可接入（注册 API 是纯函数调用，无需新协议）。
-→ L4 的"内容"（`.engramfont-theme.json` 主题包、预设快照）是**数据文件**，
-  天然插件式分发，无需代码级 API。
+→ The engine (token table parsing, applier, OKLCH derivation, schema, migration) is **built into fontra-core**.
+→ The extension point = a **registration API** (a second registry isomorphic to `registerVisualizationLayerDefinition`), implemented:
+  - `registerVisualTokens(tokens, {category})`: append token rows (keys deduplicated);
+    keys/migration keys/schema/panel rows update automatically via live binding;
+  - `registerTokenCategory(id, displayName)`: add a new panel card;
+  - `onVisualTokensRegistered(listener)`: theme-settings subscribes and materializes the new token defaults
+    into the model (no refresh needed).
+  Our own follow-up batches (P2/P3 tool layer colors, L2 presets) are the first registrants — the API gets
+  validated by internal use first; once Fontra's plugin mechanism evolves a "core view injection" capability,
+  third parties can hook in via webcontent JS + a convention-based loading protocol (the registration API is a pure function call; no new protocol needed).
+→ The L4 "content" (`.engramfont-theme.json` theme packs, preset snapshots) are **data files**,
+  naturally distributed plugin-style, with no code-level API needed.

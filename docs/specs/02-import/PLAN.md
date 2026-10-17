@@ -1,5 +1,5 @@
-# R2 · 计划
+# R2 · Plan
 
-- M1（T2.1-T2.2）：服务端转换 + 端点可用（curl 可导）
-- M2（T2.3-T2.4）：UI 闭环 + 容错
-依赖：无外部依赖（全 fontra 内置）
+- M1 (T2.1-T2.2): server-side conversion + endpoint available (import works via curl)
+- M2 (T2.3-T2.4): UI loop + fault tolerance
+Dependencies: none external (all built into fontra)

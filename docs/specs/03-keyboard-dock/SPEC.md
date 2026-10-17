@@ -1,68 +1,68 @@
-# R3 · 虚拟键盘 Dock · 技术规范
+# R3 · Virtual Keyboard Dock · Technical Specification
 
-## 1. UI 结构与布局
+## 1. UI Structure and Layout
 ```
 editor-container
 ├── top-bar-container
-├── sidebar-container.left / right（不动）
+├── sidebar-container.left / right (unchanged)
 ├── main-container
 │   ├── canvas#edit-canvas
-│   └── [新增] #keyboard-dock（绝对定位 bottom:0 左右居中，宽 min(920px, 92%)）
-│       ├── .kd-toolbar（proof 态显示：kern/space/proof 预设按钮——R5 提供）
-│       └── .kd-rows（5 行键帽）
+│   └── [new] #keyboard-dock (absolute positioning bottom:0, horizontally centered, width min(920px, 92%))
+│       ├── .kd-toolbar (shown in proof mode: kern/space/proof preset buttons — provided by R5)
+│       └── .kd-rows (5 rows of keycaps)
 └── sidebar-container.right
 ```
-- 折叠态：Dock 收缩为右下角圆形按钮（键盘 icon），点击展开
-- 键帽：`<button class="kd-key" data-key="g" aria-label="g">`（字母键含字形预览：
-  复用 glyph-cell-view.js 以 24px 渲染该字形缩略——有字形才显示预览，无则字母）
+- Collapsed state: the dock shrinks to a round button at the bottom right (keyboard icon); click to expand
+- Keycaps: `<button class="kd-key" data-key="g" aria-label="g">` (letter keys include a glyph preview:
+  reuse glyph-cell-view.js to render a 24px thumbnail of that glyph — preview only when the glyph exists, otherwise the letter)
 
-## 2. 状态机
+## 2. State Machines
 ```
-dock: collapsed ←→ expanded（localStorage "engramfont-dock-collapsed"）
-modifier: null ←→ "alt" ←→ "ctrl"（内存态，点其它处复位）
-canvasMode: edit ←→ proof（R5 拥有该状态，Dock 只读订阅 + 派发切换事件）
+dock: collapsed ←→ expanded (localStorage "engramfont-dock-collapsed")
+modifier: null ←→ "alt" ←→ "ctrl" (in-memory state; resets when clicking elsewhere)
+canvasMode: edit ←→ proof (R5 owns this state; the dock read-only subscribes + dispatches switch events)
 ```
 
-## 3. 键位映射总表（全部键）
-| 键 | 行为 | 接线（Fontra API） | 备注 |
+## 3. Complete Key Mapping (all keys)
+| Key | Behavior | Wiring (Fontra API) | Notes |
 |---|---|---|---|
-| 字母 a-z | 切换当前字形 | `sceneSettings.selectedGlyph = {...sel, glyphName, isEditing:true}`（editor.js:864 同款） | glyphName=字母 |
-| 字形缺失 | 弹创建对话框 | editor.js:860 create-new-glyph 流程复用（抽公共函数或事件派发） | D4 决策 |
-| DEL | 文本末字符退格 | `characterLines` 末行末字符移除（Q1 默认行为） | |
-| space | 文本追加空格 | characterLines 追加 | |
-| ctrl/alt | modifier 态 | alt=字母键大小写；ctrl=预留 | Q2 |
-| move | 画布平移开关 | sceneView pan 持久化开关 | |
-| 100% | 缩放复位 | viewBox 复位（editor.js:3420 _zoom 路线） | |
-| proof | canvasMode=proof | R5 状态机派发 | 依赖 R5 |
-| edit | canvasMode=edit | 同上 | |
+| letters a-z | switch the current glyph | `sceneSettings.selectedGlyph = {...sel, glyphName, isEditing:true}` (same as editor.js:864) | glyphName=letter |
+| glyph missing | pop the create dialog | reuse the editor.js:860 create-new-glyph flow (extract a shared function or dispatch an event) | D4 decision |
+| DEL | backspace the last text character | remove the last character of the last line of `characterLines` (Q1 default behavior) | |
+| space | append a space to the text | append to characterLines | |
+| ctrl/alt | modifier state | alt = letter-key case; ctrl = reserved | Q2 |
+| move | canvas pan toggle | persistent pan toggle on sceneView | |
+| 100% | zoom reset | reset viewBox (editor.js:3420 _zoom route) | |
+| proof | canvasMode=proof | dispatch via the R5 state machine | depends on R5 |
+| edit | canvasMode=edit | same as above | |
 
-## 4. 模块与文件清单
-| 文件 | 操作 | 内容 |
+## 4. Modules and File Inventory
+| File | Operation | Content |
 |---|---|---|
-| `src-js/views-editor/src/keyboard-dock.js` | 新增 | KeyboardDock 类（DOM 构建/键位表/事件） |
-| `src-js/views-editor/src/editor.js` | 修改 1 处 | 实例化 Dock 并挂载（+折叠按钮挂 main-container） |
-| `src-js/views-editor/assets/editor.css` | 修改（追加） | Dock/键帽样式（--engramfont-* 令牌） |
-| `src-js/fontra-core/assets/lang/*.js` | 修改 | aria/tooltip 文案键 |
+| `src-js/views-editor/src/keyboard-dock.js` | new | KeyboardDock class (DOM building/keymap/events) |
+| `src-js/views-editor/src/editor.js` | modify 1 spot | instantiate the dock and mount it (+ collapsed button mounted on main-container) |
+| `src-js/views-editor/assets/editor.css` | modify (append) | dock/keycap styles (--engramfont-* tokens) |
+| `src-js/fontra-core/assets/lang/*.js` | modify | aria/tooltip copy keys |
 
-## 5. 交互细节
-- 键帽按下（pointerdown）即触发导航，不需要 Enter
-- 按住 shift（物理键盘）+ 点字母 = 大写形态字形（"G"）
-- 长按字母键 500ms：弹出该字母的相关字形菜单（P2）
-- Dock 不遮挡画布交互：Dock 以外的画布区域正常响应编辑工具
+## 5. Interaction Details
+- Navigation triggers on keycap press (pointerdown); no Enter needed
+- Hold shift (physical keyboard) + click a letter = the uppercase-form glyph ("G")
+- Long-press a letter key for 500ms: pop a menu of glyphs related to that letter (P2)
+- The dock does not block canvas interaction: canvas areas outside the dock respond normally to editing tools
 
-## 6. 主题与 a11y
-- 全部颜色/边框走 --engramfont-* 令牌（暗色自动）
-- 每键：role=button + aria-label（"切换到字形 g"）；焦点环可见；Tab 顺序按行
+## 6. Theme and a11y
+- All colors/borders use --engramfont-* tokens (dark mode automatic)
+- Every key: role=button + aria-label ("switch to glyph g"); visible focus ring; Tab order row by row
 
-## 7. 完整键位布局常量表（实现即用）
+## 7. Complete Key Layout Constant Table (ready for implementation)
 
-> **实测修正**：以下占位猜测已全部实证，权威键位表见 [KEYMAP-VERIFIED.md](./KEYMAP-VERIFIED.md)——
-> 紫键=网格显隐、黄键=笔画粗细滑块、红/绿键=左右边距滑块、alt=移除锚点、
-> 右下四小键=网格吸附/参考线吸附/bezier-mesh 切换/轮廓视图。下表保留供对照，实现以 KEYMAP-VERIFIED.md 为准。
+> **Measured corrections**: the placeholder guesses below have all been verified empirically; the authoritative keymap is [KEYMAP-VERIFIED.md](./KEYMAP-VERIFIED.md) —
+> purple key = grid show/hide, yellow key = stroke-thickness slider, red/green keys = left/right sidebearing sliders, alt = remove anchors,
+> the four small bottom-right keys = snap to grid / snap to guides / bezier-mesh switch / outline view. The table below is kept for reference; implementation follows KEYMAP-VERIFIED.md.
 ```js
-// keyboard-dock.js 顶部常量——全部 28 键的唯一定义处
+// constants at the top of keyboard-dock.js — the single definition site for all 28 keys
 export const DOCK_ROWS = [
-  // row1：数字行 + DEL
+  // row1: number row + DEL
   [
     { key: "`", glyph: "grave" }, { key: "1", glyph: "one" }, { key: "2", glyph: "two" },
     { key: "3", glyph: "three" }, { key: "4", glyph: "four" }, { key: "5", glyph: "five" },
@@ -71,7 +71,7 @@ export const DOCK_ROWS = [
     { key: "=", glyph: "equal" },
     { key: "DEL", glyph: null, special: "del", span: 1, style: "orange" },
   ],
-  // row2：q 行 + 紫键(eye，语义未知→预留不实现，渲染占位禁用)
+  // row2: q row + purple key (eye; semantics unknown → reserved, not implemented, rendered as a disabled placeholder)
   [
     { key: null, special: "eye-reserved", style: "purple", disabled: true },
     { key: "q" }, { key: "w" }, { key: "e" }, { key: "r" }, { key: "t" }, { key: "y" },
@@ -79,7 +79,7 @@ export const DOCK_ROWS = [
     { key: "[", glyph: "bracketleft" }, { key: "]", glyph: "bracketright" },
     { key: "\\", glyph: "backslash" },
   ],
-  // row3：a 行 + edit 模式键（蓝，切回编辑/进编辑）
+  // row3: a row + edit mode key (blue; return to editing / enter editing)
   [
     { key: null, special: "capsule", style: "yellow", disabled: true },
     { key: "a" }, { key: "s" }, { key: "d" }, { key: "f" }, { key: "g" }, { key: "h" },
@@ -87,7 +87,7 @@ export const DOCK_ROWS = [
     { key: "'", glyph: "quotesingle" },
     { key: "edit", special: "mode-edit", style: "blue", span: 2 },
   ],
-  // row4：z 行 + 绿圈(语义未知→预留)
+  // row4: z row + green circle (semantics unknown → reserved)
   [
     { key: null, special: "circle-red", style: "red", disabled: true },
     { key: "z" }, { key: "x" }, { key: "c" }, { key: "v" }, { key: "b" }, { key: "n" },
@@ -95,7 +95,7 @@ export const DOCK_ROWS = [
     { key: "/", glyph: "slash" },
     { key: null, special: "circle-green", style: "green", disabled: true },
   ],
-  // row5：ctrl/alt/space + 4 装饰键
+  // row5: ctrl/alt/space + 4 decorative keys
   [
     { key: "ctrl", special: "ctrl" }, { key: "alt", special: "alt" },
     { key: "space", special: "space", span: 6 },
@@ -106,68 +106,68 @@ export const DOCK_ROWS = [
   ],
 ];
 ```
-- `glyph` 存在 = 该键同时渲染字形预览（glyph-cell-view 24px）
-- `special` = 功能键（DEL/space/ctrl/alt/mode）；`disabled: true` = meshfont 观察到的装饰/未知键，
-  v1 渲染为禁用占位（保持视觉一致），后续版本按需赋语义
-- 字母键 glyphName 规则：小写字母=自身；DEL=退格；space=空格字符
+- `glyph` present = the key also renders a glyph preview (glyph-cell-view 24px)
+- `special` = function key (DEL/space/ctrl/alt/mode); `disabled: true` = decorative/unknown keys observed in meshfont,
+  rendered as disabled placeholders in v1 (keeping visual parity), assigned semantics as needed in later versions
+- Letter-key glyphName rules: lowercase letter = itself; DEL = backspace; space = the space character
 
-## 8. canvasMode 状态机与 Dock 交互（代码级草图）
+## 8. canvasMode State Machine and Dock Interaction (code-level sketch)
 ```js
-// canvas-mode.js（R5 交付，Dock 只消费）
+// canvas-mode.js (delivered by R5; the dock only consumes it)
 import { ObservableController } from "@fontra/core/observable-object.js";
 export const canvasModeController = new ObservableController({ mode: "edit" });
 canvasModeController.synchronizeWithLocalStorage("engramfont-");
 export function setCanvasMode(mode) { canvasModeController.model.mode = mode; }
 
-// keyboard-dock.js 内：
+// inside keyboard-dock.js:
 canvasModeController.addKeyListener("mode", (e) => {
-  // proof 态：Dock 工具条（kern/space/proof 预设按钮）显示；edit 键高亮
-  // edit 态：工具条隐藏
+  // proof mode: dock toolbar (kern/space/proof preset buttons) shown; edit key highlighted
+  // edit mode: toolbar hidden
   this.toolbarElement.style.display = canvasModeController.model.mode === "proof" ? "" : "none";
 });
 
-// 模式键：
+// mode keys:
 modeProofKey.onclick = () => setCanvasMode("proof");
 modeEditKey.onclick  = () => setCanvasMode("edit");
 ```
 
-## 9. 布局尺寸规范
-| 项 | 值 |
+## 9. Layout Dimension Specification
+| Item | Value |
 |---|---|
-| Dock 宽 | min(920px, 92% 画布宽)，水平居中 |
-| 键帽 | 高 44px；标准键宽 52px；space 跨 6 键；edit 跨 2 键 |
-| 键距 | 6px；行距 8px；Dock 内边距 12px |
-| Dock 背景 | var(--engramfont-ui-element-background-color)；圆角 12px |
-| 层级 | z-index 高于 canvas，低于对话框（modal-dialog） |
-| 折叠态 | 56px 圆形按钮，右下角固定 |
+| Dock width | min(920px, 92% of canvas width), horizontally centered |
+| Keycaps | 44px tall; standard key 52px wide; space spans 6 keys; edit spans 2 keys |
+| Key gap | 6px; row gap 8px; dock padding 12px |
+| Dock background | var(--engramfont-ui-element-background-color); border-radius 12px |
+| Stacking | z-index above canvas, below dialogs (modal-dialog) |
+| Collapsed state | 56px round button, fixed at the bottom right |
 
-## 10. 可拆分/合并布局（EngramFont 原创，meshfont 无此功能）
+## 10. Split/merged Layout (EngramFont original; meshfont has no such feature)
 ```
-merged（默认）：底部居中整键盘（现有布局）
-split：左簇锚定画布左下 + 右簇锚定画布右下，中段留空（不遮挡画布中央的编辑焦点）
-  左簇：row1 前段(~1-5) / eye + q-t / capsule + a-g / 红 + z-b / ctrl+alt
-  右簇：row1 后段(6-=-DEL) / y-p+括号 / h-l+'+edit / n-/+绿 / space右半+4开关
-切换：Dock 上的 split/merge 拨钮（或拖拽分离手势——P2）；280ms 过渡
-持久化：localStorage "engramfont-dock-layout"
+merged (default): the whole keyboard centered at the bottom (current layout)
+split: left cluster anchored at the canvas bottom-left + right cluster anchored at the canvas bottom-right, middle left empty (does not block the editing focus at canvas center)
+  left cluster: row1 front segment (~1-5) / eye + q-t / capsule + a-g / red + z-b / ctrl+alt
+  right cluster: row1 rear segment (6-=-DEL) / y-p+brackets / h-l+'+edit / n-/ + green / right half of space + 4 toggles
+Switch: a split/merge toggle on the dock (or a drag-apart gesture — P2); 280ms transition
+Persistence: localStorage "engramfont-dock-layout"
 ```
-- 实现要点：键位数据（DOCK_ROWS）不变，按 split 点拆成两个容器渲染；
-  键的动作接线完全不变（同一 selectedGlyph/action 通路）
-- DoD：两簇所有键功能与合并态一致；切换 <300ms；状态持久化
+- Implementation notes: the keymap data (DOCK_ROWS) stays the same, split at the split point into two containers for rendering;
+  key action wiring is completely unchanged (the same selectedGlyph/action path)
+- DoD: all keys in both clusters behave identically to the merged state; switching <300ms; state persisted
 
-## 11. 按键自定义功能（EngramFont 原创）
+## 11. Custom Key Bindings (EngramFont original)
 ```
-绑定表：{ keyId: actionId }  存 localStorage "engramfont-key-bindings"
-默认绑定 = 现行行为；改绑 = 右键键帽 → action 选择器（menu-panel web component）
-可绑定项 = Fontra 已注册 action（zoom/export-as/网格显隐/模式切换…）
-         + 导航类（"切到字形 X"）+ 无功能
-分发：键点击 → 查绑定表 → 调 registerAction 注册的 callback（Fontra action 体系）
-重置：settings 里"恢复默认绑定"
+Binding table: { keyId: actionId }  stored in localStorage "engramfont-key-bindings"
+Default bindings = current behavior; rebinding = right-click a keycap → action picker (menu-panel web component)
+Bindable items = actions registered in Fontra (zoom/export-as/grid show-hide/mode switching…)
+         + navigation ("switch to glyph X") + no function
+Dispatch: key click → look up the binding table → call the callback registered via registerAction (Fontra action system)
+Reset: "restore default bindings" in settings
 ```
-- 范围：功能键与字母键均可改绑；DEL/mode 键建议锁定（防误改核心流程）——P2 再开放
-- DoD：改绑后行为即时生效、持久化、重置可用
+- Scope: both function keys and letter keys can be rebound; DEL/mode keys should be locked (to protect the core flow from accidental change) — opened up in P2
+- DoD: rebinding takes effect immediately, persists, and reset works
 
-## 12. 估时修正
-| 项 | 原 | 新 |
+## 12. Estimate Revision
+| Item | Old | New |
 |---|---|---|
-| R3 合计 | ≈4d | **≈6-6.5d**（+T3.7 拆分合并 0.5-1d，+T3.8 自定义绑定 1-2d）|
-| 文档包总计 | ≈20d | ≈22.5d |
+| R3 total | ≈4d | **≈6-6.5d** (+T3.7 split/merge 0.5-1d, +T3.8 custom bindings 1-2d) |
+| Documentation package total | ≈20d | ≈22.5d |

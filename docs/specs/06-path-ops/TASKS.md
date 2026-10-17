@@ -1,9 +1,9 @@
-# R6 · 任务拆解
+# R6 · Task Breakdown
 
-| # | 任务 | 文件 | DoD | 估时 |
+| # | Task | Files | DoD | Estimate |
 |---|---|---|---|---|
-| T6.1 | path-ops 模块骨架 + straighten | path-ops.js / editor.js | 选中曲线段→直线，undo 可撤销 | 0.5d |
-| T6.2 | soften | path-ops.js | 角点软化，参数可调，smooth 约束保持 | 1-1.5d |
-| T6.3 | make circle | path-ops.js | 闭合轮廓正圆化（内切/外接选项） | 0.5d |
-| T6.4 | 锚点密度（add/reduce） | path-ops.js / keyboard-dock.js | 滑块拖动→点密度变化，undo 正常 | 1-1.5d |
-| T6.5 | i18n/主题/按钮禁用条件 | editor.css / lang | 暗色正常、未选中时禁用 | 0.5d |
+| T6.1 | path-ops module skeleton + straighten | path-ops.js / editor.js | selected curve segment → line, undoable | 0.5d |
+| T6.2 | soften | path-ops.js | corner softened, parameters adjustable, smooth constraints preserved | 1-1.5d |
+| T6.3 | make circle | path-ops.js | closed contour circularized (inscribed/circumscribed option) | 0.5d |
+| T6.4 | anchor density (add/reduce) | path-ops.js / keyboard-dock.js | slider drag → point density changes, undo works | 1-1.5d |
+| T6.5 | i18n/theme/button disable conditions | editor.css / lang | dark theme fine, disabled when nothing is selected | 0.5d |

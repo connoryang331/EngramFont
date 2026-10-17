@@ -1,44 +1,43 @@
-# 架构决策记录（ADR）索引与规则
+# Architecture Decision Records (ADR) Index and Rules
 
-> 一决策一文档：`NNNN-<slug>.md`（四位编号递增）。改架构、定口径、删机制、
-> 引入/废除一种通用机制——写 ADR；实现细节留在特性包与代码里。
-> AGENTS.md 只沉淀定稿后的架构事实，不放决策过程。
+> One document per decision: `NNNN-<slug>.md` (four-digit numbers, incrementing). Changing the architecture, setting a shared convention, removing a mechanism, or introducing/retiring a general mechanism — write an ADR; implementation details stay in feature packages and the code.
+> AGENTS.md only records finalized architecture facts, not the decision process.
 
-## 状态
+## Status
 
-`accepted`（现行）· `superseded`（被 NNNN 取代，文件头标注取代者）。
+`accepted` (current) · `superseded` (replaced by NNNN, with the superseding ADR noted in the file header).
 
-## 格式（对齐 visee）
+## Format (aligned with visee)
 
 ```markdown
 ---
 Id: ADR-NNNN
-tags: [<领域标签，词表见 docs/README.md>]
+tags: [<domain tag; vocabulary in docs/README.md>]
 Status: accepted / superseded
 Date: YYYY-MM-DD
 ---
-# <一句话决策>
-## 背景      ← 现状与问题（可带表）
-## 决策      ← 定了什么（可带"用户明确决定"标注）
-## 理由      ← 为什么这么定
-## 被否决的方案 ← 每条说清否决原因
-## 后果      ← 落地影响面（文件 / 迁移 / 兼容）
-## 关联      ← 特性包 / bugfixes / 台账链接
+# <one-sentence decision>
+## Background      ← current state and the problem (tables allowed)
+## Decision      ← what was decided (may carry a "user explicitly decided" note)
+## Rationale      ← why it was decided this way
+## Rejected alternatives ← each entry states its rejection reason
+## Consequences      ← implementation impact (files / migration / compatibility)
+## Related      ← feature packages / bugfixes / ledger links
 ```
 
-## 索引
+## Index
 
-| 编号 | 决策 | Status | 日期 |
+| Number | Decision | Status | Date |
 |---|---|---|---|
-| [ADR-0001](0001-fork-patch-discipline-src-js.md) | fork 贴片纪律：前端改动只做 `src-js/`，client 目录是构建产物 | accepted | 2026-10-12 |
-| [ADR-0002](0002-node-appearance-always-on.md) | 节点外观设置常开，删除总开关 `nodeAppearanceCustom` | accepted | 2026-10-14 |
-| [ADR-0003](0003-slanted-selection-shear-space.md) | 斜向框选：剪切空间命中测试，复用矩形判定 | accepted | 2026-10-14 |
-| [ADR-0004](0004-settings-rows-text-first-combined.md) | 设置面板行：文字在前 + combined 行类型 + 行级 reset | accepted | 2026-10-14 |
-| [ADR-0005](0005-node-icons-eye-on-curves.md) | 节点图标几何语义：曲线点 = 眼形（切线朝向），直线点 = 方形 | accepted | 2026-10-14 |
-| [ADR-0006](0006-toggle-smooth-glyphs-convert.md) | 双击转曲：直线段变真曲线，手柄按过节点的公切线生成（Glyphs/FontLab 语义） | accepted | 2026-10-14 |
-| [ADR-0007](0007-startpoint-chevron-indicator.md) | 起始点方向指示：圆弧改为尖角箭头（`>` / `<`） | accepted | 2026-10-14 |
-| [ADR-0008](0008-node-size-unified.md) | 节点尺寸合并为单一设置 + 箭头随尺寸缩放 + 眼形比例改为眼睛形 | accepted | 2026-10-14 |
-| [ADR-0009](0009-squircle-g2-nodes.md) | Squircle 节点：曲率连续（G2）闭式解，图标用超椭圆而非五角星 | accepted | 2026-10-14 |
-| [ADR-0010](0010-node-slide-g2.md) | G2 解允许沿切线微移节点：滑动解与原地解取代价更小者 | accepted | 2026-10-15 |
-| [ADR-0011](0011-node-kind-state-is-geometry.md) | 节点类型即几何：降格必须改线段与手柄，Alt+双击才是"只改标志" | accepted | 2026-10-15 |
-| [ADR-0012](0012-squircle-line-curve-derived-transition.md) | 线↔曲线的 squircle（雨滴点）：渲染与导出时派生过渡，屏幕≡导出由共享真值表锁死（**未实现**） | accepted | 2026-10-15 |
+| [ADR-0001](0001-fork-patch-discipline-src-js.md) | Fork patch discipline (src-js): frontend changes only in `src-js/`, the client directory is a build artifact | accepted | 2026-10-12 |
+| [ADR-0002](0002-node-appearance-always-on.md) | Node appearance settings always on, master switch `nodeAppearanceCustom` removed | accepted | 2026-10-14 |
+| [ADR-0003](0003-slanted-selection-shear-space.md) | Slanted selection in shear space: hit testing reuses the rectangle test | accepted | 2026-10-14 |
+| [ADR-0004](0004-settings-rows-text-first-combined.md) | Settings rows: text-first + combined row type + per-row reset | accepted | 2026-10-14 |
+| [ADR-0005](0005-node-icons-eye-on-curves.md) | Geometric semantics of node icons: curve points get the eye shape (tangent orientation), line points get the square | accepted | 2026-10-14 |
+| [ADR-0006](0006-toggle-smooth-glyphs-convert.md) | Double-click to convert: line segments become true curves, handles generated from the common tangent through the node (Glyphs/FontLab semantics) | accepted | 2026-10-14 |
+| [ADR-0007](0007-startpoint-chevron-indicator.md) | Start point direction indicator: arc replaced with a chevron arrow (`>` / `<`) | accepted | 2026-10-14 |
+| [ADR-0008](0008-node-size-unified.md) | Node size unified into a single setting + arrow scales with size + eye-shape ratio changed to a true eye shape | accepted | 2026-10-14 |
+| [ADR-0009](0009-squircle-g2-nodes.md) | Squircle nodes: closed-form curvature-continuous (G2) solution, icon uses a superellipse instead of a pentagram | accepted | 2026-10-14 |
+| [ADR-0010](0010-node-slide-g2.md) | G2 solve allows sliding the node slightly along the tangent: sliding solution vs. in-place solution, whichever costs less wins | accepted | 2026-10-15 |
+| [ADR-0011](0011-node-kind-state-is-geometry.md) | Node kind is geometry: downgrading must change the segments and handles; Alt+double-click is the "flag only" toggle | accepted | 2026-10-15 |
+| [ADR-0012](0012-squircle-line-curve-derived-transition.md) | Squircle for line↔curve transitions (raindrop points): the transition is derived at render and export time, screen ≡ export locked in by a shared truth table (**not implemented**) | accepted | 2026-10-15 |

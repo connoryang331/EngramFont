@@ -1,21 +1,19 @@
-# R4 · 新建字体/模板流 · 需求文档（PRD）
+# R4 · New Font / Template Flow · PRD
 
-## 背景
-filesystem 模式下创建新工程目前只有命令行（`fontra new <path>`，后端函数
-createNewFontAndPopulate 已存在），页面无入口；meshfont 的"欢迎弹窗 + 模板卡片"
-让新用户 10 秒开始设计。
+## Background
+In filesystem mode, creating a new project currently works only from the command line (`fontra new <path>`; the backend function createNewFontAndPopulate already exists), with no UI entry point. meshfont's "welcome dialog + template cards" lets new users start designing in 10 seconds.
 
-## 目标
-- landing 页有"新建字体"卡片：输入工程名 + 选模板（空白/Latin 常用/Japanese 假名组…）
-- 生成可编辑 .fontra 工程并直接打开编辑器
-- 模板内容 = 预提取的种子字形集（轮廓来自开源字体，OFL 许可）
+## Goals
+- The landing page gets a "New Font" card: enter a project name + choose a template (blank / common Latin / Japanese kana set, etc.)
+- Generate an editable .fontra project and open the editor directly
+- Template content = a pre-extracted seed glyph set (outlines from open-source fonts under the OFL license)
 
-## 用户故事
-- 新用户第一次打开 EngramFont：点"新建字体"→ 选"Latin 常用"→ 直接看到一批可编辑字形
+## User Story
+- A new user opens EngramFont for the first time: clicks "New Font" → selects "Common Latin" → immediately sees a batch of editable glyphs
 
-## 非目标
-- 在线模板市场；模板自定义编辑器（后续）
+## Non-Goals
+- Online template marketplace; a custom template editor (later)
 
-## 验收标准（概览）
-- 新建 → 项目列表出现 → 打开 → 种子字形存在且可编辑
-- 空模板选项存在（纯空白工程）
+## Acceptance Criteria (Overview)
+- Create → project appears in the list → open → seed glyphs exist and are editable
+- A blank template option exists (a purely empty project)

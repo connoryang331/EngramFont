@@ -1,5 +1,5 @@
-# R9 · 执行计划
+# R9 · Execution Plan
 
-会话内连续执行（2026-10-14）：T9.1 状态机 → T9.2 命中测试 → T9.3 绘制 →
-T9.4 bundle + Playwright 交互验证（矩形基线 / Ctrl 斜选 / 定角缩放 / 交叉校验）→
-全量 e2e 回归。
+Continuous execution within a session (2026-10-14): T9.1 state machine → T9.2 hit testing → T9.3 drawing →
+T9.4 bundle + Playwright interaction verification (rectangle baseline / Ctrl slanted selection / fixed-angle resize / cross-check) →
+full e2e regression.

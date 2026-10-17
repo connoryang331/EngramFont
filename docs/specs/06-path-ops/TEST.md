@@ -1,26 +1,26 @@
-# R6 · 测试验收与回归
+# R6 · Test Acceptance & Regression
 
-## 单元测试（纯函数几何断言）
-| ID | 用例 | 期望 |
+## Unit Tests (pure-function geometry assertions)
+| ID | Case | Expected |
 |---|---|---|
-| UT6.1 | straighten：含 2 off-curve 的 cubic 段 | 段变 line，off-curve=0，端点不变 |
-| UT6.2 | soften：直角点 | 拆为 2 on-curve + cubic 段，邻点 smooth |
-| UT6.3 | make circle：任意闭合轮廓 | 4 on-curve 均布，bounds 中心对称 |
-| UT6.4 | add：cubic 段 t=0.5 | 分割点在曲线上，两段形状不变 |
-| UT6.5 | reduce：容差 0 | 不删点；容差大 | 段数减少且偏差 ≤ 容差 |
-| UT6.6 | 极端：单点轮廓/组件字形 | 跳过不崩溃 |
+| UT6.1 | straighten: a cubic segment containing 2 off-curve points | segment becomes line, off-curve=0, endpoints unchanged |
+| UT6.2 | soften: a right-angle corner point | split into 2 on-curve + a cubic segment, neighbors smooth |
+| UT6.3 | make circle: any closed contour | 4 on-curve evenly distributed, symmetric about the bounds center |
+| UT6.4 | add: cubic segment t=0.5 | the split point lies on the curve, both segments' shapes unchanged |
+| UT6.5 | reduce: tolerance 0 | no points deleted; large tolerance | segment count decreases and deviation ≤ tolerance |
+| UT6.6 | extremes: single-point contour / component glyph | skipped without crashing |
 
 ## E2E
-| ID | 步骤 | 期望 |
+| ID | Steps | Expected |
 |---|---|---|
-| E2E-1 | 选中曲线段 → Straighten | 画布直线化，undo 恢复 |
-| E2E-2 | 选中角点 → Soften 滑块拖动 | 实时圆滑过渡 |
-| E2E-3 | Dock 绿滑块拖动 | 控制点数变化，undo 正常 |
-| E2E-4 | 暗色/未选中态 | 按钮禁用、主题正常 |
+| E2E-1 | select a curve segment → Straighten | canvas straightened, undo restores it |
+| E2E-2 | select a corner → drag the Soften slider | real-time rounded transition |
+| E2E-3 | drag the Dock's green slider | control point count changes, undo works |
+| E2E-4 | dark theme / nothing selected | buttons disabled, theme fine |
 
-## 回归
-| 项 | 断言 |
+## Regression
+| Item | Assertion |
 |---|---|
-| 原有编辑 | pen/point 拖拽/undo 不受影响 |
-| convert-curves-to-cubic/quadratic | 原曲率转换正常 |
-| 性能 | 大字形（100+ 点）操作 <100ms |
+| Existing editing | pen/point dragging/undo unaffected |
+| convert-curves-to-cubic/quadratic | original curvature conversion works |
+| Performance | large glyph (100+ points) operations <100ms |

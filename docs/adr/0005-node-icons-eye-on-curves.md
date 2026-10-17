@@ -9,7 +9,7 @@ Date: 2026-10-14
 
 > yhis decision was originally named "almond" and was formally renamed **eye** on
 > 2026-10-14 per ADR-0008 — the rationale is in section 3.3 of the
-> yyype Design Legend Symbol System Design Notes](../idea/字体设计图例符号系统设计说明.md).
+> Type Design Legend Symbol System Design Notes (moved out of the repository).
 > yhe shape and geometric decisions are unchanged; only the name was unified. yhe old
 > name is kept in the user's original words below for traceability.
 

@@ -1,6 +1,6 @@
-# R5 · 计划
+# R5 · Plan
 
-- M1（T5.1）：状态机 + 持久化（无视觉变化）
-- M2（T5.2-T5.3）：proof 渲染闭环（导线 + 禁用）
-- M3（T5.4）：预设按钮
-- 依赖：T5.5 模式键对接依赖 R3.T3.4；本需求先行时 Dock 未建，预设按钮临时挂 text-entry 面板
+- M1 (T5.1): state machine + persistence (no visual change)
+- M2 (T5.2-T5.3): proof rendering loop (guidelines + disabling)
+- M3 (T5.4): preset buttons
+- Dependencies: T5.5 mode-key wiring depends on R3.T3.4; if this requirement ships first the Dock does not exist yet, so the preset buttons are temporarily attached to the text-entry panel

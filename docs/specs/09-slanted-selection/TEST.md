@@ -1,28 +1,28 @@
-# R9 · 测试验收与回归
+# R9 · Test Acceptance and Regression
 
-需求：[PRD.md](./PRD.md) ｜ 实现：ADR-0003 ｜ 台账：ENGRAM-CHANGES「R5-T5.5」
+Requirements: [PRD.md](./PRD.md) | Implementation: ADR-0003 | Ledger: ENGRAM-CHANGES "R5-T5.5"
 
-## E2E / 手测（Playwright headless，8800 · Untitled.fontra "a"，zoom 让字形避开 dock）
+## E2E / Manual Testing (Playwright headless, 8800 · Untitled.fontra "a", zoom so the glyph avoids the dock)
 
-| ID | 步骤 | 期望 | 结果 |
+| ID | Steps | Expected | Result |
 |---|---|---|---|
-| TC-1 | 矩形框选拖拽（无 Ctrl） | 选区 = 矩形内 on-curve 节点（4 点） | ✅ |
-| TC-2 | 拖拽中按 Ctrl 摆角 | `selectionParallelogram` 出现（shearK≈0.615），虚线平行四边形渲染 | ✅（`qa/sel-2-slant-mid.png`） |
-| TC-3 | 斜选阶段选区 | 与独立剪切命中计算**逐点一致**（point/7,16,18） | ✅ |
-| TC-4 | 松开 Ctrl 继续拖 | 角度冻结、仅大小变化（角点跟随鼠标） | ✅（`qa/sel-3-resize-mid.png`） |
-| TC-5 | mouse.up | `selectionParallelogram`/`selectionRect` 清空；选中集保留 | ✅（3 点保留） |
-| TC-6 | 亮/暗主题 | 平行四边形虚线两主题可见 | ✅ |
+| TC-1 | Rectangular marquee drag (no Ctrl) | Selection = on-curve nodes inside the rectangle (4 points) | ✅ |
+| TC-2 | Press Ctrl during the drag to set the angle | `selectionParallelogram` appears (shearK≈0.615); dashed parallelogram renders | ✅ (`qa/sel-2-slant-mid.png`) |
+| TC-3 | Selection during the slanted phase | **Point-by-point identical** to independent sheared hit computation (point/7,16,18) | ✅ |
+| TC-4 | Release Ctrl and keep dragging | Angle frozen, only size changes (corner follows the mouse) | ✅ (`qa/sel-3-resize-mid.png`) |
+| TC-5 | mouse.up | `selectionParallelogram`/`selectionRect` cleared; the selected set is kept | ✅ (3 points kept) |
+| TC-6 | Light/dark themes | The parallelogram dashed line is visible in both themes | ✅ |
 
-## 回归
+## Regression
 
-| 项 | 断言 | 结果 |
+| Item | Assertion | Result |
 |---|---|---|
-| 行为兼容 | 不碰 Ctrl 的框选走原 `selectionAtRect` 路径 | ✅（dbg rectSelectCalls=8） |
-| 全量 e2e | `npx playwright test` 35/35（keyboard-dock / proof-edit-mode / background-image / export / import / new-font） | ✅ |
-| 控制台 | 无 pageerror / 无 console.error | ✅ |
+| Behavior compatibility | Marquee selection without touching Ctrl takes the original `selectionAtRect` path | ✅ (dbg rectSelectCalls=8) |
+| Full e2e | `npx playwright test` 35/35 (keyboard-dock / proof-edit-mode / background-image / export / import / new-font) | ✅ |
+| Console | No pageerror / no console.error | ✅ |
 
-## 已知边界
+## Known Edge Cases
 
-- 测试环境注意 dock 覆盖画布下缘——拖拽落点先做命中测试（[BUG-005](../../bugfixes/2026-10-14-键盘dock覆盖画布下缘拖拽被吞.md)）；
-- Ctrl 在 Windows 同时是"加入选区"修饰键（commandKeyProperty）：斜选模式下
-  选择模式取**初始事件**（Ctrl 按下前的修饰键态），互不干扰；Mac 上 Ctrl 无此冲突。
+- In the test environment, watch out for the dock covering the lower edge of the canvas — hit-test drag landing points first ([BUG-005](../../bugfixes/2026-10-14-keyboard-dock-swallowed-bottom-edge-drag.md));
+- On Windows, Ctrl is also the "add to selection" modifier key (commandKeyProperty): in slanted-selection mode the
+  selection mode takes the **initial event** (the modifier state before Ctrl was pressed), so the two do not interfere; on Mac, Ctrl has no such conflict.

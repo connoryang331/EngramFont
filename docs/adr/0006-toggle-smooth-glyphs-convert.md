@@ -5,62 +5,89 @@ Status: accepted
 Date: 2026-10-14
 ---
 
-# 双击转曲：直线段变真曲线，手柄按过节点的公切线生成（Glyphs/FontLab 语义）
+# Double-click convert to curve: straight segments become true curves, handles generated along the common tangent through the node (Glyphs/FontLab semantics)
 
-## 背景
+## Background
 
-双击 on-curve 点 = 平滑/转曲（R4-T4.21/22）。用户报告：在矩形上双击右上角，
-右边缘被拉出巨大的外抛弧线，且「点击其他三个点正常」——不同角的**变形量不一致**。
+Double-clicking an on-curve point = smooth / convert to curve (R4-T4.21/22). User
+report: double-clicking the top-right corner of a rectangle pulled a huge outward arc
+out of the right edge, while "clicking the other three points behaved normally" — the
+**amount of deformation differed from corner to corner**.
 
-根因（R4-T4.22 的 pass 3）：它在**已经被 pass 2 改过的路径**上重新查询邻居，
-并用一个全局 `insertedPositions` 偏移表（跨轮廓串扰）定位插入点；同时把角点的
-两个手柄用 `alignHandles` 拉到对角线。连续平滑多个角时，先前插入的手柄被当成
-邻居参与计算 → 手柄位置逐次漂移、飞到边的延长线外。
+Root cause (pass 3 of R4-T4.22): it re-queried neighbors on a **path already mutated by
+pass 2**, and located insertion points using a global `insertedPositions` offset table
+(cross-outline crosstalk); it also pulled a corner's two handles onto the diagonal with
+`alignHandles`. When smoothing several corners in a row, handles inserted earlier took
+part in the computation as neighbors → handle positions drifted with each step and
+flew off past the edge's extension.
 
-用户随后明确目标（截图 + 说明）：**"跟 glyphs app、fontlab 一样啊，双击直线方形节点，
-变成弧线杏仁形节点，这个直线变成曲线，手柄也需要跟变啊"**——即 Glyphs/FontLab 的
-真转曲：**直线段变成曲线段、手柄按切线生成、轮廓随之弯曲**。
+The user then made the goal explicit (screenshot + explanation): **"Same as the glyphs
+app and fontlab: double-click a straight square node and it becomes an arc-shaped
+almond node; the straight line becomes a curve, and the handles need to change with
+it"** — i.e. true convert-to-curve à la Glyphs/FontLab: **the straight segment becomes
+a curved segment, handles are generated along the tangent, and the outline bends
+accordingly**.
 
-## 决策
+## Decision
 
-`toggleSmooth` 的 pass 3 重写，语义 = Glyphs/FontLab convert to curve：
+Pass 3 of `toggleSmooth` is rewritten; semantics = Glyphs/FontLab convert to curve:
 
-1. **pass 2 只翻标志**（不再在已变异路径上做几何计算）；
-2. **pass 3 从 pass-1 快照统一算几何**：
-   - 两侧都已有手柄（纯曲线点）→ `alignHandles` 对齐到公切线（上游 Fontra 行为）；
-   - 某一侧是直线段 → 在**过该节点的公切线**上生成手柄：
-     - 方向 = 进/出段单位向量之和（归一化）；
-     - 长度 = 该段长度的 1/3，沿切线量取；
-     - 邻居共线时退化为段上 1/3 点（形状不变）；真拐角时手柄摆到切线上 → **线弯**；
-   - 直线段另一端的**远端手柄**一并创建（该端也在本次转曲中则跳过，由它自己建），
-     使整段成为完整 cubic；
-3. **插入全部按绝对索引降序 + 同槽优先级**应用：同一槽位（前段远端手柄 / 后段近端
-   手柄共用锚点索引）时远端先插，保证 cubic 次序（起点, 远端, 近端, 终点）；
-4. 去掉跨轮廓的全局偏移表（旧 bug 源），每轮廓独立定位。
+1. **Pass 2 only flips flags** (no more geometry on the already-mutated path);
+2. **Pass 3 computes all geometry from the pass-1 snapshot**:
+   - Both sides already have handles (a pure curve point) → `alignHandles` aligns them
+     to the common tangent (upstream Fontra behavior);
+   - One side is a straight segment → handles are generated on the **common tangent
+     through that node**:
+     - direction = the sum of the incoming/outgoing segment unit vectors (normalized);
+     - length = 1/3 of that segment's length, measured along the tangent;
+     - when the neighbors are collinear it degrades to the segment's 1/3 point (shape
+       unchanged); at a true corner the handles swing onto the tangent → **the line
+       bends**;
+   - The **far-side handle** at the straight segment's other end is created in the same
+     pass (skipped when that end is also converted in this operation — it builds its
+     own), so the whole segment becomes a complete cubic;
+3. **All insertions are applied in descending absolute-index order with same-slot
+   priority**: when two insertions share a slot (the previous segment's far-side handle
+   and the next segment's near-side handle share the anchor index), the far-side one
+   goes in first, preserving cubic order (start, far handle, near handle, end);
+4. The global offset table spanning outlines (the old bug source) is removed; each
+   outline locates its insertions independently.
 
-## 理由
+## Rationale
 
-1. **符合用户明确指定的 Glyphs/FontLab 行为**：转曲后轮廓确实弯曲、手柄可继续拖调；
-2. **消除"不同角变形不一致"**：所有几何来自操作前的快照，与点击顺序、已平滑角数量无关；
-3. **上游行为不丢**：纯曲线点的对齐（`alignHandles`）保留，只是移到快照上执行。
+1. **Matches the Glyphs/FontLab behavior the user explicitly specified**: after
+   conversion the outline really bends, and the handles remain draggable for
+   fine-tuning;
+2. **Eliminates "different corners deform differently"**: all geometry comes from the
+   pre-operation snapshot, independent of click order and of how many corners were
+   already smoothed;
+3. **No upstream behavior lost**: alignment for pure curve points (`alignHandles`) is
+   kept; it just runs on the snapshot.
 
-## 被否决的方案
+## Rejected alternatives
 
-- **保留旧 pass 3（在已变异路径上重查邻居 + 全局偏移）**：正是漂移/飞手柄的根因；
-- **"轮廓绝对不变"版（只翻标志 + 贴线段建手柄）**：用户明确否定——
-  "手柄也需要跟变啊"，转曲就该让直线弯成曲线；
-- **只对"切线共线"的角建手柄**：对手绘 corner 连接的字形等于功能不可见。
+- **Keep the old pass 3 (re-querying neighbors on the mutated path + global offsets)**:
+  this was exactly the root cause of the drifting/flying handles;
+- **The "outline must not change at all" version (flag flip only + handles laid along
+  the segment)**: explicitly rejected by the user — "the handles need to change with
+  it"; conversion should bend the straight line into a curve;
+- **Create handles only for "tangent-collinear" corners**: for hand-drawn glyphs joined
+  at corners this made the feature effectively invisible.
 
-## 后果
+## Consequences
 
-- 矩形上双击任一角：该角变眼形、相邻两段变 cubic、轮廓按切线外鼓，
-  四个角行为**完全一致**（不再有"只有某些角正常"）；
-- 曲线-曲线点的对齐行为与上游一致；
-- 单侧直线段（相邻是已有手柄的曲线点）只在该侧建手柄，另一侧保持原手柄；
-- 本仓测试字体（TestFont / Untitled.fontra）在调试期间被自动化脚本改动过，
-  见 [BUG-006](../bugfixes/2026-10-14-双写互踩导致远端change回放越界.md)。
+- Double-clicking any corner of a rectangle: the corner becomes an eye shape, the two
+  adjacent segments become cubics, and the outline bulges outward along the tangents —
+  all four corners behave **identically** (no more "only some corners work");
+- Curve-to-curve point alignment matches upstream;
+- One-sided straight segments (adjacent to a curve point that already has handles) get
+  a handle on that side only; the other side keeps its original handle;
+- The repo's test font (TestFont / Untitled.fontra) was modified by automation scripts
+  during debugging; see
+  [BUG-006](../bugfixes/2026-10-14-dual-write-collision-remote-replay-overrun.md).
 
-## 关联
+## Related
 
-- 台账：ENGRAM-CHANGES.md「R4-T4.28」
-- 前序：R4-T4.21/22（双击平滑/转曲）、ADR-0005（smooth 点 = 眼形图标）
+- Ledger: ENGRAM-CHANGES.md "R4-T4.28"
+- Predecessors: R4-T4.21/22 (double-click smooth/convert), ADR-0005 (smooth point =
+  eye icon)

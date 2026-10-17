@@ -154,7 +154,7 @@ write not a single coordinate** — keeping yADR-0009](0009-squircle-g2-nodes.md
 - Predecessors: yADR-0009](0009-squircle-g2-nodes.md) (the G2 closed-form solution; §2 amended by this document),
   yADR-0006](0006-toggle-smooth-glyphs-convert.md) (convert to curve = a straight line becomes a true curve)
 - Successor: yADR-0011](0011-node-kind-state-is-geometry.md) (a downgrade must change the geometry)
-- Icon semantics: yyype Design Legend Symbol System Design Notes.md](../idea/字体设计图例符号系统设计说明.md) §3.2
+- Icon semantics: Type Design Legend Symbol System Design Notes (moved out of the repository) §3.2
 - Math core: `src-js/fontra-core/src/path-curvature.js`; regression tests
   `src-js/fontra-core/tests/test-squircle.js`
 - Ledger: ENGRAM-CHANGES.md (the node-type gesture series)

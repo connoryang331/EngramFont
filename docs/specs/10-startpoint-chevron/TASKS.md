@@ -1,23 +1,23 @@
-# R10 · 任务分解（施工单）
+# R10 · Task Breakdown (Work Order)
 
-## T10.1 · 特性包
-PRD / SPEC / TASKS / TEST（本包）。DoD：四件套齐备。
+## T10.1 · Feature Package
+PRD / SPEC / TASKS / TEST (this package). DoD: all four documents in place.
 
-## T10.2 · 实现 chevron
-`fontra.startpoint.indicator` 的 `draw` 改为：取前进方向 → `save/translate/rotate` →
-画顶点朝 +x 的 chevron（`upper → tip → lower`，只描边）→ `restore`；
-删除 `START_POINT_ARC_GAP_ANGLE`，新增 `START_POINT_CHEVRON_HALF_ANGLE`。
-DoD：单点轮廓跳过、多轮廓各自独立、朝向正确。
+## T10.2 · Implement the chevron
+Change the `draw` of `fontra.startpoint.indicator` to: take the forward direction → `save/translate/rotate` →
+draw a chevron with the tip facing +x (`upper → tip → lower`, stroke only) → `restore`;
+delete `START_POINT_ARC_GAP_ANGLE`, add `START_POINT_CHEVRON_HALF_ANGLE`.
+DoD: single-point contours are skipped, multiple contours are independent, orientations are correct.
 
-## T10.3 · 构建
-`npm run bundle`。DoD：编译无错误。
+## T10.3 · Build
+`npm run bundle`. DoD: compiles without errors.
 
-## T10.4 · 验证（8801 隔离实例，禁止碰用户 8800）
-构造四个方向各异的轮廓（右/左/上/下 + 斜向），截图确认：
-① 无圆弧残留；② 朝右呈 `>`、朝左呈 `<`；③ 斜向随方向旋转；④ 亮/暗主题正常。
-DoD：TEST.md 用例全绿 + 截图存档。
+## T10.4 · Verification (isolated instance on 8801; never touch the user's 8800)
+Construct contours with four different directions (right/left/up/down + diagonal) and confirm via screenshots:
+① no arc residue; ② facing right renders `>`, facing left renders `<`; ③ diagonals rotate with the direction; ④ light/dark themes look correct.
+DoD: all TEST.md cases green + screenshots archived.
 
-## T10.5 · 回填与记录
-TEST.md 填结果与证据路径；ENGRAM-CHANGES 记 R10-T10.1；ADR-0007 记录画法决策；
-AGENTS 判例速查加一行（改起始点指示动哪里）。
-DoD：docs lint 通过。
+## T10.5 · Backfill and Records
+Fill TEST.md with the results and evidence paths; record R10-T10.1 in ENGRAM-CHANGES; record the drawing decision in ADR-0007;
+add one line to the AGENTS precedent quick reference (where to touch when changing the start point indicator).
+DoD: docs lint passes.

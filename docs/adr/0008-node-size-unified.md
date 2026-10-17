@@ -5,90 +5,82 @@ Status: accepted
 Date: 2026-10-14
 ---
 
-# 节点尺寸合并为单一设置 + 起始点箭头随尺寸缩放 + 眼形比例改为眼睛形
+# Node sizes merged into a single setting + start point chevron scales with size + eye-shape proportions changed to an actual eye
 
-## 背景
+## Background
 
-节点外观设置最初有**三个独立尺寸**：`nodeCornerSize`、`nodeSmoothSize`、
-`nodeHandleSize`。起始点方向箭头（ADR-0007 的 `>` / `<`）另有自己的固定尺寸。
+The node appearance settings originally had **three independent sizes**: `nodeCornerSize`, `nodeSmoothSize`,
+`nodeHandleSize`. The start point direction chevron (`>` / `<` from ADR-0007) had its own fixed size.
 
-用户连续提出三个问题：
+The user raised three issues in a row:
 
-1. **"大于号、小于号的大小是不是要跟 corner size 和 smooth size 一起变化呢？"**
-   ——箭头尺寸写死，节点调大后箭头显得过小、不协调；
-2. **"corner size 与 smooth size 不应该是两个 size 设置，而是同一个 size 设置。
-   不应该是一个大一个小。"**，随后补充 **"handle 的 size 也是统一的，不单独设置"**
-   ——三个尺寸各自独立，用户可以调出一大一小，违背"同类元素视觉一致"；
-3. **"杏仁形的中间区域大一些，现在太小了，设置页面的和编辑区的都要调整大一些。
-   应该像眼睛的形状。"**
-   ——`halfWidth = 0.34 × size` 相对 `halfLen = 1.15 × size` 太瘦（宽只有长的 30%），
-   小尺寸下看起来像一条细缝，不像眼睛。
+1. **"Shouldn't the greater-than / less-than signs change size along with the corner size and the smooth size?"**
+   — the chevron size was hard-coded; after the nodes were enlarged the chevron looked too small and out of place;
+2. **"Corner size and smooth size should not be two size settings, but one and the same size setting.
+    It should not be one large and one small."**, later adding **"the handle's size is unified as well, not set separately"**
+   — three independent sizes let the user dial in one large and one small, violating "same-kind elements are visually consistent";
+3. **"The middle region of the almond shape should be bigger — it is too small now; both the settings-page one and the editing-canvas one need to be made bigger. It should be shaped like an eye."**
+   — `halfWidth = 0.34 × size` against `halfLen = 1.15 × size` was too skinny (the width was only 30% of the length);
+   at small sizes it looked like a thin slit, not an eye.
 
-## 决策
+## Decision
 
-### 1. 尺寸合并为一个 `nodeSize`
+### 1. Sizes merged into a single `nodeSize`
 
-- 模型键从 `nodeCornerSize` / `nodeSmoothSize` / `nodeHandleSize`
-  合并为**单一 `nodeSize`**（默认 8，范围 4–24）；
-- `applyNodeAppearanceSettings` 把同一个值写进三个图层参数
-  （`cornerSize` / `smoothSize` / `handleSize`）；
-- **一次性迁移**：读取旧的 `nodeSmoothSize` ?? `nodeCornerSize` 写入 `nodeSize`，
-  然后删除三个旧键，用户既有设置不丢失；
-- 设置面板只保留**一个 size 轮**（Node size 行），
-  三行颜色各自独立（Smooth / Corner / Handle）。
+- The model keys `nodeCornerSize` / `nodeSmoothSize` / `nodeHandleSize` are merged into a **single `nodeSize`** (default 8, range 4–24);
+- `applyNodeAppearanceSettings` writes the same value into the three layer parameters
+  (`cornerSize` / `smoothSize` / `handleSize`);
+- **One-time migration**: read the old `nodeSmoothSize` ?? `nodeCornerSize` into `nodeSize`,
+  then delete the three old keys, so no existing user setting is lost;
+- The settings panel keeps only **one size spinner** (the Node size row);
+  the three color rows remain independent (Smooth / Corner / Handle).
 
-### 2. 起始点箭头随节点尺寸缩放
+### 2. The start point chevron scales with node size
 
-`chevronLength` / `chevronSpread` 按 `nodeSize / NODE_SIZE_DEFAULT` 等比缩放，
-**间隙 `gap` 不缩放**——箭头与节点图标的间距恒定，永不重叠（ADR-0007 的约束）。
+`chevronLength` / `chevronSpread` scale proportionally by `nodeSize / NODE_SIZE_DEFAULT`;
+**the gap `gap` does not scale** — the spacing between the chevron and the node icon stays constant and they never overlap (the constraint from ADR-0007).
 
-### 3. 眼形比例改为眼睛形
+### 3. Eye-shape proportions changed to an actual eye
 
-`halfWidth` 从 `0.34 × size` 提到 **`0.514 × size`**，`halfLen` 从 `1.15 × size` 收到
-**`0.73 × size`** —— 长宽比 **1.42 : 1**，取自
-[Lucide](https://lucide.dev) `eye` 图标的外轮廓（去掉瞳孔后实测 19.88 : 14.0 单位）。
-抽成共享常量 `EYE_HALF_LEN_FACTOR` / `EYE_HALF_WIDTH_FACTOR`，
-由画布绘制与起始点间隙计算共同引用，避免两处漂移。
+`halfWidth` goes from `0.34 × size` up to **`0.514 × size`**, and `halfLen` from `1.15 × size` down to
+**`0.73 × size`** — an aspect ratio of **1.42 : 1**, taken from the outer contour of the
+[Lucide](https://lucide.dev) `eye` icon (measured at 19.88 : 14.0 units with the pupil removed).
+Extracted into the shared constants `EYE_HALF_LEN_FACTOR` / `EYE_HALF_WIDTH_FACTOR`,
+referenced by both the canvas drawing and the start point gap calculation so the two cannot drift apart.
 
-**尺寸用「面积相等」定标**：角点方块面积 = `size²`，眼形（双二次曲线围合）面积 =
-`(8/3) · 眼半长轴 · 眼半短轴`，代入 `0.73 × 0.514` 恰为 `1.0006 · size²`。
-即两种节点**视觉等重**——这是「同类元素视觉一致」的量化落点，不是凭感觉调数值。
-实测（放大渲染取面积）size 8/12/16/24/32 的 眼/方 面积比为
-0.997 / 0.997 / 0.995 / 0.997 / 0.994，均值 **0.996**。
+**Sizes are calibrated by "equal area"**: the corner square's area is `size²`; the eye shape (bounded by biquadratic curves)
+has area `(8/3) · eye semi-major axis · eye semi-minor axis`; substituting `0.73 × 0.514` gives exactly `1.0006 · size²`.
+That is, the two node kinds are **visually equal in weight** — the quantitative realization of "same-kind elements are visually consistent",
+not values tuned by feel. Measured (by rendering enlarged and taking the area), the eye/square area ratios at
+sizes 8/12/16/24/32 are 0.997 / 0.997 / 0.995 / 0.997 / 0.994, with a mean of **0.996**.
 
-## 理由
+## Rationale
 
-1. **同类元素应当同尺寸**：角点、平滑点、手柄都是"节点"，三个独立尺寸只提供了
-   制造不一致的机会，没有实际表达力；用户明确否定了"一大一小"；
-2. **箭头是节点的附属指示器**：节点放大而箭头不变，视觉权重失衡；
-   等比缩放让指示器在任何尺寸下都保持协调；
-3. **间隙必须独立于尺寸**：若 gap 也缩放，大节点时箭头会飘得过远、小节点时贴上；
-   保持恒定才能"永远清晰可辨且不重叠"；
-4. **眼睛比例可读性更好**：0.34 的宽度在 8px 节点上只有 ~2.7px，
-   中间几乎无实体；0.58 给出 ~4.6px，形状可辨。
+1. **Same-kind elements should be the same size**: corners, smooth points, and handles are all "nodes"; three independent sizes only offered an opportunity to create inconsistency, with no real expressive value; the user explicitly rejected "one large, one small";
+2. **The chevron is an indicator attached to the node**: if the node grows while the chevron does not, the visual weight is out of balance; proportional scaling keeps the indicator harmonious at every size;
+3. **The gap must be independent of size**: if the gap scaled too, the chevron would drift too far from large nodes and stick to small ones; only a constant gap keeps it "always clearly distinguishable and never overlapping";
+4. **The eye proportions are much more readable**: a width of 0.34 is only ~2.7px on an 8px node, with almost no solid body in the middle; 0.58 gives ~4.6px and a recognizable shape.
 
-## 被否决的方案
+## Rejected alternatives
 
-- **保留三个尺寸、只做联动**（改一个自动同步另两个）：模型仍有三份状态，
-  重置/持久化/迁移都要各自处理，复杂度不降反升；
-- **箭头尺寸固定、只调间隙**：用户明确要求箭头"跟 size 一起变化"；
-- **gap 也随尺寸缩放**：会让大节点时间隙过大、失去"紧邻指示"的语义；
-- **用椭圆而非贝塞尔眼形**：贝塞尔有真正的**尖点**（`eyePath` 的两端），
-  椭圆两端是圆头，与画布形状不符（设置页色块也会失真）。
+- **Keep three sizes and only link them** (changing one automatically syncs the other two): the model still carries three pieces of state; reset / persistence / migration would each need separate handling, and complexity would rise rather than fall;
+- **Fixed chevron size, only adjusting the gap**: the user explicitly asked for the chevron to "change along with the size";
+- **Scale the gap with size as well**: it would make the gap overly large for big nodes and lose the "closely adjacent indicator" semantics;
+- **Use an ellipse instead of the Bezier eye shape**: the Bezier has true **pointed tips** (the two ends of `eyePath`), while the ends of an ellipse are round caps, which does not match the canvas shape (the settings-page swatch would be distorted too).
 
-## 后果
+## Consequences
 
-- 设置面板的 Node appearance 卡片：`Node size`（唯一尺寸轮）+
-  `Smooth node` / `Corner node` / `Handle` 三行颜色，每行带 reset；
-- 三种节点在任何 size 下都严格同尺寸；
-- 起始点 `>` / `<` 箭头随 size 缩放，与节点图标的间隙恒为 5（屏幕 px）；
-- 设置页 Smooth 色块为**眼形**（按 `eyePath` 的 `4t(1-t)` 精确采样，
-  盒子长宽比与形状一致），与画布形状一致；
-- 旧 localStorage 键自动迁移并清理。
+- The settings panel's Node appearance card: `Node size` (the only size spinner) +
+  the three color rows `Smooth node` / `Corner node` / `Handle`, each with a reset;
+- All three node kinds are strictly the same size at any size;
+- The start point `>` / `<` chevron scales with size; its gap to the node icon is a constant 5 (screen px);
+- The settings-page Smooth swatch is **eye-shaped** (precisely sampled from `eyePath`'s `4t(1-t)`,
+  with the box's aspect ratio matching the shape), consistent with the canvas shape;
+- Old localStorage keys are migrated and cleaned up automatically.
 
-## 关联
+## Related
 
-- 特性包：[docs/specs/10-startpoint-chevron/](../specs/10-startpoint-chevron/)
-- 前序：ADR-0005（smooth 点 = 眼形）、ADR-0007（起始点箭头）、
-  ADR-0004（设置行文字在前）
-- 台账：ENGRAM-CHANGES.md「R10-T10.2」
+- Feature pack: [docs/specs/10-startpoint-chevron/](../specs/10-startpoint-chevron/)
+- Predecessors: ADR-0005 (smooth point = eye shape), ADR-0007 (start point chevron),
+  ADR-0004 (settings-row text first)
+- Ledger: ENGRAM-CHANGES.md "R10-T10.2"

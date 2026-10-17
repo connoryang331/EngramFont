@@ -1,51 +1,51 @@
-# R5 · Proof/Edit 双模式画布 · 技术规范
+# R5 · Proof/Edit Dual-Mode Canvas · Technical Spec
 
-## 1. 状态机
+## 1. State Machine
 ```
-canvasMode: "edit" ←→ "proof"     （"mesh" 预留）
-持久化：localStorage "engramfont-canvas-mode"（theme-settings.js 同款模式）
-默认："edit"（老用户无感）
-转换：任意态 <100ms，无服务端往返
+canvasMode: "edit" ←→ "proof"     ("mesh" reserved)
+Persistence: localStorage "engramfont-canvas-mode" (same pattern as theme-settings.js)
+Default: "edit" (invisible to existing users)
+Transitions: any state <100ms, no server round-trip
 ```
 
-## 2. proof 态渲染规范
-| 项 | 规范 |
+## 2. proof-State Rendering Spec
+| Item | Spec |
 |---|---|
-| 文本布局 | 复用 scene-model 现有多行堆叠（lineHeight，scene-model.js:471/561）零新代码 |
-| metrics 导线 | `fontra.lineMetrics` 层宽度来源参数化：canvasMode=proof 时画**整行宽度**（scene-model 行布局数据），edit 态维持单字形宽度（现状） |
-| 编辑禁用 | 工具簇隐藏（editor.js 工具注册处按 canvasMode 条件）；`glyphSelector("editing")` 的可视化层在 proof 态不激活 |
-| 选中态 | proof 态仍可点字形（高亮定位），但无控制点/拖拽 |
-| 缩放 | 保留（100%/滚轮） |
+| Text layout | reuse the existing scene-model multi-line stacking (lineHeight, scene-model.js:471/561), zero new code |
+| metrics guidelines | parameterize the width source of the `fontra.lineMetrics` layer: when canvasMode=proof draw **full-line width** (scene-model line layout data); edit state keeps single-glyph width (status quo) |
+| Edit disabling | tool cluster hidden (conditionally registered in editor.js per canvasMode); the `glyphSelector("editing")` visualization layer is not active in proof state |
+| Selection | glyphs remain clickable in proof state (highlight/locate), but no control points / dragging |
+| Zoom | kept (100% / mouse wheel) |
 
-## 3. 预设按钮（Dock 上方工具条，R3 提供）
-| 按钮 | 设置文本（characterLines） |
+## 3. Preset Buttons (toolbar above the Dock, provided by R3)
+| Button | Sets text (characterLines) |
 |---|---|
-| your text | 恢复用户最近输入（内存缓存） |
+| your text | restore the user's most recent input (in-memory cache) |
 | kern | `AVAT AT AV To To Wa Wa Yo Yo` |
 | capitals | `ABCDEFGHIJKLMNOPQRSTUVWXYZ` + `0123456789` |
 | spacing | `nnnoonn HHooHH nHnH oHoH` |
 | shapes | `sphinx of black quartz, judge my vow.` + `pack my box with five dozen liquor jugs.` |
 
-实现：设置 sceneSettings.characterLines（text-entry 面板自动同步——同一 controller）
+Implementation: set sceneSettings.characterLines (the text-entry panel syncs automatically — same controller)
 
-## 4. 文件清单
-| 文件 | 操作 | 内容 |
+## 4. File List
+| File | Action | Content |
 |---|---|---|
-| `src-js/views-editor/src/canvas-mode.js` | 新增 | canvasMode 状态机（get/set/subscribe/持久化） |
-| `src-js/views-editor/src/visualization-layer-definitions.js` | 修改 | lineMetrics 层宽度参数化（proof 态整行） |
-| `src-js/views-editor/src/editor.js` | 修改 2 处 | 工具簇按模式条件渲染；canvasMode 订阅 |
-| `src-js/views-editor/src/keyboard-dock.js`（R3） | 修改 | 模式键派发 |
+| `src-js/views-editor/src/canvas-mode.js` | new | canvasMode state machine (get/set/subscribe/persistence) |
+| `src-js/views-editor/src/visualization-layer-definitions.js` | modify | parameterize lineMetrics layer width (full line in proof state) |
+| `src-js/views-editor/src/editor.js` | modify 2 spots | render the tool cluster conditionally per mode; subscribe to canvasMode |
+| `src-js/views-editor/src/keyboard-dock.js` (R3) | modify | mode-key dispatch |
 
-## 5. 交互细节
-- 切换动画：无（即时切换，保持 viewport 不变——参照 engram-editor immersive-mode 的 viewport 保持经验）
-- proof 态下滚轮仍缩放、space 仍平移
-- edit 态恢复：工具选择恢复到进入 proof 前的工具
+## 5. Interaction Details
+- Switch animation: none (instant switch, viewport unchanged — following the viewport-preservation experience of engram-editor immersive-mode)
+- In proof state the wheel still zooms and space still pans
+- Return to edit state: tool selection restored to what it was before entering proof
 
-## 6. 五个预览预设 · 精确字符串（实现即用）
+## 6. Five Preview Presets · Exact Strings (ready to use in implementation)
 ```js
-// keyboard-dock.js（R3）工具条按钮 → 设置 characterLines
+// keyboard-dock.js (R3) toolbar buttons → set characterLines
 export const PROOF_PRESETS = {
-  "your-text": null,   // 恢复用户输入：保存进入 proof 前的 characterLines 快照（内存）
+  "your-text": null,   // restore user input: save a snapshot of characterLines from before entering proof (in memory)
   "kerning": ["AVAT AT AV", "To To Wa Wa", "Yo Yo AVA"],
   "capitals": ["ABCDEFGHIJKLMNOPQRSTUVWXYZ", "0123456789"],
   "spacing": ["nnnoonn", "HHooHH", "nHnH oHoH"],
@@ -55,70 +55,68 @@ export const PROOF_PRESETS = {
   ],
 };
 ```
-- "your text"：进入 proof 前缓存 `characterLines` 快照（内存变量，不持久化）
-- 点击预设 = `sceneSettings.characterLines = preset.map(line => line.split(""))`
-  （characterLines 结构：行数组 × 字符数组——实现时以 scene-model.js:462 消费端为准核对）
+- "your text": cache a `characterLines` snapshot before entering proof (in-memory variable, not persisted)
+- Clicking a preset = `sceneSettings.characterLines = preset.map(line => line.split(""))`
+  (characterLines structure: array of lines × array of characters — verify against the consumer at scene-model.js:462 during implementation)
 
-## 7. fontra.lineMetrics 层改造 · 代码级草图
+## 7. fontra.lineMetrics Layer Changes · Code-Level Sketch
 ```js
-// visualization-layer-definitions.js — fontra.lineMetrics 层 draw() 改造点
+// visualization-layer-definitions.js — changes to the fontra.lineMetrics layer draw()
 draw: ({ context, positionedGlyph, parameters, model, controller }) => {
-  // 现状：glyphWidth = positionedGlyph.glyph.xAdvance（单字形宽）
-  // 改造：proof 态取整行宽（canvas-mode.js 提供 isProof() 与 lineLayoutWidth）
+  // status quo: glyphWidth = positionedGlyph.glyph.xAdvance (single-glyph width)
+  // change: in proof state use the full-line width (canvas-mode.js provides isProof() and lineLayoutWidth)
   const width = isProof()
-    ? model.textLayoutWidth            // scene-model 行布局已有该数据（行内字形 advance 累计）
+    ? model.textLayoutWidth            // scene-model line layout already has this data (accumulated glyph advances within a line)
     : positionedGlyph.glyph.xAdvance;
-  // pathBox.rect(0, descender, width, ascender-descender) 等全部用 width
-  // 注意：多行时逐行画（scene-model 的 lineHeight 堆叠 y 值迭代——与 scene-model.js:561 同步）
+  // pathBox.rect(0, descender, width, ascender-descender) etc. all use width
+  // note: for multiple lines, draw line by line (iterate scene-model's lineHeight-stacked y values — in sync with scene-model.js:561)
 }
 ```
-- 接口新增：scene-model 暴露 `textLayoutWidth`（每行宽度数组）——scene-model.js 内部已有
-  逐行字形 advance 累计（:471 起的布局循环），只需存储并暴露，~5 行
-- 回归保障：edit 态（isProof()=false）走原路径，单字形导线不变
+- New interface: scene-model exposes `textLayoutWidth` (array of per-line widths) — scene-model.js already accumulates per-line glyph advances internally (layout loop starting at :471); it only needs to be stored and exposed, ~5 lines
+- Regression safety: in edit state (isProof()=false) the original path is taken; single-glyph guidelines unchanged
 
-## 8. 工具禁用清单（proof 态）
-| 部件 | proof 态行为 |
+## 8. Tool Disabling List (proof state)
+| Component | Behavior in proof state |
 |---|---|
-| 工具簇（pen/knife/rect/ruler） | 隐藏（editor.js 工具注册处按 canvasMode 条件） |
-| 选中控制点/拖拽 | glyphSelector("editing") 层不激活 |
-| 侧栏（text-entry 除外） | 保留可见但输入禁用（avoid 误编辑） |
-| 缩放/平移 | 保留 |
-| Dock | 可见（proof 工具条显示） |
+| Tool cluster (pen/knife/rect/ruler) | hidden (conditionally registered in editor.js per canvasMode) |
+| Selection control points / dragging | glyphSelector("editing") layer not active |
+| Sidebars (except text-entry) | remain visible but input disabled (avoid accidental edits) |
+| Zoom / pan | kept |
+| Dock | visible (proof toolbar shown) |
 
-## 9. proof 工具条三按钮 · 语义规范（kern / space / proof）
-> 位置：proof 态下键盘上方工具条。行为依据：meshfont 截图弹窗（5 预设）+ 标签推断；
-> **精确文本串留待执行会话对照验证**（对照工具：demo-liga/probe-proof-keys.mjs 已备好，执行时先跑它采集基准）。
+## 9. Three proof-Toolbar Buttons · Semantic Spec (kern / space / proof)
+> Position: the toolbar above the keyboard in proof state. Basis for behavior: meshfont screenshot dialog (5 presets) + inference from labels;
+> **exact text strings are left for the execution session to verify against** (comparison tool: demo-liga/probe-proof-keys.mjs is ready; run it first at execution time to capture the baseline).
 
-| 按钮 | 行为规范 | 预设文本（推测初值，执行时对照） |
+| Button | Behavior Spec | Preset Text (guessed initial values, verify at execution time) |
 |---|---|---|
-| **kern** | 一键把画布文本切换为**字距对预览** | `AVAT AT AV` `To To Wa Wa` `Yo Yo AVA` |
-| **space** | 一键切换为**间距节奏预览** | `nnnoonn` `HHooHH` `nHnH oHoH` |
-| **proof（带▾下拉）** | 打开 5 预设菜单（your text / kerning / capitals / spacing / shapes）+ 应用当前选择 | 菜单即 R5 §6 的 PROOF_PRESETS |
+| **kern** | one click switches the canvas text to **kerning-pair preview** | `AVAT AT AV` `To To Wa Wa` `Yo Yo AVA` |
+| **space** | one click switches to **spacing-rhythm preview** | `nnnoonn` `HHooHH` `nHnH oHoH` |
+| **proof (with ▾ dropdown)** | opens the 5-preset menu (your text / kerning / capitals / spacing / shapes) + applies the current selection | the menu is the PROOF_PRESETS from R5 §6 |
 
-- 实现形式：三个按钮都只是**设置 characterLines**（kern/space=直接设预设串；proof=开下拉菜单），
-  复用 R5 §6 的 PROOF_PRESETS 常量表——无独立渲染逻辑
-- your text：进入 proof 前缓存用户 characterLines 快照
+- Implementation form: all three buttons merely **set characterLines** (kern/space = set preset strings directly; proof = open a dropdown menu), reusing the PROOF_PRESETS constant table from R5 §6 — no independent rendering logic
+- your text: cache a snapshot of the user's characterLines before entering proof
 
-## 10. 排版控制 = Dock 滑块的上下文重映射（v5 定案）
-proof 态的排版控制**不新增控件**——复用 Dock 的四个滑块/键（canvasMode 驱动语义重映射）：
+## 10. Typography Controls = Contextual Remapping of Dock Sliders (v5 final)
+Typography controls in proof state **add no new controls** — reuse the Dock's four sliders/keys (semantic remapping driven by canvasMode):
 
-| Dock 控件 | proof 态功能 | 作用于 |
+| Dock Control | Function in proof state | Acts On |
 |---|---|---|
-| 紫色 | Metric lines 显隐 | 导线可视化层开关 |
-| 黄滑块 | letter spacing（字母间距） | 文本字距（tracking） |
-| 红滑块 | Word spacing（词间距） | 空格宽度倍率 |
-| 绿滑块 | Line height（行高） | 行距堆叠 |
-| DEL | reset 文本（恢复默认文本） | characterLines 复位 |
+| Purple | Metric lines show/hide | toggles the guideline visualization layer |
+| Yellow slider | letter spacing | text tracking |
+| Red slider | word spacing | space-width multiplier |
+| Green slider | line height | line stacking |
+| DEL | reset text (restore default text) | resets characterLines |
 
-- sceneSettings 新增字段：`wordSpacing`（默认 1.0 倍空格宽）、`letterSpacing`（默认 0 额外）、
-  `canvasMode`（R5 已有）——scene-model 布局循环消费这些值（lineHeight 已有 ✓）
-- edit 态下同组滑块回退为字形编辑控制（见 R3 KEYMAP v5 双功能表）
+- New sceneSettings fields: `wordSpacing` (default 1.0× space width), `letterSpacing` (default 0 extra),
+  `canvasMode` (already in R5) — the scene-model layout loop consumes these values (lineHeight already exists ✓)
+- In edit state the same sliders fall back to glyph-editing controls (see the R3 KEYMAP v5 dual-function table)
 
-## 11. reset 文本 · 确切行为定案（2026-10-12 用户确认 + 源码查证）
-| 项 | 定案 |
+## 11. Reset Text · Final Behavior (user-confirmed 2026-10-12 + verified against source)
+| Item | Decision |
 |---|---|
-| DEL 行为 | **恢复默认预览文本**（非清空、非删除）|
-| 默认预览文本（EngramFont） | **动态生成**：工程 glyphMap 顺序取有 codePoint 的字形拼串，前 40 字符一行 —— 永远全部字形存在（不 notdef），任何工程 reset 后都有意义 |
-| 对照 | Fontra 默认 `text: ""`（scene-controller.js:1824）；meshfont 固定 pangram 依赖模板字体有全 Latin——EngramFont 工程字形动态，固定串会 notdef，故用动态默认 |
-| 文本进 URL | 沿用 Fontra 机制（editor.js:3410 writeObjectToURLFragment）——reset 后 URL fragment 同步更新 |
-| 实现点 | scene-settings 默认值改造：`text: ""` → getter 动态取 glyphMap 前 40 个有 codePoint 的字形（工程加载后可得）；DEL = characterLines 复位为该默认 |
+| DEL behavior | **restore the default preview text** (not clearing, not deleting) |
+| Default preview text (EngramFont) | **dynamically generated**: take glyphs with a codePoint in project glyphMap order and join them, 40 characters per line — all glyphs are always present (never notdef), so reset is meaningful for any project |
+| Comparison | Fontra defaults to `text: ""` (scene-controller.js:1824); meshfont's fixed pangram relies on the template font having full Latin — EngramFont project glyphs are dynamic, so a fixed string would produce notdef; hence the dynamic default |
+| Text into URL | reuse the Fontra mechanism (editor.js:3410 writeObjectToURLFragment) — the URL fragment updates in sync after reset |
+| Implementation point | scene-settings default change: `text: ""` → a getter that dynamically takes the first 40 glyphs with a codePoint from glyphMap (available once the project is loaded); DEL = reset characterLines to that default |

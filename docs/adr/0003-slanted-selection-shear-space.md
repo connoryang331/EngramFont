@@ -5,57 +5,73 @@ Status: accepted
 Date: 2026-10-14
 ---
 
-# 斜向框选：剪切空间命中测试，复用矩形判定
+# Slanted selection: shear-space hit testing, reusing the rectangle tests
 
-## 背景
+## Background
 
-对标 Glyphs 的 slanted selection：拖拽框选中按住 Ctrl 改变选区**角度**，
-松开 Ctrl 沿当前角度继续改变大小。选区从矩形变成平行四边形——
-**命中测试怎么办**？现有 `selectionAtRect` 覆盖四类元素：节点（逐点）、组件
-（controlBounds 预滤 + 凸包 + 逐轮廓）、锚点、背景图，各有自己的矩形判定。
+Parity with Glyphs' slanted selection: while dragging a rectangle selection, holding
+Ctrl changes the selection's **angle**, and releasing Ctrl continues resizing along the
+current angle. The selection changes from a rectangle to a parallelogram —
+**what about hit testing**? The existing `selectionAtRect` covers four element kinds:
+nodes (point by point), components (controlBounds pre-filter + convex hull + per
+outline), anchors, and background images, each with its own rectangle test.
 
-## 决策
+## Decision
 
-**剪切空间法**：平行四边形建模为 `{x0, y0, x1, y1, shearK}`
-（水平上下边 + 斜侧边；`shearK` = 每垂直单位水平偏移）。判定时把所有候选几何
-按 `x -= shearK·(y-y0)` 剪切——平行四边形**恰好退化**为轴对齐矩形
-`(x0, y0, x1, y1)`，于是四类元素的既有矩形判定**原样复用**：
+**The shear-space approach**: the parallelogram is modeled as `{x0, y0, x1, y1, shearK}`
+(horizontal top and bottom edges + slanted sides; `shearK` = horizontal offset per unit
+of vertical distance). For the test, all candidate geometry is sheared by
+`x -= shearK·(y-y0)` — the parallelogram **degenerates exactly** into the axis-aligned
+rectangle `(x0, y0, x1, y1)`, so the existing rectangle tests of the four element kinds
+are **reused as-is**:
 
-- `scene-model.selectionAtParallelogram(para, filter)`：新增方法（不改矩形版）；
-- 组件判定镜像 `intersectsRect` 的结构（剪切 controlBounds 预滤 + 剪切凸包 +
-  逐轮廓），模块级 helper `componentIntersectsShearedRect`；
-- 背景图：`_backgroundImageSelectionAtPointOrRect` 增加 `paraGlyph` 三分支；
-- 绘制：`fontra.rect.select` 图层增加平行四边形分支（样式与矩形一致）。
+- `scene-model.selectionAtParallelogram(para, filter)`: a new method (the rectangle
+  version is untouched);
+- the component test mirrors the structure of `intersectsRect` (sheared controlBounds
+  pre-filter + sheared convex hull + per outline), with the module-level helper
+  `componentIntersectsShearedRect`;
+- background image: `_backgroundImageSelectionAtPointOrRect` gains a three-way
+  `paraGlyph` branch;
+- drawing: the `fontra.rect.select` layer gains a parallelogram branch (styling
+  identical to the rectangle).
 
-角度状态机在 `edit-tools-pointer.handleRectSelect`：Ctrl 按下瞬间冻结横向宽度 `w`；
-角度模式鼠标驱动 `shearK`（钳制 ±12 ≈ ±85°）；松开后定角缩放
-（`dy = mouse.y - y0`，`w = dx - k·dy`，角点精确跟随鼠标）。
+The angle state machine lives in `edit-tools-pointer.handleRectSelect`: the moment Ctrl
+goes down, the horizontal width `w` is frozen; in angle mode the mouse drives `shearK`
+(clamped to ±12 ≈ ±85°); after release, fixed-angle resizing
+(`dy = mouse.y - y0`, `w = dx - k·dy`, corners tracking the mouse exactly).
 
-## 理由
+## Rationale
 
-1. **一份判定逻辑而不是四份**：剪切只改变输入坐标，不改判定本身——四类元素的
-   命中口径与矩形模式逐条对齐，行为不会悄悄漂移。
-2. **精确**：剪切是仿射变换，点/凸包/轮廓测试全部保持精确（测试交叉验证见特性包）。
-3. **贴片友好**：全部是新增方法 + 一个绘制分支 + 状态机重写；原有 `selectionAtRect`
-   一字未动，不碰 Ctrl 时行为完全一致。
+1. **One test instead of four**: shearing only changes the input coordinates, not the
+   test itself — the hit-test semantics of the four element kinds stay aligned
+   one-to-one with rectangle mode, so behavior cannot silently drift.
+2. **Exact**: shearing is an affine transform, so the point/convex hull/outline tests
+   all remain exact (cross-validated tests in the feature pack).
+3. **Patch friendly**: everything is new methods + one drawing branch + a rewritten
+   state machine; the original `selectionAtRect` is untouched, and behavior without
+   Ctrl is completely unchanged.
 
-## 被否决的方案
+## Rejected alternatives
 
-- **每种元素各写 point-in-parallelogram**：四份近似同构的几何代码，未来矩形侧
-  修 bug 时必然漏改某一侧。
-- **通用凸多边形 SAT/相交工具**：要新写并维护几何 utils，且矩形路径仍要保留
-  （不碰 Ctrl 时走原路），两套判定并存更贵。
+- **A point-in-parallelogram per element kind**: four nearly isomorphic pieces of
+  geometry code; a future bug fix on the rectangle side would inevitably miss one side.
+- **A generic convex-polygon SAT/intersection utility**: it would need to be written
+  and maintained, and the rectangle path would still have to stay (the original path is
+  used when Ctrl is not held) — running two test systems side by side is more expensive.
 
-## 后果
+## Consequences
 
-- 选区状态新增 `sceneController.selectionParallelogram`（glyph 坐标，与
-  `selectionRect` 同约定，拖拽结束清空）。
-- 组件/背景图在斜选下的判定精度与矩形模式同级（含已知简化：矩形完全包住
-  多边形时按角点判定——与上游 `rectIntersectsPolygon` 的既有口径一致）。
-- 验证：独立实现的剪切命中计算与真实选择逐点一致（point/7,16,18）；
-  `npx playwright test` 35/35 回归通过。
+- Selection state gains `sceneController.selectionParallelogram` (glyph coordinates,
+  same contract as `selectionRect`, cleared when the drag ends).
+- Component/background-image test precision under slanted selection is on par with
+  rectangle mode (including a known simplification: when the rectangle fully contains
+  the polygon, the test falls back to corners — consistent with the existing semantics
+  of upstream's `rectIntersectsPolygon`).
+- Verification: an independently implemented shear hit calculation matched real
+  selections point by point (point/7,16,18); `npx playwright test` passed 35/35
+  regressions.
 
-## 关联
+## Related
 
-- 特性包：[docs/specs/09-slanted-selection/](../specs/09-slanted-selection/)
-- 台账：ENGRAM-CHANGES.md「R5-T5.5」
+- Feature pack: [docs/specs/09-slanted-selection/](../specs/09-slanted-selection/)
+- Ledger: ENGRAM-CHANGES.md "R5-T5.5"

@@ -1,7 +1,7 @@
-# R7 · 任务拆解
-| # | 任务 | 文件 | DoD | 估时 |
+# R7 · Task Breakdown
+| # | Task | File | DoD | Estimate |
 |---|---|---|---|---|
-| T7.1 | Edit image 上下文按钮（出现条件/点击激活） | editor.js | 有背景图时按钮出现，点击→选中背景图+滑块出现 | 0.5d |
-| T7.2 | 自动锁定（selection 离开→re-lock） | scene-controller.js | 点画布其它处→自动锁定 | 0.5d |
-| T7.3 | Replace 按钮（保留变换） | panel-selection-info.js | 换图后位置/透明度不变 | 0.5d |
-| T7.4 | 移除全局 Unlock/Lock 菜单项 | scene-controller.js | 菜单无该项，行为由上下文接管 | 0.25d |
+| T7.1 | Edit image context button (appearance condition / click to activate) | editor.js | Button appears when a background image exists; click → background image selected + sliders appear | 0.5d |
+| T7.2 | Auto-lock (selection leaves → re-lock) | scene-controller.js | Clicking elsewhere on the canvas → auto-lock | 0.5d |
+| T7.3 | Replace button (preserves transformation) | panel-selection-info.js | Position/opacity unchanged after replacing the image | 0.5d |
+| T7.4 | Remove the global Unlock/Lock menu item | scene-controller.js | Menu item gone; behavior taken over by the context | 0.25d |

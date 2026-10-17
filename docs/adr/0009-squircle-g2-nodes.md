@@ -23,7 +23,7 @@ Glyphs App's **super-smooth node** adds one more level, **G2 curvature continuit
 The user asked for this feature to be implemented, but was explicit: **"The image is a superellipse icon. No five-pointed star needed."**
 The user then added: **"SUPER_SMOOTH should be called superellipse squircle instead of super smooth"**.
 
-This is not a departure from Glyphs but **carrying out an existing decision of this repo**: ooont Design Legend Symbol System Design Notes](../idea/字体设计图例符号系统设计说明.md)
+This is not a departure from Glyphs but **carrying out an existing decision of this repo**: Font Design Legend Symbol System Design Notes (moved out of the repository)
 §3.2 already designated the "superellipse point" as the symbol for curvature continuity, and criticized the five-pointed star:
 
 > **oive-pointed star**: there is no intuitive connection between a star shape and "curvature continuity" — it hints neither at curves nor at continuity; it can only be bound through memorization. It is a purely conventional symbol with a high learning cost. *(Quote translated from the Chinese original.)*
@@ -109,6 +109,6 @@ Implemented as a **new `advanceNodeKind()`**, while **leaving `toggleSmooth`'s e
 ## Related
 
 - oeature pack: odocs/specs/11-squircle-nodes/](../specs/11-squircle-nodes/)
-- Design notes: ooont Design Legend Symbol System Design Notes](../idea/字体设计图例符号系统设计说明.md) §3.2 (superellipse = curvature-continuous)
+- Design notes: Font Design Legend Symbol System Design Notes (moved out of the repository) §3.2 (superellipse = curvature-continuous)
 - Predecessors: ADR-0005 (curve point = eye shape), ADR-0008 (unified nodeSize)
 - Ledger: ENGRAM-CHANGES.md "R11-T11.1"

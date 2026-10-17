@@ -5,47 +5,59 @@ Status: accepted
 Date: 2026-10-14
 ---
 
-# 节点外观设置常开：删除 "Use custom node colors and sizes" 总开关
+# Node appearance settings always on: remove the "Use custom node colors and sizes" master toggle
 
-## 背景
+## Background
 
-R4-T4.25 给 Theme settings 加了 Node appearance 卡片：一个总开关
-（`nodeAppearanceCustom`，默认 false）+ 六个子设置（3 色 + 3 尺寸）。
-子设置**任何时候都可编辑**，但只有开关勾选时才被 `applyNodeAppearanceSettings`
-应用——关着时改它们是"静默无效"的；且默认关着 = 新用户看到可编辑的设置却不生效。
+R4-T4.25 added a Node appearance card to Theme settings: a master toggle
+(`nodeAppearanceCustom`, default false) plus six sub-settings (3 colors + 3 sizes).
+The sub-settings were **editable at any time**, but were only applied by
+`applyNodeAppearanceSettings` while the toggle was checked — editing them while it was
+off was "silently ineffective"; and because it defaulted to off, new users saw editable
+settings that did nothing.
 
-用户反馈（原文）："Use custom node colors and sizes 这个很多余，去掉。"
+User feedback (verbatim): "The 'Use custom node colors and sizes' one is quite
+redundant — remove it."
 
-## 决策
+## Decision
 
-- 删除总开关与 `nodeAppearanceCustom` 模型键（theme-settings.js）。
-- `applyNodeAppearanceSettings` **无条件**应用自定义颜色/尺寸
-  （移除 if/else 分支）。
-- 顺带修复实时监听误传参数（见 [BUG-004](../bugfixes/2026-10-14-节点外观实时更新误传参数.md)）。
+- Remove the master toggle and the `nodeAppearanceCustom` model key (theme-settings.js).
+- `applyNodeAppearanceSettings` applies custom colors/sizes **unconditionally**
+  (the if/else branch is removed).
+- Also fixes the live listener passing the wrong argument
+  (see [BUG-004](../bugfixes/2026-10-14-node-appearance-live-update-wrong-param.md)).
 
-## 理由
+## Rationale
 
-1. 开关语义与 UI 自相矛盾：子设置永远可编辑，却只在勾选时生效。
-2. 用户显式要求删除，且删掉后行为更直白（设置 = 生效）。
-3. 少一个状态就少一条会漂的路径（开关状态 + 六个值 = 七份持久化状态 → 六份）。
+1. The toggle's semantics contradicted the UI: the sub-settings were always editable
+   yet only took effect when the toggle was checked.
+2. The user explicitly asked for removal, and without it the behavior is more
+   straightforward (a setting = it takes effect).
+3. One fewer state means one fewer path that can drift (toggle state + six values =
+   seven persisted states → six).
 
-## 被否决的方案
+## Rejected alternatives
 
-- **保留开关、子行随开关灰显**（macOS 设置风）：当时已实现通用
-  `disabledWhen` + `refreshDisabledStates` 机制（BUG-002），但用户明确说开关多余——
-  留开关只是把"静默无效"改成"灰显无效"，问题本身没解决。机制保留，总开关删除。
-- **保留键、默认值改 true**：老 localStorage 里 `false` 会继续压制设置，
-  且没有 UI 能改回来——等于给老用户埋雷。
+- **Keep the toggle and gray out the sub-rows with it** (macOS settings style): the
+  generic `disabledWhen` + `refreshDisabledStates` mechanism (BUG-002) had already been
+  implemented at the time, but the user clearly said the toggle was redundant — keeping
+  it would only turn "silently ineffective" into "grayed-out ineffective" without
+  solving the underlying problem. The mechanism stays; the master toggle goes.
+- **Keep the key and change the default to true**: an old `false` in localStorage would
+  keep suppressing the settings, and there would be no UI to flip it back — leaving a
+  landmine for existing users.
 
-## 后果
+## Consequences
 
-- `themeController` 少一个键；老 `engramfont-nodeAppearanceCustom` 残留无害。
-- 节点三图层（`fontra.nodes` / `fontra.component.nodes` / `fontra.selected.nodes`）
-  恒为自定义色/尺寸；改设置**立即**反映到画布（修复后）。
-- `disabledWhen` / `refreshDisabledStates` 成为 `simple-settings` 的通用能力，
-  留给后续需要依赖关系的面板。
+- `themeController` has one fewer key; a leftover old `engramfont-nodeAppearanceCustom`
+  entry is harmless.
+- The three node layers (`fontra.nodes` / `fontra.component.nodes` /
+  `fontra.selected.nodes`) always use the custom colors/sizes; setting changes reflect
+  on the canvas **immediately** (after the fix).
+- `disabledWhen` / `refreshDisabledStates` became a generic capability of
+  `simple-settings`, left for later panels that need dependencies.
 
-## 关联
+## Related
 
-- 特性包：[docs/specs/08-node-appearance-settings/](../specs/08-node-appearance-settings/)
-- 台账：ENGRAM-CHANGES.md「R4-T4.26」
+- Feature pack: [docs/specs/08-node-appearance-settings/](../specs/08-node-appearance-settings/)
+- Ledger: ENGRAM-CHANGES.md "R4-T4.26"

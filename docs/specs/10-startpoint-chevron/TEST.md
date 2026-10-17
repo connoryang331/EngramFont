@@ -1,46 +1,46 @@
-# R10 · 测试验收与回归
+# R10 · Test Acceptance and Regression
 
-需求：[PRD.md](./PRD.md) ｜ 实现：[SPEC.md](./SPEC.md) ｜ 台账：ENGRAM-CHANGES「R10-T10.1」
+Requirements: [PRD.md](./PRD.md) | Implementation: [SPEC.md](./SPEC.md) | Ledger: ENGRAM-CHANGES "R10-T10.1"
 
-## 一、方向正确性（Playwright，**8801 e2e 隔离实例**，遵守 BUG-006 硬约束）
+## 1. Direction Correctness (Playwright, **8801 e2e isolated instance**, honoring the BUG-006 hard constraint)
 
-构造 4 条朝向各异的开放轮廓（起始点分别为右/左/上/下），用应用自身的
-`canvasController.canvasPoint()` 算出起始点屏幕坐标，逐个**裁剪特写截图**：
+Construct 4 open contours with different orientations (start points facing right/left/up/down respectively), use the app's own
+`canvasController.canvasPoint()` to compute each start point's screen coordinates, and take **cropped close-up screenshots** one by one:
 
-| ID | 用例 | 期望 | 结果 |
+| ID | Case | Expected | Result |
 |---|---|---|---|
-| TC-1 | 起始点方向朝右 | 显示 `>`（顶点朝右） | ✅ `qa/chev-right.png` |
-| TC-2 | 起始点方向朝左 | 显示 `<`（顶点朝左） | ✅ `qa/chev-left.png` |
-| TC-3 | 起始点方向朝上 | 显示 `∧` | ✅ `qa/chev-up.png` |
-| TC-4 | 起始点方向朝下 | 显示 `∨` | ✅ `qa/chev-down.png` |
-| TC-5 | 斜向（45°/135°） | 箭头随方向旋转 | ✅ `qa/chevron-shapes.png` |
-| TC-6 | 无圆弧残留 | 起始点处不再出现圆弧 | ✅ 全部截图 |
+| TC-1 | Start point direction facing right | Shows `>` (tip facing right) | ✅ `qa/chev-right.png` |
+| TC-2 | Start point direction facing left | Shows `<` (tip facing left) | ✅ `qa/chev-left.png` |
+| TC-3 | Start point direction facing up | Shows `∧` | ✅ `qa/chev-up.png` |
+| TC-4 | Start point direction facing down | Shows `∨` | ✅ `qa/chev-down.png` |
+| TC-5 | Diagonal (45°/135°) | Chevron rotates with the direction | ✅ `qa/chevron-shapes.png` |
+| TC-6 | No arc residue | No arc appears at the start point anymore | ✅ all screenshots |
 
-## 二、间隙恒定（用户追加要求：节点尺寸变大时间隙不变）
+## 2. Constant Gap (user follow-up requirement: the gap must not change when node size gets larger)
 
-**这是首轮遗漏的验证项**：首版只验证了方向，箭头半径写死 9 而节点尺寸可调到 24+，
-导致箭头压在节点图标上（用户截图指出）。修复后必须**量化**间隙。
+**This was a verification item missed in the first round**: the first version only verified direction; the chevron radius was hard-coded at 9 while node size could be raised to 24+,
+causing the chevron to sit on top of the node icon (pointed out via the user's screenshot). After the fix the gap must be **quantified**.
 
-方法：用真实图层代码 `draw()` + 记录型 context 取出箭头的实际腿端坐标，
-再对节点轮廓（方形/眼形按 `fillSquareNode`/`eyePath` 的公式密集采样 3000 点）
-求**可见最小间隙**。轮廓朝右，故箭头局部坐标系 == 字形坐标系。
+Method: run the real layer code `draw()` with a recording context to extract the chevron's actual leg-end coordinates,
+then densely sample 3000 points along the node outline (square/eye shape per the `fillSquareNode`/`eyePath` formulas)
+and compute the **minimum visible gap**. The contour faces right, so the chevron's local coordinate system == the glyph coordinate system.
 
-| 节点形状 | size 6 | 8 | 12 | 16 | 24 | 32 | 48 | spread |
+| Node shape | size 6 | 8 | 12 | 16 | 24 | 32 | 48 | spread |
 |---|---|---|---|---|---|---|---|---|
-| corner（方形） | 7.04 | 6.67 | 6.54 | 6.54 | 6.54 | 6.54 | 6.54 | 0.50 |
-| smooth（眼形） | 9.24 | 9.24 | 9.24 | 9.24 | 9.24 | 9.24 | 9.24 | **0.000** |
+| corner (square) | 7.04 | 6.67 | 6.54 | 6.54 | 6.54 | 6.54 | 6.54 | 0.50 |
+| smooth (eye shape) | 9.24 | 9.24 | 9.24 | 9.24 | 9.24 | 9.24 | 9.24 | **0.000** |
 
-- 眼形**完全恒定**（spread 0.000）；方形在 size ≥ 12 后恒定 6.54；
-- 方形 size 6/8 的 0.3–0.5px 偏差来自 V 形腿与方角的几何（腿端是点、方角是直角），
-  属亚像素级，肉眼不可辨；
-- 结论：**间隙与节点尺寸无关**（要求达成）。
+- The eye shape is **perfectly constant** (spread 0.000); the square is constant at 6.54 for size ≥ 12;
+- The 0.3–0.5px deviation for the square at size 6/8 comes from the geometry of the V-shaped legs versus the square corner (leg ends are points, corners are right angles) —
+  sub-pixel and invisible to the eye;
+- Conclusion: **the gap is independent of node size** (requirement met).
 
-## 三、尺寸联动与统一（用户追加：箭头随 size 变化、三种节点同尺寸）
+## 3. Size Coupling and Unification (user follow-up: the chevron scales with size, all three node kinds share one size)
 
-**要求**：① `>` / `<` 随节点 size 等比缩放；② corner / smooth / handle **同一个 size**，
-不允许一大一小；③ 眼形中间饱满，设置页与编辑区一致。
+**Requirements**: ① `>` / `<` scale proportionally with node size; ② corner / smooth / handle use **the same size** —
+one larger and one smaller is not allowed; ③ the eye shape is full in the middle, and the settings page matches the editor area.
 
-### 3.1 尺寸统一 + 箭头缩放（真实设置路径：localStorage → 重载）
+### 3.1 Size unification + chevron scaling (real settings path: localStorage → reload)
 
 | nodeSize | cornerSize | smoothSize | handleSize | gap | chevronLength | chevronSpread |
 |---|---|---|---|---|---|---|
@@ -49,54 +49,54 @@
 | 16 | 16 | 16 | 16 | **5** | 12 | 10 |
 | 24 | 24 | 24 | 24 | **5** | 18 | 15 |
 
-- ✅ `corner == smooth == handle` 在所有尺寸成立（**同一尺寸设置**）；
-- ✅ `gap` 恒为 5，**不随尺寸缩放**（箭头永不与节点重叠）；
-- ✅ 箭头等比：`chevronSpread / (size/8)` 恒为 5。
+- ✅ `corner == smooth == handle` holds at all sizes (**one shared size setting**);
+- ✅ `gap` is constantly 5 and **does not scale with size** (the chevron never overlaps a node);
+- ✅ The chevron is proportional: `chevronSpread / (size/8)` is constantly 5.
 
-### 3.2 眼形比例改为眼睛形
+### 3.2 Eye-shape ratio changed to a true eye shape
 
-| 位置 | 改动 | 验证 |
+| Location | Change | Verification |
 |---|---|---|
-| 编辑区画布 | `halfWidth` 0.34 → **0.58** × size（长宽比 ≈ 2:1） | `qa/chevron-gap-sheet.png`（对比表） |
-| 设置页色块 | 新增 `.swatch-eye`：`clip-path: polygon()` 按 `4t(1-t)` 精确采样，盒子 2.6em × 1.31em（与形状同比例） | `qa/panel-node-appearance.png` |
+| Editor canvas | `halfWidth` 0.34 → **0.58** × size (aspect ratio ≈ 2:1) | `qa/chevron-gap-sheet.png` (comparison sheet) |
+| Settings page swatch | Added `.swatch-eye`: `clip-path: polygon()` sampled precisely along `4t(1-t)`, box 2.6em × 1.31em (same ratio as the shape) | `qa/panel-node-appearance.png` |
 
-两处共用常量 `EYE_HALF_LEN_FACTOR` / `EYE_HALF_WIDTH_FACTOR`（单一真值源）。
+Both share the constants `EYE_HALF_LEN_FACTOR` / `EYE_HALF_WIDTH_FACTOR` (single source of truth).
 
-### 3.3 间隙仍恒定（比例改动后复测）
+### 3.3 Gap still constant (re-measured after the ratio change)
 
-| 节点形状 | size 6 → 48 的可见间隙 | spread |
+| Node shape | Visible gap for size 6 → 48 | spread |
 |---|---|---|
-| corner（方形） | 7.04, 6.67, 6.54, 6.54, 6.54, 6.54, 6.54 | 0.50 |
-| smooth（眼形） | 9.24 ×7 | **0.000** |
+| corner (square) | 7.04, 6.67, 6.54, 6.54, 6.54, 6.54, 6.54 | 0.50 |
+| smooth (eye shape) | 9.24 ×7 | **0.000** |
 
-眼形完全恒定；方形 ≥ size12 恒定 6.54（小尺寸 0.3–0.5px 差异来自 V 形腿与方角的几何）。
+The eye shape is perfectly constant; the square is constant at 6.54 for size ≥ 12 (the 0.3–0.5px difference at small sizes comes from the geometry of the V-shaped legs versus the square corner).
 
-### 3.4 设置面板外观
+### 3.4 Settings panel appearance
 
-`Node appearance` 卡片 = **Node size**（唯一尺寸轮）+ Smooth node / Corner node / Handle
-三行颜色（各带 reset）。Smooth 色块为紫色**眼形**、Corner 为琥珀方形、
-Handle 为灰色圆形 → `qa/panel-node-appearance.png`。
+The `Node appearance` card = **Node size** (the single size dial) + three color rows for Smooth node / Corner node / Handle
+(each with a reset). The Smooth swatch is a purple **eye shape**, Corner is an amber square,
+Handle is a gray circle → `qa/panel-node-appearance.png`.
 
-## 四、视觉证据
+## 4. Visual Evidence
 
-- `qa/chevron-gap-sheet.png` — 用**真实图层代码**渲染的放大对比表
-  （方形/眼形 × size 8/16/24/32），可直接看到各尺寸间隙一致；
-- `qa/chev-right.png` / `chev-left.png` / `chev-up.png` / `chev-down.png` — 四方向特写。
+- `qa/chevron-gap-sheet.png` — an enlarged comparison sheet rendered with the **real layer code**
+  (square/eye shape × size 8/16/24/32), where the identical gaps across sizes are directly visible;
+- `qa/chev-right.png` / `chev-left.png` / `chev-up.png` / `chev-down.png` — close-ups of the four directions.
 
-## 四、回归
+## 4. Regression
 
-| 项 | 断言 | 结果 |
+| Item | Assertion | Result |
 |---|---|---|
-| 全量 e2e | `npx playwright test` 35/35 | ✅ |
-| docs lint | `node docs/lint.cjs` 74 篇 | ✅ |
-| 控制台 | 无 pageerror / console.error | ✅ |
-| 图层开关 | 其余图层（节点/手柄/路径描边）行为不变 | ✅ |
-| localStorage 迁移 | 旧 `nodeSmoothSize` 值写入 `nodeSize`，三个旧键删除 | ✅ |
+| Full e2e | `npx playwright test` 35/35 | ✅ |
+| docs lint | `node docs/lint.cjs` 74 documents | ✅ |
+| Console | No pageerror / console.error | ✅ |
+| Layer toggles | The remaining layers (nodes/handles/path stroke) behave unchanged | ✅ |
+| localStorage migration | Old `nodeSmoothSize` values written into `nodeSize`, the three old keys deleted | ✅ |
 
-## 六、测量脚本（可复现）
+## 6. Measurement Scripts (reproducible)
 
-- `qa/measure-gap-geometry.mjs` — 间隙量测（第二节、3.3 的数据来源）
-- `qa/verify-nodesize-real.mjs` — 尺寸统一 + 箭头缩放（3.1，走真实 localStorage 路径）
-- `qa/verify-panel.mjs` — 设置面板截图与行结构
-- `qa/gap-sheet.mjs` — 生成放大对比表
-- `qa/verify-chev-clip.mjs` — 四方向特写
+- `qa/measure-gap-geometry.mjs` — gap measurement (data source for Section 2 and 3.3)
+- `qa/verify-nodesize-real.mjs` — size unification + chevron scaling (3.1, via the real localStorage path)
+- `qa/verify-panel.mjs` — settings panel screenshot and row structure
+- `qa/gap-sheet.mjs` — generates the enlarged comparison sheet
+- `qa/verify-chev-clip.mjs` — four-direction close-ups

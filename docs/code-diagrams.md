@@ -1,4 +1,4 @@
-# Fontra 架构图（Mermaid）
+# Fontra Architecture Diagrams (Mermaid)
 
 ## Fontra Block Diagram
 

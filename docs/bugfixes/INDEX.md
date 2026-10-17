@@ -1,42 +1,43 @@
-# Bug 修复记录索引（Bugfix Index）
+# Bug Fix Record Index (Bugfix Index)
 
-> **一 bug 一记录**：每修一个 bug，在本目录建一份记录——**现象名即文件名**
-> （`YYYY-MM-DD-<主题>.md`），frontmatter 带 `Id: BUG-<n>` / `Status` / `tags`。
-> AGENTS.md 只放指针，细节不进它。
+> **One bug, one record**: every time a bug is fixed, create a record in this directory —
+> **the symptom name is the file name** (`YYYY-MM-DD-<topic>.md`), with frontmatter carrying
+> `Id: BUG-<n>` / `Status` / `tags`. AGENTS.md only holds pointers; details do not go into it.
 >
-> **修 bug 的固定动作**：复现 → 定根因 → 修 → 跑回归测试 → 写记录。
-> 根因没写清（指到文件与行）的记录不算完成；同区域二次起火，先翻旧记录再动手。
+> **The standard drill for fixing a bug**: reproduce → pin down the root cause → fix → run regression
+> tests → write the record. A record whose root cause is not written clearly (pointing to file and
+> line) does not count as done; if the same area breaks again, read the old records before acting.
 
-## 记录模板
+## Record Template
 
 ```markdown
 ---
 Id: BUG-<n>
-tags: [<领域标签，词表见 docs/README.md>]
+tags: [<domain tag; vocabulary list in docs/README.md>]
 Status: fixed / open / mitigated / wontfix
 ---
-# <一句话现象>
-日期：YYYY-MM-DD  状态：<同上>
+# <one-sentence symptom>
+Date: YYYY-MM-DD  Status: <same as above>
 
-## 现象
-用户看到什么（截图 / 复现步骤）。
+## Symptom
+What the user saw (screenshot / reproduction steps).
 
-## 根因
-为什么错——指到具体文件与行，说清机制，不写"改好了"三个字。
+## Root Cause
+Why it was wrong — point to the specific file and line, explain the mechanism; don't just write "fixed".
 
-## 修复
-改了哪些文件、关键改动是什么。若需求因此演进，链到特性包 / ADR。
+## Fix
+Which files changed and what the key changes are. If the requirement evolved as a result, link to the feature pack / ADR.
 
-## 验证
-跑什么测试（TC id）、结果、证据路径。没有回归验证的修复 = 未验证。
+## Verification
+Which tests ran (TC id), the results, evidence paths. A fix without regression verification = unverified.
 ```
 
-## 索引
+## Index
 
-| 日期 | Id | 记录 | Status |
+| Date | Id | Record | Status |
 |---|---|---|---|
-| 2026-10-14 | BUG-001 | [设置卡片单选组渲染成 object HTMLDivElement](2026-10-14-设置卡片单选组渲染成object占位.md) | fixed |
-| 2026-10-14 | BUG-002 | [主开关切换后依赖行禁用态不刷新](2026-10-14-主开关切换后依赖行禁用态不刷新.md) | fixed |
-| 2026-10-14 | BUG-003 | [icon-button 构造参数 src 失效请求 undefined](2026-10-14-icon-button构造参数src失效.md) | fixed |
-| 2026-10-14 | BUG-004 | [节点外观实时更新误传参数从未生效](2026-10-14-节点外观实时更新误传参数.md) | fixed |
-| 2026-10-14 | BUG-005 | [键盘 dock 覆盖画布下缘拖拽起点被键帽吞掉](2026-10-14-键盘dock覆盖画布下缘拖拽被吞.md) | mitigated |
+| 2026-10-14 | BUG-001 | [Settings card radio group rendered as object HTMLDivElement](2026-10-14-settings-card-radio-group-object-placeholder.md) | fixed |
+| 2026-10-14 | BUG-002 | [Dependent row disabled states not refreshed after master toggle switch](2026-10-14-master-toggle-row-disabled-state-stale.md) | fixed |
+| 2026-10-14 | BUG-003 | [icon-button constructor parameter src failing, requesting undefined](2026-10-14-icon-button-src-prop-ignored.md) | fixed |
+| 2026-10-14 | BUG-004 | [Node appearance real-time update passed wrong parameter, never took effect](2026-10-14-node-appearance-live-update-wrong-param.md) | fixed |
+| 2026-10-14 | BUG-005 | [Keyboard dock covers lower canvas edge, drag start point swallowed by keycap](2026-10-14-keyboard-dock-swallowed-bottom-edge-drag.md) | mitigated |

@@ -1,12 +1,12 @@
-# R1 · 计划
+# R1 · Plan
 
-## 里程碑
-- M1（T1.1-T1.2）：ExportManager 接入 + TTF 编译可用 → File 菜单亮起、能出 TTF
-- M2（T1.3-T1.4）：OTF/WOFF2 + 前端下载闭环 → 三格式全通
-- M3（T1.5）：家族导出
+## Milestones
+- M1 (T1.1-T1.2): ExportManager integration + working TTF compilation → File menu lights up and can produce TTF
+- M2 (T1.3-T1.4): OTF/WOFF2 + frontend download loop → all three formats pass
+- M3 (T1.5): family export
 
-## 依赖图
+## Dependency graph
 T1.1 → T1.2 → {T1.3, T1.4} → T1.5
 
-## 回滚
-全部改动集中在新文件 + 3 处单行修改；revert 单提交即可。
+## Rollback
+All changes are concentrated in new files + 3 single-line modifications; a single-commit revert is enough.

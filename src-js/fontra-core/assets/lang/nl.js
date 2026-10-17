@@ -235,6 +235,7 @@ export const strings = {
   "edit-tools-pointer.undo.resize-selection": "selectie vergroten of verkleinen",
   "edit-tools-pointer.undo.rotate-selection": "roteer selectie",
   "edit-tools-pointer.undo.toggle-smooth": '"smooth" omschakelen',
+  "edit-tools-pointer.undo.toggle-squircle": "squircle omschakelen",
   "editor.hand-tool": "Hand gereedchap",
   "editor.kerning-tool": "Kerning gereedschap",
   "editor.knife-tool": "Mes gereedschap",

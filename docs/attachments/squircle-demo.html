@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8" />
+<title>Squircle 节点示范 · 到底不同在哪</title>
+<style>
+  :root {
+    --ink: #1c1c22;
+    --dim: #6b6b76;
+    --line: #d8d8de;
+    --smooth: #7a4fe8;
+    --squircle: #0d9488;
+    --corner: #d99a1f;
+    --handle: #a0a0b0;
+    --bad: #d64545;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 28px 60px;
+    font: 14px/1.65 -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+    color: var(--ink);
+    background: #fbfbfc;
+  }
+  h1 { font-size: 21px; margin: 0 0 6px; }
+  h2 { font-size: 15px; margin: 34px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+  .lede { color: var(--dim); margin: 0 0 8px; max-width: 62em; }
+  .grid { display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-start; }
+  .card {
+    background: #fff; border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px 16px; min-width: 300px;
+  }
+  .card h3 { margin: 0 0 2px; font-size: 14px; }
+  .card p { margin: 0 0 10px; color: var(--dim); font-size: 12.5px; }
+  canvas { display: block; }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 14px; font-size: 12.5px; color: var(--dim); }
+  .legend b { font-weight: 600; }
+  .swatch { display: inline-block; width: 11px; height: 11px; border-radius: 3px; vertical-align: -1px; margin-right: 5px; }
+  .kbd { font: 12px ui-monospace, Consolas, monospace; background: #ececf1; border-radius: 4px; padding: 1px 6px; }
+  table { border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+  th, td { border: 1px solid var(--line); padding: 5px 10px; text-align: left; }
+  th { background: #f3f3f6; font-weight: 600; }
+  .ok { color: #0d7a4f; font-weight: 600; }
+  .no { color: var(--bad); font-weight: 600; }
+</style>
+
+<h1>Squircle 节点：到底和 Smooth 有什么不同</h1>
+<p class="lede">
+  三种节点都出现在曲线的连续处，肉眼看轮廓可能都"挺顺"。
+  真正的差别在<b>曲率</b>：Smooth 只保证<b>切线</b>连续（G1），Squircle 还保证<b>曲率</b>连续（G2）。
+  下面用同一个方形角做对照，并画出沿轮廓的曲率曲线——曲率断掉的地方，就是眼睛能察觉的"折"。
+</p>
+
+<h2>① 同一个角，三种节点</h2>
+<div class="grid" id="cases"></div>
+<div class="legend">
+  <span><span class="swatch" style="background:var(--corner)"></span><b>Corner</b>（方形）切线与曲率都断</span>
+  <span><span class="swatch" style="background:var(--smooth)"></span><b>Smooth</b>（眼形）切线连续、<b>曲率跳变</b></span>
+  <span><span class="swatch" style="background:var(--squircle)"></span><b>Squircle</b>（超椭圆）切线 + <b>曲率都连续</b></span>
+  <span>细线 = 手柄，虚线 = 手柄延长线</span>
+</div>
+
+<h2>② 沿轮廓的曲率（越平滑越好）</h2>
+<p class="lede">
+  横轴是轮廓上的位置，纵轴是曲率大小。Corner 处曲率是尖峰，Smooth 处曲率<b>阶跃</b>（同一个点两侧数值不同），
+  Squircle 处两侧数值<b>相等</b>——这就是"曲率连续"。
+</p>
+<div class="grid" id="plots"></div>
+
+<h2>③ 数值对照</h2>
+<table id="table">
+  <thead>
+    <tr><th>节点</th><th>切线连续 (G1)</th><th>曲率连续 (G2)</th><th>节点处曲率跳变</th></tr>
+  </thead>
+  <tbody></tbody>
+</table>
+<p class="lede" style="margin-top:12px">
+  在编辑器里：<span class="kbd">双击</span> 切换 角点 ↔ 平滑点；<span class="kbd">Shift</span> + <span class="kbd">双击</span> 切换 Squircle。
+  节点图标：角点 = 琥珀方块，平滑点 = 紫色眼形，Squircle = 青绿超椭圆。
+</p>
+
+<script>
+// ---------------------------------------------------------------------------
+// Geometry. The G2 solve below is the same closed form the editor uses
+// (src-js/fontra-core/src/path-curvature.js):
+//     b / a = sqrt(C_ / A_),  A_ = cross(n, hA - P),  C_ = cross(n, hC - P)
+// where a, b are the two handle lengths at the node and n is the forward
+// tangent. Curvature at a cubic's endpoint is k = (2/3) * cross(n, far-P) / a^2.
+// ---------------------------------------------------------------------------
+const sub = (a, b) => ({ x: a.x - b.x, y: a.y - b.y });
+const add = (a, b) => ({ x: a.x + b.x, y: a.y + b.y });
+const mul = (a, s) => ({ x: a.x * s, y: a.y * s });
+const len = (a) => Math.hypot(a.x, a.y);
+const cross = (a, b) => a.x * b.y - a.y * b.x;
+const dot = (a, b) => a.x * b.x + a.y * b.y;
+const norm = (a) => (len(a) < 1e-12 ? { x: 0, y: 0 } : mul(a, 1 / len(a)));
+
+function bez(p0, p1, p2, p3, t) {
+  const u = 1 - t;
+  return {
+    x: u*u*u*p0.x + 3*u*u*t*p1.x + 3*u*t*t*p2.x + t*t*t*p3.x,
+    y: u*u*u*p0.y + 3*u*u*t*p1.y + 3*u*t*t*p2.y + t*t*t*p3.y,
+  };
+}
+function d1(p0, p1, p2, p3, t) {
+  const u = 1 - t;
+  return {
+    x: 3*(u*u*(p1.x-p0.x) + 2*u*t*(p2.x-p1.x) + t*t*(p3.x-p2.x)),
+    y: 3*(u*u*(p1.y-p0.y) + 2*u*t*(p2.y-p1.y) + t*t*(p3.y-p2.y)),
+  };
+}
+function d2(p0, p1, p2, p3, t) {
+  const u = 1 - t;
+  return {
+    x: 6*(u*(p2.x-2*p1.x+p0.x) + t*(p3.x-2*p2.x+p1.x)),
+    y: 6*(u*(p2.y-2*p1.y+p0.y) + t*(p3.y-2*p2.y+p1.y)),
+  };
+}
+// signed curvature, and its magnitude
+function curvature(seg, t) {
+  const v = d1(...seg, t), a = d2(...seg, t);
+  const q = v.x*v.x + v.y*v.y;
+  if (q < 1e-18) return 0;
+  return cross(v, a) / Math.pow(q, 1.5);
+}
+
+// ---------------------------------------------------------------------------
+// Build the geometry for the three cases. Same underlying square corner at P,
+// with the incoming side from A and the outgoing side to C.
+// ---------------------------------------------------------------------------
+const A  = { x:  40, y: 260 };   // far end of the incoming (horizontal) side
+const P  = { x: 200, y: 260 };   // the node under study (bottom-right of a square)
+const C  = { x: 200, y: 100 };   // far end of the outgoing (vertical) side
+
+// handle directions: incoming handle points back along the horizontal side,
+// outgoing handle points up along the vertical side
+const inDir  = norm(sub(A, P));   // (-1, 0)
+const outDir = norm(sub(C, P));   // (0, -1)
+
+const L = 62;   // handle length used for the corner/smooth cases
+
+function makeCase(kind, exponent) {
+  if (kind === "corner") {
+    // no handles at all: two straight lines meeting at P
+    return {
+      left:  [A, P, P, P],
+      right: [P, P, P, C],
+      handleIn: null,
+      handleOut: null,
+      straightIn: true,
+      straightOut: true,
+    };
+  }
+  if (kind === "smooth") {
+    // tangent continuous: both handles on the two segment directions -> the
+    // outline is EXACTLY the square, curvature is 0 on both sides
+    const hIn  = add(P, mul(inDir, L));
+    const hOut = add(P, mul(outDir, L));
+    return {
+      left:  [A, mul(add(A, P), 0.5), hIn, P],
+      right: [P, hOut, mul(add(P, C), 0.5), C],
+      handleIn: hIn,
+      handleOut: hOut,
+      straightIn: false,
+      straightOut: false,
+      // a plain smooth node keeps the corner sharp in curvature terms; to show
+      // the G1-only weakness we give it equal handle lengths, which is the
+      // classic "looks smooth, curvature jumps" case
+      evenHandles: true,
+    };
+  }
+  // squircle: solve for the handle RATIO so the two curvatures match.
+  // The tangent n is the forward direction through the node.
+  const n = norm(add(inDir, outDir));            // (-0.707, -0.707)
+  // far off-curve points (the "shoulders" of each side)
+  const hA = mul(add(A, P), 0.5);
+  const hC = mul(add(P, C), 0.5);
+  const A_ = cross(n, sub(hA, P));
+  const C_ = cross(n, sub(hC, P));
+  const ratio = Math.sqrt(Math.abs(C_ / A_));
+  const budget = L * 2;
+  const a = budget / (1 + ratio);
+  const b = (budget * ratio) / (1 + ratio);
+  const hIn  = add(P, mul(inDir, a));
+  const hOut = add(P, mul(outDir, b));
+  return {
+    left:  [A, hA, hIn, P],
+    right: [P, hOut, hC, C],
+    handleIn: hIn,
+    handleOut: hOut,
+    straightIn: false,
+    straightOut: false,
+    ratio,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Drawing
+// ---------------------------------------------------------------------------
+const NODE_ICON = {
+  corner:   { color: "#d99a1f", shape: "square",   label: "Corner（方形）" },
+  smooth:   { color: "#7a4fe8", shape: "eye",      label: "Smooth（眼形）" },
+  squircle: { color: "#0d9488", shape: "squircle", label: "Squircle（超椭圆）" },
+};
+
+function nodeIcon(ctx, pt, kind, size, showColor = true) {
+  const { color, shape } = NODE_ICON[kind];
+  ctx.save();
+  ctx.lineWidth = 1.6;
+  ctx.strokeStyle = showColor ? color : "#9a9aa4";
+  ctx.fillStyle = showColor ? color : "#9a9aa4";
+  if (shape === "square") {
+    ctx.strokeRect(pt.x - size/2, pt.y - size/2, size, size);
+  } else if (shape === "eye") {
+    const hl = size * 0.73, hw = size * 0.514;
+    const c = hw * 2;
+    ctx.beginPath();
+    ctx.moveTo(pt.x - hl, pt.y);
+    ctx.quadraticCurveTo(pt.x, pt.y + c, pt.x + hl, pt.y);
+    ctx.quadraticCurveTo(pt.x, pt.y - c, pt.x - hl, pt.y);
+    ctx.closePath();
+    ctx.stroke();
+  } else {
+    // superellipse |x/a|^n + |y/b|^n = 1, a = size/2 * 1.15
+    const a = (size / 2) * 1.15;
+    const n = 3;
+    ctx.beginPath();
+    for (let i = 0; i <= 72; i++) {
+      const t = (i / 72) * Math.PI * 2;
+      const cx = Math.cos(t), cy = Math.sin(t);
+      const x = Math.sign(cx) * Math.pow(Math.abs(cx), 2/n) * a;
+      const y = Math.sign(cy) * Math.pow(Math.abs(cy), 2/n) * a;
+      if (i === 0) ctx.moveTo(pt.x + x, pt.y + y);
+      else ctx.lineTo(pt.x + x, pt.y + y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawCase(canvas, kind) {
+  const ctx = canvas.getContext("2d");
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = 300 * dpr;
+  canvas.height = 300 * dpr;
+  canvas.style.width = "300px";
+  canvas.style.height = "300px";
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, 300, 300);
+
+  const c = makeCase(kind, 3);
+
+  // the two far segments (drawn faintly, they are not the point of interest)
+  ctx.strokeStyle = "#e4e4ea";
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(A.x, A.y); ctx.lineTo(P.x, P.y); ctx.lineTo(C.x, C.y);
+  ctx.stroke();
+
+  // the outline through the corner, as it actually renders
+  ctx.strokeStyle = "#1c1c22";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(A.x, A.y);
+  const [, l1, l2, l3] = c.left;
+  if (c.straightIn) ctx.lineTo(P.x, P.y);
+  else ctx.bezierCurveTo(l1.x, l1.y, l2.x, l2.y, l3.x, l3.y);
+  const [, r1, r2, r3] = c.right;
+  if (c.straightOut) ctx.lineTo(C.x, C.y);
+  else ctx.bezierCurveTo(r1.x, r1.y, r2.x, r2.y, r3.x, r3.y);
+  ctx.stroke();
+
+  // handles
+  if (c.handleIn) {
+    ctx.strokeStyle = "#c9c9d2";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(P.x, P.y); ctx.lineTo(c.handleIn.x, c.handleIn.y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(P.x, P.y); ctx.lineTo(c.handleOut.x, c.handleOut.y); ctx.stroke();
+    // the tangent line: collinear handles sit on it, that is what "smooth" means
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = kind === "squircle" ? "#0d9488" : "#b9b9c4";
+    ctx.beginPath();
+    ctx.moveTo(c.handleIn.x, c.handleIn.y);
+    ctx.lineTo(c.handleOut.x, c.handleOut.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "#fff";
+    for (const h of [c.handleIn, c.handleOut]) {
+      ctx.beginPath(); ctx.arc(h.x, h.y, 3.2, 0, Math.PI*2);
+      ctx.fill(); ctx.strokeStyle = "#a0a0b0"; ctx.lineWidth = 1.2; ctx.stroke();
+    }
+  }
+
+  nodeIcon(ctx, P, kind, 13);
+}
+
+function drawPlot(canvas, kind) {
+  const ctx = canvas.getContext("2d");
+  const dpr = window.devicePixelRatio || 1;
+  const W = 300, H = 190;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  canvas.style.width = W + "px"; canvas.style.height = H + "px";
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const c = makeCase(kind, 3);
+  const padL = 34, padR = 10, padT = 12, padB = 24;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+
+  // sample curvature magnitude along the whole outline (incoming then outgoing)
+  const N = 220;
+  const vals = [];
+  for (let i = 0; i <= N; i++) {
+    const t = i / N;
+    vals.push({ side: "in", t, k: Math.abs(curvature(c.left, t)) });
+  }
+  for (let i = 1; i <= N; i++) {
+    const t = i / N;
+    vals.push({ side: "out", t, k: Math.abs(curvature(c.right, t)) });
+  }
+  const kmax = Math.max(0.0004, ...vals.map((v) => v.k));
+  const px = (i) => padL + (i / (vals.length - 1)) * plotW;
+  const py = (k) => padT + plotH - (k / kmax) * plotH;
+
+  // axes
+  ctx.strokeStyle = "#e0e0e6"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + plotH); ctx.lineTo(padL + plotW, padT + plotH); ctx.stroke();
+  ctx.fillStyle = "#8a8a94"; ctx.font = "10px sans-serif";
+  ctx.fillText("曲率", 4, padT + 8);
+  ctx.fillText("沿轮廓 →", padL + plotW - 56, padT + plotH + 16);
+  // mark the node position (junction between the two sides)
+  const nodeX = px(N);
+  ctx.strokeStyle = "#cfcfd8"; ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(nodeX, padT); ctx.lineTo(nodeX, padT + plotH); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = "#8a8a94";
+  ctx.fillText("节点", nodeX - 10, padT + plotH + 16);
+
+  // curvature curve
+  ctx.strokeStyle = NODE_ICON[kind].color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  vals.forEach((v, i) => {
+    const x = px(i), y = py(v.k);
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // annotate the jump at the node
+  const kBefore = Math.abs(curvature(c.left, 1));
+  const kAfter  = Math.abs(curvature(c.right, 0));
+  const jump = Math.abs(kAfter - kBefore);
+  const label = jump < 1e-6 ? "曲率连续（跳变 0）" : `曲率跳变 ${jump.toExponential(2)}`;
+  ctx.fillStyle = jump < 1e-6 ? "#0d7a4f" : "#d64545";
+  ctx.font = "600 11px sans-serif";
+  ctx.fillText(label, padL + 2, padT + 10);
+}
+
+// ---------------------------------------------------------------------------
+// Build the page
+// ---------------------------------------------------------------------------
+const KINDS = ["corner", "smooth", "squircle"];
+const casesHost = document.getElementById("cases");
+const plotsHost = document.getElementById("plots");
+const tbody = document.querySelector("#table tbody");
+
+for (const kind of KINDS) {
+  const meta = NODE_ICON[kind];
+  const card = document.createElement("div");
+  card.className = "card";
+  const h3 = document.createElement("h3");
+  h3.innerHTML = `<span class="swatch" style="background:${meta.color}"></span>${meta.label}`;
+  const p = document.createElement("p");
+  p.textContent =
+    kind === "corner"
+      ? "两侧是直线，节点处切线不连续 —— 明显的尖角。"
+      : kind === "smooth"
+        ? "两侧手柄共线（切线连续），但两侧曲率不相等，过渡处仍有"曲率折"。"
+        : "两侧手柄按 G2 求解，切线连续且曲率相等，过渡是真正的连续弯曲。";
+  const cv = document.createElement("canvas");
+  card.append(h3, p, cv);
+  casesHost.append(card);
+  drawCase(cv, kind);
+
+  const pcard = document.createElement("div");
+  pcard.className = "card";
+  const ph = document.createElement("h3");
+  ph.textContent = meta.label + " · 曲率曲线";
+  const pp = document.createElement("p");
+  pp.textContent =
+    kind === "squircle" ? "节点两侧曲率相等，曲线在这里不断。" : "节点两侧曲率数值不同，这里是断点。";
+  const pcv = document.createElement("canvas");
+  pcard.append(ph, pp, pcv);
+  plotsHost.append(pcard);
+  drawPlot(pcv, kind);
+
+  const c = makeCase(kind, 3);
+  const kL = Math.abs(curvature(c.left, 1));
+  const kR = Math.abs(curvature(c.right, 0));
+  const jump = Math.abs(kR - kL);
+  const g1 = kind === "corner" ? '<span class="no">否</span>' : '<span class="ok">是</span>';
+  const g2 = jump < 1e-6 ? '<span class="ok">是</span>' : '<span class="no">否</span>';
+  const tr = document.createElement("tr");
+  tr.innerHTML = `<td>${meta.label}</td><td>${g1}</td><td>${g2}</td><td>${jump < 1e-6 ? "0" : jump.toExponential(3)}</td>`;
+  tbody.append(tr);
+}
+</script>
+</html>

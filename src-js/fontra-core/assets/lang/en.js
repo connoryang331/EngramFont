@@ -234,6 +234,7 @@ export const strings = {
   "edit-tools-pointer.undo.resize-selection": "resize selection",
   "edit-tools-pointer.undo.rotate-selection": "rotate selection",
   "edit-tools-pointer.undo.toggle-smooth": "Toggle Smooth",
+  "edit-tools-pointer.undo.toggle-squircle": "Toggle Squircle",
   "editor.hand-tool": "Hand Tool",
   "editor.kerning-tool": "Kerning Tool",
   "editor.knife-tool": "Knife Tool",
@@ -587,6 +588,8 @@ export const strings = {
   "sidebar.user-settings.glyph.coordinates": "Coordinates",
   "sidebar.user-settings.glyph.dragcrosshair": "Drag crosshair",
   "sidebar.user-settings.glyph.dragghostpath": "Drag “ghost” path",
+  "sidebar.user-settings.glyph.editing-nodes-and-handles":
+    "Nodes and handles for editing layers",
   "sidebar.user-settings.glyph.kerning": "Kerning",
   "sidebar.user-settings.glyph.kerning-tool": "Kerning (tool)",
   "sidebar.user-settings.glyph.lockicon": "Glyph lock icon for non-editing glyphs",

@@ -237,6 +237,7 @@ export const strings = {
   "edit-tools-pointer.undo.resize-selection": "baguhin ang laki ng napili",
   "edit-tools-pointer.undo.rotate-selection": "paikutin ang pagpili",
   "edit-tools-pointer.undo.toggle-smooth": "I-toggle ang Makinis",
+  "edit-tools-pointer.undo.toggle-squircle": "I-toggle ang Squircle",
   "editor.hand-tool": "Kagamitang Pangkamay",
   "editor.kerning-tool": "Kagamitan sa Kerning",
   "editor.knife-tool": "Kagamitan sa Kutsilyo",

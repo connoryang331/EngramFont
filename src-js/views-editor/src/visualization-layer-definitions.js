@@ -1,4 +1,11 @@
 import { guessGlyphPlaceholderString } from "@fontra/core/glyph-data.js";
+import { deriveDarkColor, normalizeHex6 } from "@fontra/core/color-derive.js";
+import {
+  VISUAL_TOKENS,
+  alphaKeyOf,
+  clampAlpha,
+  composeAlphaColor,
+} from "@fontra/core/visual-tokens.js";
 import { translate } from "@fontra/core/localization.js";
 import { rectToPoints } from "@fontra/core/rectangle.ts";
 import { difference, isSuperset, union } from "@fontra/core/set-ops.js";
@@ -20,11 +27,8 @@ import { isProofMode } from "./canvas-mode.js";
 
 // Default exponent of the squircle node icon (|x/a|^n + |y/b|^n = 1):
 // n = 1 diamond, 2 circle, 3 rounded square, higher = squarer.
-// Declared here -- ahead of every registerVisualizationLayerDefinition() call,
-// which run at module load and reference it -- so there is no temporal dead
-// zone. The user can change it in the settings (theme model
-// `nodeSquircleExponent`); it reaches the layers via glyphParameters, which are
-// deliberately NOT scaled by the zoom factor.
+// FIXED at n = 3 (the designed rounded-square look); it reaches the layers
+// via glyphParameters, which are deliberately NOT scaled by the zoom factor.
 const SQUIRCLE_EXPONENT_DEFAULT = 3;
 
 export const visualizationLayerDefinitions = [];
@@ -57,7 +61,10 @@ registerVisualizationLayerDefinition({
   zIndex: 0,
   dontTranslate: true,
   screenParameters: { strokeWidth: 2 },
-  colors: { strokeColor: "#FFF" },
+  // Light theme draws on a pure-white canvas now (--background-color-light:
+  // #fff), so the grid lines must be a hair darker than the canvas to stay
+  // visible (white-on-white would vanish); dark keeps its lighter-on-#333.
+  colors: { strokeColor: "#E6E6E6" },
   colorsDarkMode: { strokeColor: "#3C3C3C" },
   draw: ({ context, positionedGlyph, parameters, model, controller }) => {
     if (controller.magnification < 4) {
@@ -880,7 +887,11 @@ registerVisualizationLayerDefinition({
     const { x, y } = positionedGlyph.glyph.path.getPoint(pointIndex);
     context.strokeStyle = parameters.strokeColor;
     context.lineWidth = parameters.strokeWidth;
-    context.setLineDash(parameters.lineDash);
+    if (parameters.dashed === false) {
+      context.setLineDash([]);
+    } else {
+      context.setLineDash(parameters.lineDash);
+    }
     const { xMin, yMin, xMax, yMax } = controller.getViewBox();
     const dx = -positionedGlyph.x;
     const dy = -positionedGlyph.y;
@@ -1260,12 +1271,12 @@ function parseComponentSelection(selection, numComponents) {
 // Two independent requirements shape this:
 //   - the chevron SCALES with the node icons (chevronLength/chevronSpread are
 //     multiplied by nodeSize / NODE_SIZE_DEFAULT in
-//     applyNodeAppearanceSettings), so the indicator stays proportionate to
+//     applyVisualTokenSettings), so the indicator stays proportionate to
 //     bigger or smaller nodes;
 //   - the GAP between the node icon and the chevron stays constant, so the two
 //     never touch however large the nodes get (the gap is deliberately NOT
 //     scaled).
-// The values below are the size-8 baseline; applyNodeAppearanceSettings()
+// The values below are the size-8 baseline; applyVisualTokenSettings()
 // rescales them from there.
 const NODE_SIZE_DEFAULT = 8;
 const START_POINT_CHEVRON_GAP = 5;
@@ -1328,7 +1339,7 @@ registerVisualizationLayerDefinition({
   selectionFunc: glyphSelector("editing"),
   zIndex: 500,
   // cornerSize / smoothSize are synced from the node appearance settings by
-  // applyNodeAppearanceSettings(); the defaults keep the layer working before
+  // applyVisualTokenSettings(); the defaults keep the layer working before
   // that runs
   screenParameters: {
     cornerSize: 8,
@@ -1513,14 +1524,14 @@ registerVisualizationLayerDefinition({
   },
   colors: {
     smoothColor: "#7A4FE8B0",
-    squircleColor: "#D6336CB0",
-    cornerColor: "#D99A1FB0",
+    squircleColor: "#0D9488B0",
+    cornerColor: "#C2410CB0",
     handleColor: "#A0A0B0B0",
   },
   colorsDarkMode: {
     smoothColor: "#A78BFAB0",
-    squircleColor: "#F472B6B0",
-    cornerColor: "#E8B84AB0",
+    squircleColor: "#2DD4BFB0",
+    cornerColor: "#FB923CB0",
     handleColor: "#7E8290B0",
   },
   draw: ({ context, positionedGlyph, parameters, model, controller }) => {
@@ -1583,14 +1594,14 @@ registerVisualizationLayerDefinition({
   },
   colors: {
     smoothColor: "#7A4FE8",
-    squircleColor: "#D6336C",
-    cornerColor: "#D99A1F",
+    squircleColor: "#0D9488",
+    cornerColor: "#C2410C",
     handleColor: "#A0A0B0",
   },
   colorsDarkMode: {
     smoothColor: "#A78BFA",
-    squircleColor: "#F472B6",
-    cornerColor: "#E8B84A",
+    squircleColor: "#2DD4BF",
+    cornerColor: "#FB923C",
     handleColor: "#7E8290",
   },
   draw: ({ context, positionedGlyph, parameters, model, controller }) => {
@@ -1635,16 +1646,16 @@ registerVisualizationLayerDefinition({
     selectedColor: "#000",
     underColor: "#FFFA",
     smoothColor: "#7A4FE8",
-    squircleColor: "#D6336C",
-    cornerColor: "#D99A1F",
+    squircleColor: "#0D9488",
+    cornerColor: "#C2410C",
     handleColor: "#A0A0B0",
   },
   colorsDarkMode: {
     selectedColor: "#FFF",
     underColor: "#0008",
     smoothColor: "#A78BFA",
-    squircleColor: "#F472B6",
-    cornerColor: "#E8B84A",
+    squircleColor: "#2DD4BF",
+    cornerColor: "#FB923C",
     handleColor: "#7E8290",
   },
   draw: ({ context, positionedGlyph, parameters, model, controller }) => {
@@ -1663,6 +1674,8 @@ registerVisualizationLayerDefinition({
       corner: parameters.underColor,
       smooth: parameters.underColor,
       handle: parameters.underColor,
+      // the halo follows the handle glyph shape (circle/diamond)
+      handleShape: parameters.handleShape,
     };
     context.fillStyle = parameters.underColor;
     for (const [i, pt] of enumerate(iterPointsByIndex(glyph.path, selectedPointIndices))) {
@@ -1676,8 +1689,13 @@ registerVisualizationLayerDefinition({
         tangents.get(selectedPointIndices[i])
       );
     }
-    // Selected (active) nodes are SOLID, in their type colors
+    // Selected (active) nodes are SOLID, in their type colors; the selected
+    // off-curve handles use their own color setting
     context.fillStyle = parameters.selectedColor;
+    const selectedColors = {
+      ...parameters,
+      handleColor: parameters.selectedHandleColor ?? parameters.handleColor,
+    };
     for (const [i, pt] of enumerate(iterPointsByIndex(glyph.path, selectedPointIndices))) {
       fillNode(
         context,
@@ -1685,7 +1703,7 @@ registerVisualizationLayerDefinition({
         cornerSize,
         smoothSize,
         handleSize,
-        parameters,
+        selectedColors,
         tangents.get(selectedPointIndices[i])
       );
     }
@@ -1914,8 +1932,9 @@ registerVisualizationLayerDefinition({
 
     const color = [...statusFieldDefinitions[status].color];
     if (positionedGlyph.isEditing) {
-      // in editing mode reduce opacity
-      color[3] = color[3] * 0.4;
+      // in editing mode reduce opacity (user setting, 0..1; screenParameters
+      // would zoom-scale it, so it travels via glyphParameters)
+      color[3] = color[3] * (parameters.editingOpacity ?? 0.4);
     }
 
     const thickness = clamp(
@@ -1946,8 +1965,8 @@ registerVisualizationLayerDefinition({
     smoothSize: 5.5,
     handleSize: 4.5,
   },
-  colors: { backgroundColor: "#DDDF", editColor: "#BBFF" },
-  colorsDarkMode: { backgroundColor: "#555F", editColor: "#559F" },
+  colors: { backgroundColor: "#DDDF" },
+  colorsDarkMode: { backgroundColor: "#555F" },
 
   draw: ({ context, positionedGlyph, parameters, model, controller }) => {
     context.lineWidth = parameters.strokeWidth;
@@ -1962,6 +1981,36 @@ registerVisualizationLayerDefinition({
       parameters.smoothSize,
       parameters.handleSize
     );
+  },
+});
+
+// The editing-layer ghost nodes used to share the background layer and drew in
+// lavender #BBFF at zIndex 490 -- UNDER the hollow node rings (zIndex 500).
+// Through a ring's hole the lavender fill read as "a dot inside every
+// inactive node" (rgb(187,187,255)). Their visibility now lives in the theme
+// settings panel ("Editing layer nodes": color + alpha slider); the layer is
+// always registered and applies the color via applyVisualTokenSettings (color-alpha compose)()
+// below -- an alpha of 0 makes it draw nothing (the default).
+registerVisualizationLayerDefinition({
+  identifier: "fontra.edit.editing.layers.nodes-and-handles",
+  name: "sidebar.user-settings.glyph.editing-nodes-and-handles",
+  selectionFunc: glyphSelector("editing"),
+  zIndex: 490,
+  screenParameters: {
+    strokeWidth: 0.5,
+    cornerSize: 5.5,
+    smoothSize: 5.5,
+    handleSize: 4.5,
+  },
+  colors: { editColor: "transparent" },
+  colorsDarkMode: { editColor: "transparent" },
+
+  draw: ({ context, positionedGlyph, parameters, model, controller }) => {
+    if (parameters.editColor === "transparent") {
+      // the off state: nothing to draw
+      return;
+    }
+    context.lineWidth = parameters.strokeWidth;
 
     context.strokeStyle = parameters.editColor;
     context.fillStyle = parameters.editColor;
@@ -2110,6 +2159,12 @@ registerVisualizationLayerDefinition({
     strokeWidth: 1,
     lineDash: [10, 10],
   },
+  // The marquee is an INVERTED double stroke: a dark solid line under a light
+  // dashed one, which reads on any background -- that pair is why the colors
+  // used to be hardcoded in draw(). They are regular theme colors now
+  // (applyVisualTokenSettings); the defaults keep the theme-agnostic look.
+  colors: { solidColor: "#000", dashColor: "#FFF" },
+  colorsDarkMode: { solidColor: "#000", dashColor: "#FFF" },
   draw: ({ context, positionedGlyph, parameters, model, controller }) => {
     if (model.selectionParallelogram !== undefined) {
       // Slanted (Glyphs-style) selection: a parallelogram with horizontal
@@ -2123,9 +2178,9 @@ registerVisualizationLayerDefinition({
         { x: para.x0 + dx, y: para.y1 },
       ];
       context.lineWidth = parameters.strokeWidth;
-      context.strokeStyle = "#000";
+      context.strokeStyle = parameters.solidColor;
       strokePolygon(context, polygon);
-      context.strokeStyle = "#FFF";
+      context.strokeStyle = parameters.dashColor;
       context.setLineDash(parameters.lineDash);
       strokePolygon(context, polygon);
       return;
@@ -2139,9 +2194,9 @@ registerVisualizationLayerDefinition({
     const w = selRect.xMax - x;
     const h = selRect.yMax - y;
     context.lineWidth = parameters.strokeWidth;
-    context.strokeStyle = "#000";
+    context.strokeStyle = parameters.solidColor;
     context.strokeRect(x, y, w, h);
-    context.strokeStyle = "#FFF";
+    context.strokeStyle = parameters.dashColor;
     context.setLineDash(parameters.lineDash);
     context.strokeRect(x, y, w, h);
   },
@@ -2164,104 +2219,209 @@ export const allGlyphsCleanVisualizationLayerDefinition = {
   },
 };
 
-// ---- node appearance settings (R4.T4.25) ----
+// ---- visual token application (R4.T4.38, docs/visual-settings-inventory.md §8) ----
+//
+// One table-driven applier replaces the former per-feature apply*Settings
+// functions: every row of VISUAL_TOKENS (fontra-core/src/visual-tokens.js)
+// declares which layer slots it feeds, and this pass writes them all.
+//
+// Color resolution per token:
+//   - no override   -> the layer definition's hand-tuned per-theme defaults
+//                      are LEFT IN PLACE (they beat any formula)
+//   - overridden    -> light theme gets the user color; dark theme gets an
+//                      OKLCH-derived counterpart (hue/chroma preserved,
+//                      lightness re-solved for contrast against the dark
+//                      canvas) so the user's choice survives theme switching
+//                      without becoming illegible.
+//
+// The pristine snapshot must be taken lazily on the FIRST apply call: several
+// layers (fontra.transform.selection, power ruler, ...) are registered by
+// modules that load after this one, and the editor constructs only after the
+// full import graph has evaluated.
+let _pristineLayerDefs = null;
+function getPristineLayerDefs() {
+  if (!_pristineLayerDefs) {
+    const defs = [
+      ...visualizationLayerDefinitions,
+      // the "clean display" layer def is exported but NOT registered in the
+      // array (the editor composes it separately) -- it still takes tokens
+      allGlyphsCleanVisualizationLayerDefinition,
+    ];
+    _pristineLayerDefs = new Map(
+      defs.map((layerDef) => [
+        layerDef.identifier,
+        {
+          colors: { ...layerDef.colors },
+          colorsDarkMode: { ...layerDef.colorsDarkMode },
+          screenParameters: { ...layerDef.screenParameters },
+          glyphParameters: { ...layerDef.glyphParameters },
+        },
+      ])
+    );
+  }
+  return _pristineLayerDefs;
+}
 
-const nodeAppearanceLayerIDs = new Set([
-  "fontra.nodes",
-  "fontra.selected.nodes",
-  "fontra.component.nodes",
-]);
+function findTokenLayerDef(layerId) {
+  if (layerId === allGlyphsCleanVisualizationLayerDefinition.identifier) {
+    return allGlyphsCleanVisualizationLayerDefinition;
+  }
+  return visualizationLayerDefinitions.find((def) => def.identifier === layerId);
+}
 
-const nodeAppearanceDefaults = Object.fromEntries(
-  visualizationLayerDefinitions
-    .filter((layerDef) => nodeAppearanceLayerIDs.has(layerDef.identifier))
-    .map((layerDef) => [
-      layerDef.identifier,
-      {
-        colors: { ...layerDef.colors },
-        colorsDarkMode: { ...layerDef.colorsDarkMode },
-        screenParameters: { ...layerDef.screenParameters },
-        glyphParameters: { ...layerDef.glyphParameters },
-      },
-    ])
-);
+function isTokenOverridden(token, model) {
+  const value = normalizeHex6(model[token.key]);
+  if (value && value.toLowerCase() !== normalizeHex6(token.defaultLight).toLowerCase()) {
+    return true;
+  }
+  if (token.type === "color-alpha") {
+    return clampAlpha(model[alphaKeyOf(token)]) !== (token.defaultAlpha ?? 100);
+  }
+  return false;
+}
 
-// Apply the user's node appearance settings (themeController model) to the
-// node layer definitions; custom colors/sizes are always active.
-// `model.nodeSize` is a SINGLE size for every node kind: corner squares, smooth
-// eyes and off-curve handles must all read as the same size (they used to be
-// three separate settings, which let them drift apart).
-export function applyNodeAppearanceSettings(model) {
-  for (const layerDef of visualizationLayerDefinitions) {
-    if (!nodeAppearanceLayerIDs.has(layerDef.identifier)) {
+export function applyVisualTokenSettings(model) {
+  const pristine = getPristineLayerDefs();
+  // The canvas background override (setupCanvasBackgroundOverride) is one
+  // value for both themes; when it is not set, the CSS defaults apply
+  // (--background-color-light: #fff / --background-color-dark: #333).
+  const lightCanvas = model.canvasBackgroundColor || "#FFFFFF";
+  const darkCanvas = model.canvasBackgroundColor || "#333333";
+
+  const writes = new Map();
+  const getWrite = (layerId) => {
+    let w = writes.get(layerId);
+    if (!w) {
+      w = { colors: {}, colorsDark: {}, params: {}, glyphParams: {} };
+      writes.set(layerId, w);
+    }
+    return w;
+  };
+
+  for (const token of VISUAL_TOKENS) {
+    if (!token.apply) {
       continue;
     }
-    const defaults = nodeAppearanceDefaults[layerDef.identifier];
-    layerDef.colors = {
-      smoothColor: model.nodeSmoothColor,
-      squircleColor: model.nodeSquircleColor ?? model.nodeSmoothColor,
-      cornerColor: model.nodeCornerColor,
-      handleColor: model.nodeHandleColor,
-    };
-    layerDef.colorsDarkMode = { ...layerDef.colors };
-    layerDef.screenParameters = {
-      ...defaults.screenParameters,
-      cornerSize: model.nodeSize,
-      smoothSize: model.nodeSize,
-      handleSize: model.nodeSize,
-    };
-    // The superellipse exponent is a dimensionless shape parameter, so it must
-    // NOT live in screenParameters: buildLayers() scales every numeric
-    // screenParameter by the zoom factor, which would change the icon's shape
-    // as the user zooms (measured: exponent 3 became 3.92 at 1.31x zoom).
-    // glyphParameters are passed through verbatim, which is what we want.
-    layerDef.glyphParameters = {
-      ...defaults.glyphParameters,
-      squircleExponent: model.nodeSquircleExponent ?? SQUIRCLE_EXPONENT_DEFAULT,
-    };
+    const overridden = isTokenOverridden(token, model);
+    for (const spec of token.apply) {
+      const w = getWrite(spec.layer);
+      if (token.type === "number") {
+        // scale lets a percent-valued token feed a 0..1 parameter
+        // (e.g. statusBarEditingOpacity 0-100 -> editingOpacity 0..1)
+        const value = (model[token.key] ?? token.default) * (token.scale ?? 1);
+        if (token.write) {
+          // composed mappings (e.g. dash arrays) route through the hook
+          token.write(w, value, model);
+        } else {
+          for (const slot of Object.keys(spec.params ?? {})) {
+            w.params[slot] = value;
+          }
+          for (const slot of Object.keys(spec.glyphParams ?? {})) {
+            w.glyphParams[slot] = value;
+          }
+        }
+      } else if (token.type === "boolean") {
+        token.write?.(w, !!model[token.key], model);
+      } else if (overridden) {
+        // color / color-alpha
+        let light;
+        if (token.type === "color-alpha") {
+          light = composeAlphaColor(
+            normalizeHex6(model[token.key]) ?? token.defaultLight,
+            clampAlpha(model[alphaKeyOf(token)])
+          );
+        } else {
+          light = normalizeHex6(model[token.key]);
+        }
+        const dark =
+          light === "transparent"
+            ? "transparent"
+            : deriveDarkColor(light, lightCanvas, darkCanvas);
+        for (const slot of Object.keys(spec.colors ?? {})) {
+          w.colors[slot] = light;
+          w.colorsDark[slot] = dark;
+        }
+      }
+    }
   }
-  // The start-point chevron sits outside the node icon, so it needs to know
-  // the node size for two reasons: to clear the icon by a constant gap, and to
-  // scale its own ">" / "<" along with the node icons so the indicator stays
-  // proportionate. The gap itself deliberately does NOT scale.
-  const startPointLayer = visualizationLayerDefinitions.find(
+
+  // Reset every touched layer from its pristine defaults first, then overlay
+  // the token writes -- so clearing an override restores the hand-tuned
+  // per-theme defaults instead of keeping a stale value from a previous run.
+  const touchedLayers = new Set();
+  for (const token of VISUAL_TOKENS) {
+    for (const spec of token.apply ?? []) {
+      touchedLayers.add(spec.layer);
+    }
+  }
+  for (const layerId of touchedLayers) {
+    const layerDef = findTokenLayerDef(layerId);
+    const base = pristine.get(layerId);
+    if (!layerDef || !base) {
+      continue;
+    }
+    const w = writes.get(layerId);
+    layerDef.colors = { ...base.colors, ...w?.colors };
+    layerDef.colorsDarkMode = { ...base.colorsDarkMode, ...w?.colorsDark };
+    layerDef.screenParameters = { ...base.screenParameters, ...w?.params };
+    layerDef.glyphParameters = { ...base.glyphParameters, ...w?.glyphParams };
+  }
+
+  applyStartpointGeometry(model);
+}
+
+// The start-point chevron sits outside the node icon, so it needs the node
+// size for two reasons: to clear the icon by a constant gap, and to scale its
+// own ">" / "<" along with the node icons. The gap deliberately does NOT
+// scale. This cross-token coupling lives outside the generic table pass.
+function applyStartpointGeometry(model) {
+  const layerDef = visualizationLayerDefinitions.find(
     (layerDef) => layerDef.identifier === "fontra.startpoint.indicator"
   );
-  if (startPointLayer) {
-    const nodeScale = (model.nodeSize ?? NODE_SIZE_DEFAULT) / NODE_SIZE_DEFAULT;
-    startPointLayer.screenParameters = {
-      ...startPointLayer.screenParameters,
-      cornerSize: model.nodeSize,
-      smoothSize: model.nodeSize,
-      gap: START_POINT_CHEVRON_GAP,
-      chevronLength: START_POINT_CHEVRON_LENGTH * nodeScale,
-      chevronSpread: START_POINT_CHEVRON_SPREAD * nodeScale,
-    };
+  if (!layerDef) {
+    return;
   }
+  const base = getPristineLayerDefs().get("fontra.startpoint.indicator");
+  const nodeScale = (model.nodeSize ?? NODE_SIZE_DEFAULT) / NODE_SIZE_DEFAULT;
+  // user multiplier for the chevron size (1 = the designed default)
+  const chevronScale = model.startpointChevronSize ?? 1;
+  // merge over the CURRENT screenParameters (the generic pass may already
+  // have written token params such as startpointChevronStrokeWidth)
+  layerDef.screenParameters = {
+    ...layerDef.screenParameters,
+    cornerSize: model.nodeSize ?? NODE_SIZE_DEFAULT,
+    smoothSize: model.nodeSize ?? NODE_SIZE_DEFAULT,
+    gap: model.startpointChevronGap ?? layerDef.screenParameters.gap,
+    chevronLength: base.screenParameters.chevronLength * nodeScale * chevronScale,
+    chevronSpread: base.screenParameters.chevronSpread * nodeScale * chevronScale,
+  };
 }
 
 // Drawing helpers
 
 // Node type colors, designed to be DISTINCT from FontLab (blue/green/red
 // nodes) and Glyphs.app (white/black nodes): violet rounds for smooth
-// nodes, amber squares for corner nodes, neutral lavender for off-curve
+// nodes, burnt-orange squares for corner nodes, neutral lavender for off-curve
 // handles — echoing the keyboard dock's violet/yellow chip palette
 //
 // squircle is a distinct third kind and needs a hue that cannot be confused
-// with the smooth node's violet: teal. An earlier deeper-indigo choice sat too
-// close to #7A4FE8 and read as "another violet node"; teal is ~180 deg away in
-// hue from both the violet smooth node and the amber corner node.
+// with the smooth node's violet: teal (#0D9488 light / #2DD4BF dark). Teal is
+// ~180 deg away in hue from both the violet smooth node and the orange corner
+// node, and keeps enough chroma to stay legible on white and black canvases
+// alike. (An earlier pink/red #D6336C was rejected by the user; the original
+// amber corner #D99A1F vanished against the white canvas, hence the darker
+// burnt orange #C2410C light / #FB923C dark.)
 const nodeTypeColors = {
   light: {
     smooth: "#7A4FE8",
-    squircle: "#D6336C",
-    corner: "#D99A1F",
+    squircle: "#0D9488",
+    corner: "#C2410C",
     handle: "#A0A0B0",
   },
   dark: {
     smooth: "#A78BFA",
-    squircle: "#F472B6",
-    corner: "#E8B84A",
+    squircle: "#2DD4BF",
+    corner: "#FB923C",
     handle: "#7E8290",
   },
 };
@@ -2297,7 +2457,11 @@ function fillNode(
       fillRoundNode(context, pt, smoothNodeSize, colors?.smoothColor);
     }
   } else {
-    fillRoundNode(context, pt, handleNodeSize, colors?.handleColor);
+    if (colors?.handleShape === "diamond") {
+      fillDiamondNode(context, pt, handleNodeSize, colors?.handleColor);
+    } else {
+      fillRoundNode(context, pt, handleNodeSize, colors?.handleColor);
+    }
   }
 }
 
@@ -2327,8 +2491,42 @@ function strokeNode(
       strokeRoundNode(context, pt, smoothNodeSize, colors?.smoothColor);
     }
   } else {
-    strokeRoundNode(context, pt, handleNodeSize, colors?.handleColor);
+    if (colors?.handleShape === "diamond") {
+      strokeDiamondNode(context, pt, handleNodeSize, colors?.handleColor);
+    } else {
+      strokeRoundNode(context, pt, handleNodeSize, colors?.handleColor);
+    }
   }
+}
+
+// Diamond handle glyphs (the nodeHandleShapeDiamond setting): a rhombus with
+// half-diagonals of nodeSize / 2, filled/stroked like the round variant.
+export function fillDiamondNode(context, pt, nodeSize, color) {
+  if (color !== undefined) {
+    context.fillStyle = color;
+  }
+  const s = nodeSize / 2;
+  context.beginPath();
+  context.moveTo(pt.x, pt.y - s);
+  context.lineTo(pt.x + s, pt.y);
+  context.lineTo(pt.x, pt.y + s);
+  context.lineTo(pt.x - s, pt.y);
+  context.closePath();
+  context.fill();
+}
+
+export function strokeDiamondNode(context, pt, nodeSize, color) {
+  if (color !== undefined) {
+    context.strokeStyle = color;
+  }
+  const s = nodeSize / 2;
+  context.beginPath();
+  context.moveTo(pt.x, pt.y - s);
+  context.lineTo(pt.x + s, pt.y);
+  context.lineTo(pt.x, pt.y + s);
+  context.lineTo(pt.x - s, pt.y);
+  context.closePath();
+  context.stroke();
 }
 
 // Squircle node icon: the superellipse |x/a|^n + |y/b|^n = 1, i.e. a rounded
@@ -2338,10 +2536,11 @@ function strokeNode(
 // five-pointed star for this case; we deliberately do not, because a star
 // carries no intuition about curvature and is pure convention.
 //
-// The exponent n is a user setting (theme model `nodeSquircleExponent`,
-// default 3): n = 1 diamond, 2 circle, 3 rounded square, higher = squarer.
-// It arrives through the layer's screenParameters, so one setting drives every
-// node layer.
+// The exponent n is FIXED at 3 (the designed rounded-square look; there was
+// a user setting for a while, which was removed as meaningless -- the icon's
+// shape is part of the node type language, not a preference):
+// n = 1 diamond, 2 circle, 3 rounded square, higher = squarer.
+// It travels through the layers' glyphParameters, so it is never zoom-scaled.
 
 // The icon is based on the corner square's box (half-extent = nodeSize / 2),
 // but scaled up slightly: a rounded square of the same side as a sharp square

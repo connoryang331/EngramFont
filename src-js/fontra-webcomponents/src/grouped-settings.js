@@ -8,8 +8,10 @@ export class GroupedSettings extends UnlitElement {
     }
 
     .header {
-      margin-top: 0.6em;
-      margin-bottom: 0.2em;
+      margin: 0 0 0.5em 0;
+      padding-bottom: 0.5em;
+      border-bottom: 1px solid
+        color-mix(in srgb, var(--horizontal-rule-color) 35%, transparent);
       font-weight: bold;
     }
   `;

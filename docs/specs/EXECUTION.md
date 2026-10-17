@@ -1,6 +1,8 @@
 # EngramFont · 过夜执行手册（EXECUTION RUNBOOK）
 
-> 本文是执行会话的主入口。配合：README.md（需求索引）、VERIFICATION-ENV.md（对照环境）、
+> 本文是执行会话的主入口。治理枢纽：[../../AGENTS.md](../../AGENTS.md)（每个 agent 必读——
+> 需求执行顺序 / 测试标准 / 判例速查 / 硬约束）；文档地图：[../README.md](../README.md)。
+> 配合：README.md（需求索引）、VERIFICATION-ENV.md（对照环境）、
 > 各需求 SPEC/TASKS/TEST、SYNC.md（同步）、ENGRAM-CHANGES.md（贴片台账）。
 
 ## 0. 环境自检（执行前 5 分钟）
@@ -9,7 +11,7 @@ cd E:\engram-dev\EngramFont
 git status                        # 干净、位于 engramfont-main
 venv\Scripts\python -c "import fontTools; print('fontTools ok')"
 node --version                    # ≥ 24
-ls docs\specs\                    # 5 个需求目录 + EXECUTION.md
+ls docs\specs\                    # 9 个需求目录 + EXECUTION.md
 netstat -ano | findstr :8800      # 无占用（有则先停）
 ```
 对照环境：`E:\visee-template\meshfont-clone` → `node serve.mjs`（8124，详见 VERIFICATION-ENV.md）
@@ -35,7 +37,8 @@ R4 模板流（T4.1→T4.4）   gate: E2E 新建→模板→编辑
 1. 读对应 SPEC 章节 + TASKS 条目（涉及文件/步骤/DoD）
 2. 实现（贴片纪律：新增文件优先；原文件单行改动）
 3. DoD 验证（对应 TEST.md 用例）
-4. `npm run bundle`（动了前端源码时）+ 重启服务
+4. `npm run bundle`（动了前端源码时）+ 重启服务（**用 `start-EngramFont.bat`**，步骤见
+   [AGENTS.md](../../AGENTS.md) 的「重启服务器」节：先停旧实例 → 先构建 → 跑脚本 → 验 `/serverinfo`）
 5. E2E/手动验收 → git commit（消息前缀 "R<n>.T<x.y>:"）
 
 ## 3. 接线速查（改代码时对照）

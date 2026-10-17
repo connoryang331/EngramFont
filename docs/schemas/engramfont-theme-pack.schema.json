@@ -1,0 +1,1385 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "engramfont-theme-pack-v1",
+  "title": "EngramFont theme pack",
+  "description": "A portable snapshot of EngramFont canvas appearance token values. Generated from VISUAL_TOKENS -- do not edit the emitted schema by hand.",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "values"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "engramfont-theme"
+    },
+    "version": {
+      "const": 1
+    },
+    "name": {
+      "type": "string",
+      "maxLength": 80
+    },
+    "values": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "canvasBackgroundColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#FFFFFF",
+          "title": "Canvas color",
+          "x-category": "canvas",
+          "x-dark-default": "#FFFFFF"
+        },
+        "upmGridColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#E6E6E6",
+          "title": "UPM grid color",
+          "x-category": "canvas",
+          "x-dark-default": "#3C3C3C"
+        },
+        "nodeSize": {
+          "type": "number",
+          "minimum": 4,
+          "maximum": 24,
+          "default": 8,
+          "title": "Node size",
+          "x-category": "node"
+        },
+        "nodeSmoothColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#7A4FE8",
+          "title": "Smooth node",
+          "x-category": "node",
+          "x-dark-default": "#A78BFA"
+        },
+        "nodeSquircleColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#0D9488",
+          "title": "Squircle node",
+          "x-category": "node",
+          "x-dark-default": "#2DD4BF"
+        },
+        "nodeCornerColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#C2410C",
+          "title": "Corner node",
+          "x-category": "node",
+          "x-dark-default": "#FB923C"
+        },
+        "nodeHandleColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#A0A0B0",
+          "title": "Handle",
+          "x-category": "node",
+          "x-dark-default": "#7E8290"
+        },
+        "selectedHandleColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#A0A0B0",
+          "title": "Selected handle",
+          "x-category": "node",
+          "x-dark-default": "#7E8290"
+        },
+        "nodeHandleSize": {
+          "type": "number",
+          "minimum": 3,
+          "maximum": 24,
+          "default": 6,
+          "title": "Handle size",
+          "x-category": "node"
+        },
+        "nodeHandleShapeDiamond": {
+          "type": "boolean",
+          "default": false,
+          "title": "Diamond handle",
+          "x-category": "node"
+        },
+        "editingLayerNodesColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#BBBBFF",
+          "title": "Editing layer nodes",
+          "x-category": "node",
+          "x-dark-default": "#BBBBFF",
+          "x-alpha-key": "editingLayerNodesAlpha",
+          "x-alpha-default": 0
+        },
+        "editingLayerNodesAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 0,
+          "title": "Editing layer nodes alpha (%)",
+          "x-category": "node"
+        },
+        "selectedNodeColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#000000",
+          "title": "Selected node fill",
+          "x-category": "node",
+          "x-dark-default": "#FFFFFF"
+        },
+        "handleLineColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#BBBBBB",
+          "title": "Handle line",
+          "x-category": "node",
+          "x-dark-default": "#777777"
+        },
+        "bgLayerNodesColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#DDDDDD",
+          "title": "Background layer nodes",
+          "x-category": "node",
+          "x-dark-default": "#555555"
+        },
+        "contextGlyphColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#000000",
+          "title": "Context glyph fill",
+          "x-category": "glyph",
+          "x-dark-default": "#FFFFFF"
+        },
+        "selectedGlyphColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#000000",
+          "title": "Selected glyph fill",
+          "x-category": "glyph",
+          "x-dark-default": "#FFFFFF"
+        },
+        "selectedGlyphOutlineColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#777777",
+          "title": "Selected glyph outline",
+          "x-category": "glyph",
+          "x-dark-default": "#FFFFFF88",
+          "x-alpha-key": "selectedGlyphOutlineColorAlpha",
+          "x-alpha-default": 53
+        },
+        "selectedGlyphOutlineColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 53,
+          "title": "Selected glyph outline alpha (%)",
+          "x-category": "glyph"
+        },
+        "transformHandleFillColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#BBBBFF",
+          "title": "Handle fill",
+          "x-category": "transform",
+          "x-dark-default": "#555599"
+        },
+        "transformHandleSize": {
+          "type": "number",
+          "minimum": 3,
+          "maximum": 24,
+          "default": 8,
+          "title": "Handle size",
+          "x-category": "transform"
+        },
+        "transformBorderColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#AAAAAA",
+          "title": "Dashed border",
+          "x-category": "transform",
+          "x-dark-default": "#888888"
+        },
+        "transformBorderWidth": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 6,
+          "default": 1,
+          "title": "Dashed border width",
+          "x-category": "transform"
+        },
+        "startpointChevronColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#989898",
+          "title": "Chevron color",
+          "x-category": "startpoint",
+          "x-dark-default": "#989898"
+        },
+        "startpointChevronSize": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 3,
+          "default": 1,
+          "title": "Chevron size",
+          "x-category": "startpoint"
+        },
+        "crosshairColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#888888",
+          "title": "Crosshair color",
+          "x-category": "crosshair",
+          "x-dark-default": "#AAAAAA"
+        },
+        "crosshairStrokeWidth": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 6,
+          "default": 1,
+          "title": "Crosshair width",
+          "x-category": "crosshair"
+        },
+        "crosshairDashed": {
+          "type": "boolean",
+          "default": true,
+          "title": "Dashed",
+          "x-category": "crosshair"
+        },
+        "crosshairDashLength": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 16,
+          "default": 4,
+          "title": "Dash length",
+          "x-category": "crosshair"
+        },
+        "rectSelectSolidColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#000000",
+          "title": "Solid color",
+          "x-category": "rectselect",
+          "x-dark-default": "#000000"
+        },
+        "rectSelectDashColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#FFFFFF",
+          "title": "Dash color",
+          "x-category": "rectselect",
+          "x-dark-default": "#FFFFFF"
+        },
+        "rectSelectStrokeWidth": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 6,
+          "default": 1,
+          "title": "Stroke width",
+          "x-category": "rectselect"
+        },
+        "rectSelectDashLength": {
+          "type": "number",
+          "minimum": 2,
+          "maximum": 40,
+          "default": 10,
+          "title": "Dash length",
+          "x-category": "rectselect"
+        },
+        "editPathStrokeColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#000000",
+          "title": "Outline color",
+          "x-category": "path",
+          "x-dark-default": "#FFFFFF"
+        },
+        "editPathUnderStrokeColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#FFFFFF",
+          "title": "Under-stroke color",
+          "x-category": "path",
+          "x-dark-default": "#00000044",
+          "x-alpha-key": "editPathUnderStrokeColorAlpha",
+          "x-alpha-default": 40
+        },
+        "editPathUnderStrokeColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 40,
+          "title": "Under-stroke color alpha (%)",
+          "x-category": "path"
+        },
+        "editPathFillColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#000000",
+          "title": "Outline fill",
+          "x-category": "path",
+          "x-dark-default": "#FFFFFF33",
+          "x-alpha-key": "editPathFillColorAlpha",
+          "x-alpha-default": 7
+        },
+        "editPathFillColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 7,
+          "title": "Outline fill alpha (%)",
+          "x-category": "path"
+        },
+        "editPathStrokeWidth": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 6,
+          "default": 1,
+          "title": "Outline stroke width",
+          "x-category": "path"
+        },
+        "labelBoxColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#FFFFFF",
+          "title": "Label box color",
+          "x-category": "labels",
+          "x-dark-default": "#11111118",
+          "x-alpha-key": "labelBoxColorAlpha",
+          "x-alpha-default": 73
+        },
+        "labelBoxColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 73,
+          "title": "Label box color alpha (%)",
+          "x-category": "labels"
+        },
+        "labelTextColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#000000",
+          "title": "Label text color",
+          "x-category": "labels",
+          "x-dark-default": "#FFFFFF"
+        },
+        "guidelineColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#000000",
+          "title": "Glyph guideline",
+          "x-category": "guidelines",
+          "x-dark-default": "#FFFFFF88",
+          "x-alpha-key": "guidelineColorAlpha",
+          "x-alpha-default": 40
+        },
+        "guidelineColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 40,
+          "title": "Glyph guideline alpha (%)",
+          "x-category": "guidelines"
+        },
+        "fontGuidelineColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#00BFFF",
+          "title": "Font guideline",
+          "x-category": "guidelines",
+          "x-dark-default": "#00BFFFC0",
+          "x-alpha-key": "fontGuidelineColorAlpha",
+          "x-alpha-default": 100
+        },
+        "fontGuidelineColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 100,
+          "title": "Font guideline alpha (%)",
+          "x-category": "guidelines"
+        },
+        "guidelineHoveredColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#000000",
+          "title": "Hovered guideline",
+          "x-category": "guidelines",
+          "x-dark-default": "#FFFFFF18",
+          "x-alpha-key": "guidelineHoveredColorAlpha",
+          "x-alpha-default": 7
+        },
+        "guidelineHoveredColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 7,
+          "title": "Hovered guideline alpha (%)",
+          "x-category": "guidelines"
+        },
+        "guidelineSelectedColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#000000",
+          "title": "Selected guideline",
+          "x-category": "guidelines",
+          "x-dark-default": "#FFFFFF33",
+          "x-alpha-key": "guidelineSelectedColorAlpha",
+          "x-alpha-default": 13
+        },
+        "guidelineSelectedColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 13,
+          "title": "Selected guideline alpha (%)",
+          "x-category": "guidelines"
+        },
+        "guidelineNodeSelectedColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#000000",
+          "title": "Selected guideline node",
+          "x-category": "guidelines",
+          "x-dark-default": "#FFFFFF"
+        },
+        "guidelineStrokeWidth": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 6,
+          "default": 1,
+          "title": "Guideline stroke width",
+          "x-category": "guidelines"
+        },
+        "baselineColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#000000",
+          "title": "Baseline",
+          "x-category": "metrics",
+          "x-dark-default": "#FFFFFF66",
+          "x-alpha-key": "baselineColorAlpha",
+          "x-alpha-default": 27
+        },
+        "baselineColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 27,
+          "title": "Baseline alpha (%)",
+          "x-category": "metrics"
+        },
+        "lineMetricsColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#000000",
+          "title": "Metrics line",
+          "x-category": "metrics",
+          "x-dark-default": "#FFFFFF66",
+          "x-alpha-key": "lineMetricsColorAlpha",
+          "x-alpha-default": 27
+        },
+        "lineMetricsColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 27,
+          "title": "Metrics line alpha (%)",
+          "x-category": "metrics"
+        },
+        "lineMetricsZoneColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#00BFFF",
+          "title": "Alignment zone",
+          "x-category": "metrics",
+          "x-dark-default": "#00BFFF18",
+          "x-alpha-key": "lineMetricsZoneColorAlpha",
+          "x-alpha-default": 9
+        },
+        "lineMetricsZoneColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 9,
+          "title": "Alignment zone alpha (%)",
+          "x-category": "metrics"
+        },
+        "lineMetricsZoneStrokeColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#006080",
+          "title": "Zone boundary line",
+          "x-category": "metrics",
+          "x-dark-default": "#80DFFF18",
+          "x-alpha-key": "lineMetricsZoneStrokeColorAlpha",
+          "x-alpha-default": 9
+        },
+        "lineMetricsZoneStrokeColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 9,
+          "title": "Zone boundary line alpha (%)",
+          "x-category": "metrics"
+        },
+        "anchorColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#999999",
+          "title": "Anchor color",
+          "x-category": "anchors",
+          "x-dark-default": "#999999"
+        },
+        "componentHoveredColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#CCCCCC",
+          "title": "Hovered component",
+          "x-category": "components",
+          "x-dark-default": "#666666"
+        },
+        "componentSelectedColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#888888",
+          "title": "Selected component",
+          "x-category": "components",
+          "x-dark-default": "#AAAAAA"
+        },
+        "bgLayerOutlineColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#CCCCCC",
+          "title": "Background layer outline",
+          "x-category": "layers",
+          "x-dark-default": "#666666"
+        },
+        "editingLayerOutlineColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#9999FF",
+          "title": "Editing layer outline",
+          "x-category": "layers",
+          "x-dark-default": "#555599"
+        },
+        "ghostPathColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#AAAAAA",
+          "title": "Drag ghost path",
+          "x-category": "interaction",
+          "x-dark-default": "#88888866",
+          "x-alpha-key": "ghostPathColorAlpha",
+          "x-alpha-default": 40
+        },
+        "ghostPathColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 40,
+          "title": "Drag ghost path alpha (%)",
+          "x-category": "interaction"
+        },
+        "powerRulerStrokeColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#000000",
+          "title": "Power ruler line",
+          "x-category": "tools",
+          "x-dark-default": "#FFFFFF66",
+          "x-alpha-key": "powerRulerStrokeColorAlpha",
+          "x-alpha-default": 27
+        },
+        "powerRulerStrokeColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 27,
+          "title": "Power ruler line alpha (%)",
+          "x-category": "tools"
+        },
+        "powerRulerInsideBlobColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#FFFFFF",
+          "title": "Ruler distance box (inside)",
+          "x-category": "tools",
+          "x-dark-default": "#444444",
+          "x-alpha-key": "powerRulerInsideBlobColorAlpha",
+          "x-alpha-default": 73
+        },
+        "powerRulerInsideBlobColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 73,
+          "title": "Ruler distance box (inside) alpha (%)",
+          "x-category": "tools"
+        },
+        "powerRulerIntersectionColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#FF0088",
+          "title": "Ruler intersection",
+          "x-category": "tools",
+          "x-dark-default": "#FF6699",
+          "x-alpha-key": "powerRulerIntersectionColorAlpha",
+          "x-alpha-default": 33
+        },
+        "powerRulerIntersectionColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 33,
+          "title": "Ruler intersection alpha (%)",
+          "x-category": "tools"
+        },
+        "knifeLineColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#111111",
+          "title": "Knife line",
+          "x-category": "tools",
+          "x-dark-default": "#FFFFFFBB",
+          "x-alpha-key": "knifeLineColorAlpha",
+          "x-alpha-default": 53
+        },
+        "knifeLineColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 53,
+          "title": "Knife line alpha (%)",
+          "x-category": "tools"
+        },
+        "sidebearingColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#000000",
+          "title": "Sidebearing line",
+          "x-category": "tools",
+          "x-dark-default": "#FFFFFF66",
+          "x-alpha-key": "sidebearingColorAlpha",
+          "x-alpha-default": 27
+        },
+        "sidebearingColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 27,
+          "title": "Sidebearing line alpha (%)",
+          "x-category": "tools"
+        },
+        "referenceFontColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#AAAAAA",
+          "title": "Reference font fill",
+          "x-category": "tools",
+          "x-dark-default": "#AAAAAA66",
+          "x-alpha-key": "referenceFontColorAlpha",
+          "x-alpha-default": 40
+        },
+        "referenceFontColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 40,
+          "title": "Reference font fill alpha (%)",
+          "x-category": "tools"
+        },
+        "glyphErrorColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#AAAAAA",
+          "title": "Error glyph color",
+          "x-category": "glyph",
+          "x-dark-default": "#999999"
+        },
+        "hoveredGlyphColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#000000",
+          "title": "Hovered glyph fill",
+          "x-category": "glyph",
+          "x-dark-default": "#FFFFFF"
+        },
+        "hoveredGlyphOutlineColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#BBBBBB",
+          "title": "Hovered glyph outline",
+          "x-category": "glyph",
+          "x-dark-default": "#CCCCCC88",
+          "x-alpha-key": "hoveredGlyphOutlineColorAlpha",
+          "x-alpha-default": 53
+        },
+        "hoveredGlyphOutlineColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 53,
+          "title": "Hovered glyph outline alpha (%)",
+          "x-category": "glyph"
+        },
+        "undefinedGlyphColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#000000",
+          "title": "Undefined glyph color",
+          "x-category": "glyph",
+          "x-dark-default": "#FFFFFF66",
+          "x-alpha-key": "undefinedGlyphColorAlpha",
+          "x-alpha-default": 40
+        },
+        "undefinedGlyphColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 40,
+          "title": "Undefined glyph color alpha (%)",
+          "x-category": "glyph"
+        },
+        "emptyGlyphColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#000000",
+          "title": "Empty glyph placeholder",
+          "x-category": "glyph",
+          "x-dark-default": "#FFFFFF33",
+          "x-alpha-key": "emptyGlyphColorAlpha",
+          "x-alpha-default": 13
+        },
+        "emptyGlyphColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 13,
+          "title": "Empty glyph placeholder alpha (%)",
+          "x-category": "glyph"
+        },
+        "emptySelectedGlyphColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#D8D8D8",
+          "title": "Empty selected glyph",
+          "x-category": "glyph",
+          "x-dark-default": "#585858"
+        },
+        "emptyHoveredGlyphColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#E8E8E8",
+          "title": "Empty hovered glyph",
+          "x-category": "glyph",
+          "x-dark-default": "#484848"
+        },
+        "cleanGlyphColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#000000",
+          "title": "Clean display fill",
+          "x-category": "glyph",
+          "x-dark-default": "#FFFFFF"
+        },
+        "glyphOuterStrokeWidth": {
+          "type": "number",
+          "minimum": 4,
+          "maximum": 24,
+          "default": 10,
+          "title": "Glyph highlight outer width",
+          "x-category": "glyph"
+        },
+        "glyphInnerStrokeWidth": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 8,
+          "default": 3,
+          "title": "Glyph highlight inner width",
+          "x-category": "glyph"
+        },
+        "selectedNodeUnderColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#FFFFFF",
+          "title": "Selected node halo",
+          "x-category": "node",
+          "x-dark-default": "#00000088",
+          "x-alpha-key": "selectedNodeUnderColorAlpha",
+          "x-alpha-default": 67
+        },
+        "selectedNodeUnderColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 67,
+          "title": "Selected node halo alpha (%)",
+          "x-category": "node"
+        },
+        "nodeHoverStrokeOffset": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "default": 4,
+          "title": "Hover ring offset",
+          "x-category": "node"
+        },
+        "nodeUnderlayOffset": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 8,
+          "default": 2,
+          "title": "Selection halo offset",
+          "x-category": "node"
+        },
+        "bgLayerNodeSize": {
+          "type": "number",
+          "minimum": 3,
+          "maximum": 16,
+          "default": 5.5,
+          "title": "Background layer node size",
+          "x-category": "node"
+        },
+        "bgLayerHandleSize": {
+          "type": "number",
+          "minimum": 2,
+          "maximum": 16,
+          "default": 4.5,
+          "title": "Background layer handle size",
+          "x-category": "node"
+        },
+        "labelFontSizeCoordinates": {
+          "type": "number",
+          "minimum": 6,
+          "maximum": 20,
+          "default": 10,
+          "title": "Coordinates label size",
+          "x-category": "labels"
+        },
+        "labelFontSizePointIndex": {
+          "type": "number",
+          "minimum": 6,
+          "maximum": 20,
+          "default": 10,
+          "title": "Point index label size",
+          "x-category": "labels"
+        },
+        "labelFontSizeContourIndex": {
+          "type": "number",
+          "minimum": 6,
+          "maximum": 20,
+          "default": 11,
+          "title": "Contour index label size",
+          "x-category": "labels"
+        },
+        "labelFontSizeComponentIndex": {
+          "type": "number",
+          "minimum": 6,
+          "maximum": 20,
+          "default": 11,
+          "title": "Component index label size",
+          "x-category": "labels"
+        },
+        "labelFontSizeAnchorNames": {
+          "type": "number",
+          "minimum": 6,
+          "maximum": 20,
+          "default": 10,
+          "title": "Anchor name label size",
+          "x-category": "labels"
+        },
+        "anchorNamesMarginFromTop": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 20,
+          "default": 6,
+          "title": "Anchor name top margin",
+          "x-category": "labels"
+        },
+        "guidelineHoveredSelectedColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#000000",
+          "title": "Hovered + selected guideline",
+          "x-category": "guidelines",
+          "x-dark-default": "#FFFFFF44",
+          "x-alpha-key": "guidelineHoveredSelectedColorAlpha",
+          "x-alpha-default": 17
+        },
+        "guidelineHoveredSelectedColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 17,
+          "title": "Hovered + selected guideline alpha (%)",
+          "x-category": "guidelines"
+        },
+        "guidelineNodeHoveredColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#BBBBBB",
+          "title": "Hovered guideline node",
+          "x-category": "guidelines",
+          "x-dark-default": "#BBBBBB"
+        },
+        "guidelineNodeUnderColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#FFFFFF",
+          "title": "Guideline node halo",
+          "x-category": "guidelines",
+          "x-dark-default": "#00000088",
+          "x-alpha-key": "guidelineNodeUnderColorAlpha",
+          "x-alpha-default": 67
+        },
+        "guidelineNodeUnderColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 67,
+          "title": "Guideline node halo alpha (%)",
+          "x-category": "guidelines"
+        },
+        "guidelineIconUnderColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#F6F6F6",
+          "title": "Lock icon underlay",
+          "x-category": "guidelines",
+          "x-dark-default": "#333333"
+        },
+        "guidelineIconHoveredColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#000000",
+          "title": "Lock icon hovered",
+          "x-category": "guidelines",
+          "x-dark-default": "#BBBBBB",
+          "x-alpha-key": "guidelineIconHoveredColorAlpha",
+          "x-alpha-default": 40
+        },
+        "guidelineIconHoveredColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 40,
+          "title": "Lock icon hovered alpha (%)",
+          "x-category": "guidelines"
+        },
+        "guidelineFontSize": {
+          "type": "number",
+          "minimum": 6,
+          "maximum": 20,
+          "default": 10,
+          "title": "Guideline name size",
+          "x-category": "guidelines"
+        },
+        "guidelineMarkerRadius": {
+          "type": "number",
+          "minimum": 2,
+          "maximum": 12,
+          "default": 4,
+          "title": "Guideline marker radius",
+          "x-category": "guidelines"
+        },
+        "guidelineDash": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 8,
+          "default": 3,
+          "title": "Guideline dash length",
+          "x-category": "guidelines"
+        },
+        "guidelineMargin": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 20,
+          "default": 5,
+          "title": "Guideline name margin",
+          "x-category": "guidelines"
+        },
+        "guidelineIconSize": {
+          "type": "number",
+          "minimum": 8,
+          "maximum": 24,
+          "default": 12,
+          "title": "Guideline lock icon size",
+          "x-category": "guidelines"
+        },
+        "guidelineNodeSize": {
+          "type": "number",
+          "minimum": 4,
+          "maximum": 16,
+          "default": 8,
+          "title": "Guideline node size",
+          "x-category": "guidelines"
+        },
+        "guidelineHoverStrokeOffset": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "default": 4,
+          "title": "Guideline hover ring offset",
+          "x-category": "guidelines"
+        },
+        "guidelineUnderlayOffset": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 8,
+          "default": 2,
+          "title": "Guideline halo offset",
+          "x-category": "guidelines"
+        },
+        "anchorMarkerRadius": {
+          "type": "number",
+          "minimum": 2,
+          "maximum": 12,
+          "default": 4,
+          "title": "Anchor marker radius",
+          "x-category": "anchors"
+        },
+        "anchorHoveredColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#BBBBBB",
+          "title": "Hovered anchor",
+          "x-category": "anchors",
+          "x-dark-default": "#BBBBBB"
+        },
+        "anchorSelectedColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#000000",
+          "title": "Selected anchor",
+          "x-category": "anchors",
+          "x-dark-default": "#FFFFFF"
+        },
+        "anchorUnderColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#FFFFFF",
+          "title": "Selected anchor halo",
+          "x-category": "anchors",
+          "x-dark-default": "#00000088",
+          "x-alpha-key": "anchorUnderColorAlpha",
+          "x-alpha-default": 67
+        },
+        "anchorUnderColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 67,
+          "title": "Selected anchor halo alpha (%)",
+          "x-category": "anchors"
+        },
+        "anchorSelectedSize": {
+          "type": "number",
+          "minimum": 4,
+          "maximum": 16,
+          "default": 8,
+          "title": "Selected anchor size",
+          "x-category": "anchors"
+        },
+        "anchorSelectedStrokeWidth": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 6,
+          "default": 1,
+          "title": "Anchor stroke width",
+          "x-category": "anchors"
+        },
+        "anchorHoverStrokeOffset": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "default": 4,
+          "title": "Anchor hover ring offset",
+          "x-category": "anchors"
+        },
+        "anchorUnderlayOffset": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 8,
+          "default": 2,
+          "title": "Anchor halo offset",
+          "x-category": "anchors"
+        },
+        "componentOriginColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#BBBBBB",
+          "title": "Component origin marker",
+          "x-category": "components",
+          "x-dark-default": "#BBBBBB"
+        },
+        "componentTCenterColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#777777",
+          "title": "Component transform center",
+          "x-category": "components",
+          "x-dark-default": "#DDDDDD"
+        },
+        "componentHoverStrokeWidth": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 6,
+          "default": 3,
+          "title": "Hovered component width",
+          "x-category": "components"
+        },
+        "componentSelectedStrokeWidth": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 6,
+          "default": 3,
+          "title": "Selected component width",
+          "x-category": "components"
+        },
+        "componentOriginMarkerStrokeWidth": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 4,
+          "default": 1,
+          "title": "Origin marker line width",
+          "x-category": "components"
+        },
+        "componentOriginMarkerSelectedStrokeWidth": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 4,
+          "default": 2,
+          "title": "Origin marker selected width",
+          "x-category": "components"
+        },
+        "componentOriginMarkerSize": {
+          "type": "number",
+          "minimum": 4,
+          "maximum": 24,
+          "default": 10,
+          "title": "Origin marker size",
+          "x-category": "components"
+        },
+        "componentOriginMarkerRadius": {
+          "type": "number",
+          "minimum": 2,
+          "maximum": 12,
+          "default": 4,
+          "title": "Origin marker radius",
+          "x-category": "components"
+        },
+        "bgLayerAnchorColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#DDDDDD",
+          "title": "Background layer anchor",
+          "x-category": "layers",
+          "x-dark-default": "#555555"
+        },
+        "editingLayerAnchorColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#AAAAFF",
+          "title": "Editing layer anchor",
+          "x-category": "layers",
+          "x-dark-default": "#555588"
+        },
+        "bgLayerOutlineStrokeWidth": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 6,
+          "default": 1,
+          "title": "Background layer outline width",
+          "x-category": "layers"
+        },
+        "bgLayerAnchorRadius": {
+          "type": "number",
+          "minimum": 2,
+          "maximum": 12,
+          "default": 4,
+          "title": "Background layer anchor radius",
+          "x-category": "layers"
+        },
+        "editingLayerOutlineStrokeWidth": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 6,
+          "default": 1,
+          "title": "Editing layer outline width",
+          "x-category": "layers"
+        },
+        "editingLayerAnchorRadius": {
+          "type": "number",
+          "minimum": 2,
+          "maximum": 12,
+          "default": 4,
+          "title": "Editing layer anchor radius",
+          "x-category": "layers"
+        },
+        "connectInsertColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#3080FF",
+          "title": "Connect / insert marker",
+          "x-category": "interaction",
+          "x-dark-default": "#50A0FF",
+          "x-alpha-key": "connectInsertColorAlpha",
+          "x-alpha-default": 50
+        },
+        "connectInsertColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 50,
+          "title": "Connect / insert marker alpha (%)",
+          "x-category": "interaction"
+        },
+        "connectInsertRadius": {
+          "type": "number",
+          "minimum": 4,
+          "maximum": 24,
+          "default": 11,
+          "title": "Connect radius",
+          "x-category": "interaction"
+        },
+        "connectInsertHandlesRadius": {
+          "type": "number",
+          "minimum": 2,
+          "maximum": 16,
+          "default": 5,
+          "title": "Insert handle radius",
+          "x-category": "interaction"
+        },
+        "connectInsertDeleteIndicatorLength": {
+          "type": "number",
+          "minimum": 3,
+          "maximum": 16,
+          "default": 7,
+          "title": "Delete indicator size",
+          "x-category": "interaction"
+        },
+        "connectInsertDragIndicatorRadius": {
+          "type": "number",
+          "minimum": 4,
+          "maximum": 20,
+          "default": 9,
+          "title": "Drag indicator radius",
+          "x-category": "interaction"
+        },
+        "connectInsertStrokeWidth": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 6,
+          "default": 2,
+          "title": "Connect / insert width",
+          "x-category": "interaction"
+        },
+        "backgroundImageColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#888888",
+          "title": "Background image border",
+          "x-category": "interaction",
+          "x-dark-default": "#FFFFFF"
+        },
+        "backgroundImageHoverColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#888888",
+          "title": "Background image hover",
+          "x-category": "interaction",
+          "x-dark-default": "#FFFFFF55",
+          "x-alpha-key": "backgroundImageHoverColorAlpha",
+          "x-alpha-default": 33
+        },
+        "backgroundImageHoverColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 33,
+          "title": "Background image hover alpha (%)",
+          "x-category": "interaction"
+        },
+        "backgroundImageStrokeWidth": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 6,
+          "default": 2,
+          "title": "Background image width",
+          "x-category": "interaction"
+        },
+        "lockIconColor": {
+          "type": "string",
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "default": "#000000",
+          "title": "Lock icon",
+          "x-category": "interaction",
+          "x-dark-default": "#FFFFFFCC",
+          "x-alpha-key": "lockIconColorAlpha",
+          "x-alpha-default": 80
+        },
+        "lockIconColorAlpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 80,
+          "title": "Lock icon alpha (%)",
+          "x-category": "interaction"
+        },
+        "lockIconSize": {
+          "type": "number",
+          "minimum": 10,
+          "maximum": 32,
+          "default": 19,
+          "title": "Lock icon size",
+          "x-category": "interaction"
+        },
+        "startpointChevronGap": {
+          "type": "number",
+          "minimum": 2,
+          "maximum": 16,
+          "default": 5,
+          "title": "Chevron gap",
+          "x-category": "startpoint"
+        },
+        "startpointChevronStrokeWidth": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 6,
+          "default": 2,
+          "title": "Chevron width",
+          "x-category": "startpoint"
+        },
+        "statusBarMinThickness": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 20,
+          "default": 3,
+          "title": "Status bar min thickness",
+          "x-category": "status"
+        },
+        "statusBarMaxThickness": {
+          "type": "number",
+          "minimum": 2,
+          "maximum": 40,
+          "default": 15,
+          "title": "Status bar max thickness",
+          "x-category": "status"
+        },
+        "statusBarEditingOpacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 40,
+          "title": "Status bar editing opacity",
+          "x-category": "status"
+        }
+      }
+    }
+  }
+}

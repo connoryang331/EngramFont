@@ -238,6 +238,7 @@ export const strings = {
   "edit-tools-pointer.undo.resize-selection": "redimensionner la sélection",
   "edit-tools-pointer.undo.rotate-selection": "pivoter la sélection",
   "edit-tools-pointer.undo.toggle-smooth": "Bascule de lissage",
+  "edit-tools-pointer.undo.toggle-squircle": "Basculer le squircle",
   "editor.hand-tool": "Outil main",
   "editor.kerning-tool": "Outil de crénage",
   "editor.knife-tool": "Outil cutter",

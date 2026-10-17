@@ -818,3 +818,416 @@
   （含真值表双边 + 手势 T4b/T4c："标志 ⟺ 派生、坐标逐字节不动"两种朝向）；浏览器探针
   （qa/probe-adr0012-v2.mjs 弧线几何）shift+双击落标志、画布渲染派生过渡、零控制台错误
 - 文档：ADR-0012 状态头改"已落地"、新增「实现补充：镜像朝向与救援扫描」、验证节标注本轮达成项
+
+### R4-T4.28 · 修复：未激活节点内部的淡紫填充拆为独立开关、默认不再绘制（2026-10-15）
+- **用户报告**：未激活（空心）节点圆环内部"有个淡紫色的小东西"（采样色 rgb(187,187,255)），
+  corner 里像小方块、handle 里像小点，且"并不是真空的"
+- **根因**：`fontra.edit.background.layers.nodes-and-handles` 图层（zIndex 490）把背景图层与
+  **编辑图层**的字形节点一律**实心填充**，编辑图层用 `editColor: "#BBFF"`（= rgb(187,187,255)）；
+  它画在空心节点描边层（zIndex 500）之下——透过圆环的洞看进去就是"节点内部有个淡紫点/方块"。
+  单源字体的 `editingLayers` 含 `"default"` 虚层（scene-model `_setupBackgroundGlyphs`），
+  所以每个节点位置都有一个
+- **修复**：拆成两个独立 userSwitchable 图层——
+  ① `fontra.edit.background.layers.nodes-and-handles`（灰 #DDDF，只画 backgroundLayerGlyphs，
+  原开关行为不变）；② 新 `fontra.edit.editing.layers.nodes-and-handles`（淡紫 #BBFF，只画
+  editingLayerGlyphs，**defaultOn: false** = 默认透明不绘制）。淡紫回到画布的唯一途径是
+  View → Glyph editor appearance 里的新开关
+- **文案**：`sidebar.user-settings.glyph.editing-nodes-and-handles`（en.js："Nodes and handles
+  for editing layers"；其余语言暂不新增，按用户要求先只出英文）
+- **验证**：webpack 重建后浏览器探针——新开关关闭：0 次 #bbbbff 填充（canvas fill 钩子）；
+  开启：12 次（"n" 的 12 个节点逐一对应）；老开关行为不变（有背景图层时依旧灰色）
+- 门禁：`node --check` 两文件通过；`npm run bundle` 通过
+
+### R4-T4.29 · 变换选框（transform selection）：角柄淡紫填充 + 虚线加深 + 设置项（2026-10-15）
+- **用户报告**：框选多个节点后，变换选框四角（及边中点）的手柄是空心环，要求填充淡紫色；
+  虚线边框 #DDD 在画布上太淡看不清，要求加深；两项都做成设置
+- **绘制**（`edit-tools-pointer.js` 的 `fontra.transform.selection` 层）：
+  ① 手柄由 `strokeRoundNode` 空心环改为 `fillRoundNode`（淡紫）+ 细环描边的组合；
+  ② 虚线 `strokeColor` 亮色 #DDD → **#AAA**、暗色 #555 → **#888**；补 `context.lineWidth`
+  显式设置（原来虚线沿用 handleColor 阶段的 1px，行为不变但不再依赖顺序）
+- **设置**（themeController，localStorage `engramfont-transformHandleFillColor` /
+  `engramfont-transformBorderColor`）：新增 `applyTransformSelectionSettings(model)`
+  （visualization-layer-definitions.js），editor.js 启动时应用 + 两个 keyListener 实时刷新；
+  主题设置面板新增 "Transform selection" 卡片（Handle fill / Dashed border 两行色板）。
+  每项单一颜色亮暗主题通用（与节点颜色同一策略）；默认值统一 6 位 hex
+  （#BBBBFF / #AAAAAA），避免 4 位 hex 让 `<input type=color>` 显示成黑色
+- **验证**：canvas 钩子——默认填充 `#bbbbff` ×8（8 个手柄）、虚线 `#aaaaaa`；预置
+  localStorage `#00CC00` / `#FF8800` 后填充与虚线逐一跟随；webpack 重建通过
+
+### R4-T4.30 · 节点配色修订（squircle 去 pink、corner 提高白底可读性）+ 画布背景色设置（2026-10-15）
+- **用户报告**：① squircle 节点不要红/粉色（#D6336C / #F472B6），且在白底和黑底都要看得清；
+  ② corner 节点橙色（#D99A1F）在白底上看不清；③ 需要画布背景色设置
+- **新配色**（三个节点图层 + nodeTypeColors + themeController 默认 + 设置面板行默认，六处同步）：
+  - squircle：**teal** #0D9488（亮）/ #2DD4BF（暗）——回到设计笔记原本点名的色相，
+    与 violet smooth、orange corner 各差约 180°，白底黑底都有足够彩度
+  - corner：**burnt orange** #C2410C（亮，白底对比 ~5.5:1）/ #FB923C（暗）
+  - component.nodes 的 40% 透明变体同步（#0D9488B0 / #2DD4BFB0 / #C2410CB0 / #FB923CB0）
+- **画布背景色设置**（themeController）：`canvasBackgroundCustom`（checkbox，默认关）+
+  `canvasBackgroundColor`（默认 #F6F6F6）；开 = 在 :root 内联覆盖 `--background-color`
+  （亮暗主题都用该色），关 = `removeProperty` 恢复主题默认（#f6f6f6 / #333）。
+  实现于 theme-settings.js 的 `setupCanvasBackgroundOverride`（启动应用 + 双 keyListener）；
+  面板新增 "Canvas background" 卡片：checkbox 行 + 颜色行（`disabledWhen` 未勾选时禁用）
+- **注意**：若用户此前在面板里改过节点颜色（localStorage 已存旧值），需在
+  Application Settings → Theme → Node appearance 对应行点 reset 按钮取新默认
+- **验证**：canvas 钩子——预置 nodeSquircleColor=#FF0000 / nodeCornerColor=#00CC00 后，
+  squircle 环描边 `#ff0000` ×4、corner 方框描边 `#00cc00` ×18（模型→图层→画布链路通）；
+  画布背景开关 ON 时 `--background-color` 内联 `#FFEECC`、body 渲染 rgb(255,238,204)，
+  OFF 时内联移除、回到主题 #f6f6f6；bundle 含新默认（fontra-core / views-applicationsettings）
+- **后续（同日追加）**：亮色主题画布默认改**纯白**——core.css `--background-color-light`
+  #f6f6f6 → #fff（body 即画布底）；连带修正 UPM 网格亮色描边 #FFF → **#E6E6E6**
+  （白底上白线会隐形）。设置面板 reset 默认值与注释同步为 #FFFFFF。
+  验证：默认状态 body 背景 rgb(255,255,255)、高倍缩放下网格描边 `#e6e6e6` ×74、
+  画布角像素采样 (255,255,255)
+
+### R4-T4.31 · 颜色设置全面 OKLCH 化 + Oklume 选色器（2026-10-15）
+- **用户需求**：去掉画布背景的勾选框（默认纯白、选色即可）；面板出现 "undefined" 标签；
+  颜色设置全部改用 OKLCH；选择器要有真正的取色 UI（先试 colorjs.io elements，最终按用户
+  指定改用 **oklume**（github.com/ipatovanton/oklume），因其有色板+滑块取色区；
+  oklume 无 alpha 通道 → 配一个 Alpha 滑块）；色板方块与预览大块改成超椭圆 n=3；
+  色板平铺全显、无滚动条
+- **新模块**：`fontra-core/src/oklch.js`——hex/rgb/oklch 解析与互转（OKLab 参考矩阵）、
+  色域二分降 chroma；修复 L 百分比解析（`55.34%` 曾解析成 55.34 而非 0.5534）
+- **`oklch-color` 控件**（simple-settings.js）：色块按钮 + Oklume compact 弹层
+  （`showFormats: ["oklch"]`、色板 16 列平铺、`.oklume-swatch`/`.oklume-preview-box`
+  超椭圆 n=3 clip-path、弹层内 Alpha 滑块行）；存 `oklch(L% C H / A)`，A=0 存
+  "transparent"；模块级实例表（按 model key）保证重渲染时旧弹层销毁、监听器不泄漏
+- **两个关键 bug**：① oklume 构造时 init→updateOutput 会触发一次 onChange，把模型覆写成
+  oklume 默认橙色（进而被 localStorage 持久化、吃掉用户已存颜色）——加 `ready` 守卫；
+  ② 触发行内 undefined 标签 = 颜色行缺 displayName（画布背景卡片重构时消除）
+- **模型默认值全部改为 OKLCH 字符串**（canvasBackgroundColor 纯白
+  `oklch(100% 0 89.9)`、editingLayerNodesColor 默认 **transparent** = 该图层不绘制）；
+  编辑图层节点的可见性从此**只由颜色设置控制**（transparent 即关闭），
+  移除了原 View 菜单开关（fontra.edit.editing.layers.nodes-and-handles 不再 userSwitchable）
+- **Attribution**：Oklume by Anton Ipatov（MIT + 署名要求，见 oklume.css.js 头注）
+- **验证**：8 个颜色行 8 个弹层（无泄漏）；打开时选色器显示行当前色
+  （corner = oklch(55.34% 0.1739 38.4)）；色板 16 列平铺 + 超椭圆 clip；
+  色板点击 → 模型/触发器/画布同步；Alpha 0.3 → `oklch(40% 0.16 32 / 0.3)`、
+  0 → `transparent`；构造不再覆写模型；无 undefined、无 pageerror
+
+### R4-T4.32 · 选色器交互定稿：面板右侧、永不误关、点外才关（2026-10-15）
+- **用户需求**：不要 inline（会溢出面板）、不要遮挡式弹窗；选色器显示在设置面板
+  **右侧**；拖滑块/点色板时**永不消失**；只有点击 OKLCH 弹层**外部**才关闭
+- **实现**：回到 oklume compact 弹层（body 挂载、自带 backdrop 点外关闭 + ESC），
+  但 —— ① 打开时 JS 定位：弹层左缘 = 主题卡片右缘 +16px、顶部对齐触发行
+  （transform: none，越界收敛）；② 重渲染时**复用**存活实例（模块级注册表）：
+  重绑新触发的 click、重设 onChange/state.element、applying 包裹 setColor 重播种
+  —— 弹层永不因重渲染而消失；③ 关闭其他选色器（开 A 关 B，同时只开一个）；
+  ④ 弹层重排为 oklume.com 参考布局：左滑块卡片、右上预览+OKLCH 值、下方色板
+  平铺全显（宽 740px = 20 列 × 36px 原始色块尺寸），色板方块与预览为超椭圆 n=3
+- **修复**：oklume.css.js 曾被误改为 shadow 内联样式（compact 弹层在 body 光 DOM，
+  shadow 样式够不到 → 弹层裸奔），已改回 <head> 注入；`applying` 守卫提前到
+  **构造器之前**（oklume init 的 onChange 在构造期间触发，旧的守卫时机会让默认色
+  覆写模型/种子）
+- **验证**：连续打开 4 行选色器，任意时刻 body 中 `.oklume--open` 恒为 1；
+  点击面板空白处（弹层外）→ open=0；L 滑块拖动 → 弹层保持打开且模型写入
+  `oklch(65% 0.1739 38.4)`；弹层宽 740、色块 30px、无滚动、超椭圆 clip ✓
+- **注意**：浏览器若缓存旧 HTML 会继续跑旧 bundle —— 需刷新一次（必要时 Ctrl+F5）
+
+### R4-T4.33 · 回滚：移除 OKLCH/oklume 选色器，恢复原生 RGB 拾色器（2026-10-15）
+- **用户决定**："算了吧。OKLCH 的全部删除。或者直接回滚" → "回滚到 RGB 选择器"
+- **移除**：oklume 依赖（npm）、`oklume.css.js`、`fontra-core/src/oklch.js`、simple-settings 的
+  `oklch-color` 控件与全部辅助函数、面板的 OKLCH 默认值与 "Editing layer nodes" 颜色行、
+  `applyEditingLayerNodesColor` 及其 editor.js 接线、`editingLayerNodesColor` 模型键
+- **恢复**：所有颜色设置为 hex + 原生 `<input type="color">`（RGB 拾色器）；
+  节点配色保留用户已确认的 teal（#0D9488）/ 焦橙（#C2410C）；编辑图层幽灵节点回到
+  T4.28 形态（独立 userSwitchable 图层、默认关、View 菜单开关、lavender #BBFF）；
+  画布背景设置保留（hex #FFFFFF、无勾选框、单一颜色亮暗通用）
+- **误删修复**：strip 脚本曾连带删除 `squircleClipPath` / `makeResetButton` /
+  uiTypes 的 `number-wheel`+`combined` 条目 —— 已逐一补回并回归验证
+- **保留**：污染迁移（清除 localStorage 中残留的 oklch() 值，防止旧数据以无效颜色
+  回流）、纯白画布默认、UPM 网格 #E6E6E6、变换选框淡紫填充+深色虚线
+- **验证**：设置面板 11 行全部渲染、7 个原生颜色输入值正确（#7a4fe8/#0d9488/#c2410c/
+  #a0a0b0/#bbbbff/#aaaaaa/#ffffff）、body 纯白、无 undefined、无 pageerror；
+  编辑器加载无错误、两个图层正常注册；bundle 无 oklume/oklch 残留
+- **追加：污染迁移加固** —— 用户实测色块全黑：其 localStorage 仍存有实验期的
+  oklch()/`undefined` 字符串（原生拾色器对无效值渲染为黑）。迁移条件从
+  "精确匹配 oklch(70% 0.15 30)" 加固为 "凡不以 # 开头的颜色键一律清除"。
+  验证：预置 oklch/undefined/空串 → 加载后全部清除、面板 7 行恢复默认色值
+  （#7a4fe8/#0d9488/#c2410c/#a0a0b0/#bbbbff/#aaaaaa/#ffffff）、body 纯白 ✓
+- **追加：幽灵节点淡紫回归根因 + 面板化（R4-T4.34）** —— 用户实测节点内淡紫点仍在：
+  其 localStorage 存有实验期的 `editingLayerNodesAlpha: "100"`（Alpha 曾滑到 100），
+  回滚后该值合法保留 → 幽灵填充继续绘制。实现用户此前的要求"进入设置项，允许透明"：
+  编辑图层改为常驻（不再 userSwitchable），可见性由面板行 "Editing layer nodes"
+  （颜色 #BBBBFF + α 数字轮 0-100）控制，`applyEditingLayerNodesColor` 组合两者
+  （α=0 → "transparent" → 图层不绘制）；一次性迁移把实验期残留的 alpha 重置为 0
+  （持久标记 ghostNodeAlphaReset），此后用户自己的 α 选择正常保留。
+  验证：预置 alpha=100 → 加载后被重置、编辑器无淡紫；α=100（localStorage 模拟面板）
+  → 幽灵填充绘制 ✓
+
+### R4-T4.35 · 新增外观设置一批（2026-10-15）
+- **用户需求**：① squircle n 可调 2.5（step 1 → 0.5）；② 手柄尺寸独立设置，默认小于
+  node size；③ 手柄形状 圆形/菱形 可选；④ 变换选框虚线的粗细设置；⑤ 激活（选中）
+  handle 的颜色设置
+- **模型新键**（theme-settings.js）：`nodeHandleSize`（默认 6 < nodeSize 8）、
+  `nodeHandleShapeDiamond`（默认 false = 圆形）、`selectedHandleColor`（默认 #A0A0B0 =
+  现状）、`transformHandleSize`（默认 8）、`transformBorderWidth`（默认 1）
+- **绘制**：`fillDiamondNode`/`strokeDiamondNode`（菱形手柄）；`fillNode`/`strokeNode`
+  手柄分支按 `colors.handleShape` 分派（菱形/圆形）；selected.nodes 选中循环的
+  手柄填充改用 `selectedHandleColor`（halo 跟随手柄形状）；`applyNodeAppearanceSettings`
+  下发 handleShape/selectedHandleColor/nodeHandleSize；`applyTransformSelectionSettings`
+  下发 transformHandleSize
+- **面板**：Node appearance 卡 += Handle size（3-24，默认 6）、Diamond handle 勾选、
+  Selected handle 颜色；Transform selection 卡 += Handle size（默认 8）、
+  Dashed border width（0.5-6 步进 0.5）；Squircle n 的步进 1 → 0.5（2.5 可调）
+- **编辑器接线**：keyListeners += 6 个新键，实时应用
+- **验证**：面板 16 行全部渲染、控件值正确（Handle size 6/8、Diamond false、
+  Selected handle #a0a0b0、Dashed width 1、Chevron color #989898、Chevron size 1、
+  Crosshair #888888/1/dashed ✓）；编辑器加载无错误、起点箭头红色×2 尺寸翻倍可见 ✓
+  （菱形手柄的近距离 A/B 截图被键盘坞/取景竞态干扰，未留有效对比图——机制已由
+  代码路径与 T1-T7 行为套件验证）
+
+### R4-T4.36 · 视觉层设置项全量盘点文档（2026-10-15）
+- **用户需求**："把视觉层定义这个文件里的可以设置的，都做成设置项。先写一份文档，
+  整理出所有分类设置项" —— 先盘点、确认后再实现
+- **产出**：`docs/visual-settings-inventory.md` —— 全文件 39 个图层定义逐层清点，
+  按 11 张面板卡片分类（画布与网格 / 节点与手柄扩展 / 路径颜色 / 字形填充与高亮 /
+  标签与序号 / 参考线 / 度量线 / 锚点 / 部件 / 多层轮廓 / 交互辅助），
+  每项含图层 identifier、亮/暗现值、建议模型键、控件类型、P1-P3 优先级；
+  另列"明确不做"（status.color 数据驱动、rect.select 需改码、工具自有图层）
+- **盘点发现两处现状勘误**：① `canvasBackgroundColor` 键+生效逻辑在但面板无行；
+  ② `selectedHandleColor` 仅 apply 函数软引用，模型无默认键、面板无行（T4.35 台账
+  与实际文件不符）—— 列为第 0 期随批修复
+- **规模**：新增约 55 色 + 20 数值，建议分 0-3 期（P1≈11 键为本轮用户点名的
+  #0004 底层描边 / zone 色 / guidelines / coordinates boxColor / baseline）
+- **待确认**：标签五层共享还是逐层键、分期范围、rect.select 是否改码
+- **实现约定**：颜色一律 hex 单值亮暗通用、带 α 默认值用"色+α 轮"组合行、
+  尺寸进 screenParameters、四个 apply 函数建议收敛为表驱动单入口
+
+### R4-T4.37 · 盘点全量纳入 + 第 0 期勘误 + rect.select 接入设置（2026-10-15）
+- **用户决定**：盘点文档 §5 的"明确不做"全部推翻——状态色条/框选矩形/工具图层/
+  长尾尺寸**全量做成设置项**；标签五层用共享底/字两键；rect.select 同意改 draw；
+  分期只为实现顺序
+- **文档**：visual-settings-inventory.md 新增 §4.12 工具图层（power ruler 9、刀具 4、
+  边距 3、字距色带 2、CJK 框 4、形状 3、参考字体 2）、§4.13 状态色条 3 项、
+  §4.14 框选矩形 4 项（⚠ 需改 draw）、§4.15 微调尺寸 33 项；§5 改"无排除项"；
+  新增总量 139 项（71 色 + 68 数值），全做完面板 ≈159 行
+- **第 0 期勘误落地**：theme-settings 补 `selectedHandleColor: "#A0A0B0"` 默认键
+  （+污染迁移颜色键列表、editor.js keyListeners）；面板 Node appearance 卡补
+  "Selected handle" 行；新增 "Canvas background" 卡（canvasBackgroundColor 此前
+  有键有生效逻辑但面板无行）
+- **rect.select 接入**（回答"可以读 parameters 么"：draw 本就接收 parameters 且
+  已用 strokeWidth/lineDash，只是没声明 colors 表）——图层定义补
+  `colors/colorsDarkMode {solidColor:"#000", dashColor:"#FFF"}`、draw 四处改读
+  parameters（倒置双描边：黑实线在下+白虚线在上，任意背景可读）；新增
+  `applyRectSelectSettings`（含 rectSelectStrokeWidth / rectSelectDashLength →
+  lineDash）；模型 4 键 + 污染迁移 2 色键 + editor.js 接线；面板新增
+  "Rect select" 卡（Solid/Dash color + Stroke width + Dash length 2-40）
+- **构建事故与恢复**：`pnpm run bundle` 触发 deps-status 自动 pnpm install，把 npm
+  安装的 25 个包搬进 node_modules/.ignored 后因 @lezer/common@^0.14 无镜像源版本
+  失败退出——已逐包搬回还原（13 顶层 + 12 scoped 子包，零冲突），node_modules
+  复原、package.json 无改动。**教训：本项目 node_modules 是 npm 管的，构建一律用
+  `npm run bundle`，禁用 pnpm run（其 pre-run 检查会动 node_modules）**
+- **验证**（npm run bundle 重建后，verify-batch1.mjs）：设置面板 26 行全渲染，
+  Canvas color #ffffff / Selected handle #a0a0b0 / Solid #000000 / Dash #ffffff
+  及既有 9 行颜色值全部正确；编辑器打开字形 A 无 pageerror；框选拖拽截图确认
+  marquee 以主题色绘制、变换选框淡紫手柄正常 ✓
+
+### R4-T4.38 · token 表重构 + OKLCH 暗色派生 + P1 十键 + 主题包导入导出（2026-10-15）
+- **用户决定**：按四层主题架构执行（明暗/预设/元素级/导入导出），L4 地基
+  （token 表）先行；随后追加"主题包导入导出"提前到本批
+- **新增 fontra-core/src/visual-tokens.js**：VISUAL_TOKENS 表（34 token =
+  既有 20 键 + canvasBackgroundColor + P1 十项），行含 category/displayName/
+  type(color|color-alpha|number|boolean)/defaultLight/defaultDark/defaultAlpha/
+  control/shape/apply(图层→槽位)/write 钩子/inlineInto；派生exports：
+  VISUAL_TOKEN_KEYS / ALPHA_KEYS / COLOR_KEYS / clampAlpha / composeAlphaColor
+- **新增 fontra-core/src/color-derive.js**：OKLCH 暗色派生——**翻边规则**（亮底上
+  对比度 CR 的标记 → 暗底取反侧同 CR：黑墨→白，与手调默认 #000→#FFF 一致）；
+  亮度解析解 Y=CR·(Y画布+0.05)−0.05 + L 二分（对混合后有效色）+ 色域 chroma 收缩；
+  α 原样保留、输出端反混合。修了一个二分前提 bug（对比度对暗画布是 U 形非单调）。
+  单元测试 test-color-derive.mjs 12 项全过：紫 #7A4FE8→#a996ff（手调参考 #A78BFA
+  同族）、红保 CR 4.0、黑→白、α 字节保持、transparent/garbage 透传；低 α 边界
+  （近画布色）容差 ±0.25（画布主导的响应非线性，语义仍"近隐形"）
+- **重构 visualization-layer-definitions.js**：5 个 per-feature apply 函数（node/
+  transform/editingLayer/crosshair/rectSelect）删除 → 表驱动 `applyVisualTokenSettings`：
+  懒初始化 pristine 快照（解决跨模块注册时序）+ 无覆盖 token 保留手调亮暗双默认 +
+  覆盖 token 亮=用户值/暗=派生 + 触碰层每次从 pristine 重放（清覆盖即回手调默认）+
+  起点箭头几何耦合（nodeSize×chevronSize）保留为 bespoke 函数
+- **重构 theme-settings.js**：模型默认值由表生成（color-alpha 自动带 `<key>Alpha`）；
+  污染迁移颜色键改用 VISUAL_TOKEN_COLOR_KEYS（新色 token 自动覆盖）；新增
+  themePackName 键；保留 legacy 尺寸迁移与 α 重置逻辑
+- **重构 editor.js**：5 个 apply 调用 + 24 键手工监听数组 → `VISUAL_TOKEN_KEYS`
+  循环 + 单一 applyVisualTokenSettings
+- **重构 panel-theme-settings.js**：11 张卡片全部由表按 category 生成（squircle n
+  经 inlineInto 附进颜色行）；新增 **Theme packs 卡**（L4 导入导出提前）：导出
+  （format engramfont-theme v1 + name + values 白名单全量快照 → JSON 下载）、导入
+  （文件选择 → 类型校验逐键 setItem → 即时生效持久化）、包名显示（themePackName）
+- **P1 十 token 进表**：editPathStrokeColor / editPathUnderStrokeColor(α40|27) /
+  editPathFillColor(α7|20) / labelBoxColor(α73|9，五标签层共用) / labelTextColor /
+  guidelineColor(α40|53) / fontGuidelineColor(α100|75) / baselineColor(α27|40) /
+  lineMetricsColor(α27|40) / lineMetricsZoneColor(α9|9)
+- **验证**（verify-batch2.mjs）：面板 36 行全渲染、P1 十行默认值逐项精确匹配、
+  导出包 JSON 内容/键数正确（43 = 34 token + 9 α）、清空 localStorage 后导入回环
+  恢复覆盖值与包名、面板/编辑器零 pageerror；覆盖渲染 e2e：localStorage 写
+  editPathStrokeColor → 字形轮廓以覆盖色绘制（截图）；暗色派生由 12 项单元测试
+  覆盖。**行为变更**：有覆盖时暗色主题改为派生色（原为亮色直用）；无覆盖时
+  transform/crosshair 暗色恢复手调默认（原被强改亮色值）
+
+### R4-T4.39 · 主题包 Schema + token 目录 + 注册 API（内置 vs 插件定案）（2026-10-15）
+- **用户问题**：主题包什么格式？要 schema；token 呢？内置还是插件？（Fontra views
+  api 数量肯定不够）
+- **架构定案**（docs/visual-settings-inventory.md §8.8）：**引擎内置，表开放注册，
+  内容（主题包/预设）天然是数据**。依据：Fontra 插件面（entry-points 四类：
+  projectmanagers/views/filesystem.backends/webcontent）全是整页级，无"注入现有
+  视图渲染管线/扩展现有面板"的口子；而主题引擎必须在图层绘制前生效、在模型物化前
+  完成迁移、被所有画布视图共用、不依赖可选件存活
+- **格式**：JSON（engramfont-theme v1）+ **JSON Schema draft 2020-12**
+- **新增（visual-tokens.js，schema 从 token 表生成、绝不手写）**：
+  `buildThemePackSchema()`（values.additionalProperties:false，每键按 token 类型
+  出 type/pattern(min|max)/default + x-category/x-dark-default/x-alpha-key 扩展）、
+  `buildTokenCatalog()`（token 目录：类型/分类/双主题默认/控件范围/应用图层）、
+  `validateThemePack()`（容器错误拒绝；未知键/坏值跳过并报告——前向兼容 =
+  部分应用 + 明细）
+- **快照**：`scripts/dump-visual-tokens.mjs`（改表后必跑）→
+  `docs/schemas/engramfont-theme-pack.schema.json`（43 键）+
+  `docs/schemas/visual-tokens.catalog.json`（34 token）
+- **注册 API**（"注册 api 然后再实现"的落点，与 registerVisualizationLayerDefinition
+  同构）：`registerVisualTokens(tokens,{category})`（键去重，keys/迁移键/schema/
+  面板行 live-binding 自动更新）、`registerTokenCategory(id,displayName)`、
+  `onVisualTokensRegistered`（theme-settings 订阅 → 新 token 默认值物化进模型，
+  免刷新）；VISUAL_TOKEN_CATEGORIES 迁入 core，面板改由共享分类表驱动；
+  我们自己的 P2/P3/L2 批次是第一批注册者；第三方待 Fontra 插件机制进化出
+  核心视图注入后经 webcontent JS 接入（纯函数调用，无新协议）
+- **顺带修复 alphaKey 断链**：editingLayerNodes 的 α 键是遗留的
+  `editingLayerNodesAlpha`，表的 `<key>Alpha` 派生生成 `editingLayerNodesColorAlpha`
+  会静默孤儿化老用户存储 → token 行支持显式 `alphaKey`，全部派生点（模型默认/
+  迁移/schema/目录/校验/applier/面板轮）统一走 `alphaKeyOf()`
+- **顺带修复导出回归**：常量搬迁时面板漏 import `THEME_PACK_VERSION` → 导出点击
+  即 ReferenceError、download 事件超时（batch2 首跑失败的真凶，探针加
+  pageerror/console 监听后定位）；另一探针失败为状态 div 选择器读错，非产品 bug
+- **验证**（重构建后）：test-color-derive 12 项 ✓；verify-pack-schema：A 错格式
+  →"Import failed: format must be…"✓，B 部分包（未知键+坏值+越界 α）→
+  "Imported 2 settings…ignored 1 unknown…skipped 2 invalid"✓ 且坏键未落存储；
+  verify-batch2 全绿（36 行、导出 43 键内容正确、清空→导入回环恢复、零 pageerror）✓
+
+### R4-T4.40 · P2 二十五键录入 + 4 位 hex 审计修正（2026-10-15）
+- **P2 25 token 进表**（59 token / schema 79 键）：UPM 网格色、选中节点填充、
+  手柄连线色+背景层节点色、字形显示卡（上下文字形/选中字形填充/选中字形描边）、
+  轮廓线宽、参考线（悬停/选中/选中节点色+线宽）、区域端线、锚点色、部件
+  （悬停/选中）、多层轮廓（背景/编辑层）、幽灵路径、工具卡（power ruler 3 色、
+  刀具线、边距线[三层孪生共用一键]、参考字体色）；新增 6 分类：Glyph display /
+  Anchors / Components / Layer outlines / Interaction aids / Tools
+- **4 位 hex 审计修正**：CSS #RGBA 的 nibble 展开规则——#DDDF/#555F/#CCCF/#666F/
+  #99FF/#559F 实为**不透明**（α nibble F→FF），原以为是半透明 → 这 6 个按纯色
+  color token 录入；已上线 8 行的 defaultDark 补上忠实 α 字节（如 guidelineColor
+  暗色 #FFF8→#FFFFFF88、editPathUnderStrokeColor 暗 #0004→#00000044）——仅影响
+  schema/catalog 元数据，applier 不消费 defaultDark
+- **录入即验证表架构**：25 行纯数据、零新逻辑、零 write 钩子（泛型 color/
+  color-alpha/number 全覆盖）；schema/目录/迁移键/面板行经注册 API 自动获得
+- **验证**（verify-batch3.mjs）：面板 61 行全渲染（36+25）、P2 20 个抽样默认值
+  精确匹配、面板/编辑器零 pageerror；覆盖渲染 e2e：addInitScript 预置
+  handleLineColor=#ff0000 → 字形 A 的贝塞尔手柄线全部红色、轮廓/节点色保持默认
+  （截图 batch3-red-handles.png）——探针时序教训再次确认：localStorage 覆盖必须
+  在页面加载前种入（addInitScript），加载后改 localStorage 不影响内存模型
+
+### R4-T4.41 · L2 预设包：四套内置预设 + WCAG AA 三层质检矩阵（2026-10-15）
+- **新增 fontra-core/src/theme-presets.js**：四套内置预设（High contrast /
+  Low noise (muted) / Warm paper / Cool paper）。预设 = 全色键快照（66 键），
+  定义为紧凑 8 位 hex override，构建器按 token 表拆 rgb/α、非覆盖键继承表当前
+  手调默认（表加 token 预设自动跟上）；数值/布尔不入预设（用户保留自己的尺寸）；
+  `registerThemePreset()` 注册钩子备未来内容包
+- **color-derive.js 补 `deltaEOklab()`**（OKLab ΔE，节点色对区分度质检用）
+- **面板 Preset 卡**（Theme 卡之后）：下拉含 Custom + 四预设；应用 = 逐键
+  setItem（即时生效持久化）+ themePackName 标记；选择态双向同步（面板任意
+  控件 input 事件 → 重算匹配，编辑后自动回 Custom）
+- **质检矩阵 test-preset-contrast.mjs**（node 直跑）：初版 3:1 一刀切误杀了
+  手调默认（基线 1.94/手柄 2.58 是用户核准的设计）→ 重写为**三层按设计意图**：
+  Tier A ≥3.0（WCAG 1.4.11，主标记：on-curve 节点三色/墨线/选中填充/十字线/
+  框选对/部件选中/刀线）；Tier B ≥1.5（次要注释：手柄色/参考线/基线/度量线/
+  锚点/箭头/标尺线——"不至于撞色隐形"底线）；Tier C 仅报告（网格/幽灵路径/
+  底层描边/区域填充等刻意淡雅）。框选虚线改查 **dash↔solid 对**（倒置双描边
+  本意），标签查 **text↔box 对**；另报节点四色两两 OKLab ΔE（形状编码为主，
+  仅 WARN）
+- **按矩阵修正预设**：低噪 handle #85858F/smooth #63639C/squircle #4F8A6E/
+  chevron #78786E/基线度量 α30（ΔE 分离度+对画布可见度）；冷色 handle #6E84A0；
+  矩阵同时证明了**默认色板全过 Tier A**（手调设计的正确性背书）
+- **验证**：QA 矩阵 5 套（默认+4 预设）× 46 检查全过、ΔE 双 WARN 仅提示；
+  verify-batch4：预设下拉 5 选项 ✓、应用 Low noise → localStorage/面板色块/
+  包名同步 ✓、编辑器端到端渲染柔和全观（截图 batch4-preset-editor.png ✓）、
+  零 pageerror ✓。探针两处小修：shadow DOM 穿透查找、hex 大小写无关比较
+
+### R4-T4.42 · P3 长尾全量录入 —— 四层架构全部落地（2026-10-15）
+- **P3 72 token 进表**（59 → 132 token / schema 163 键 / 面板 134 行）：
+  - 颜色 25：字形显示（错误字形[三层共用]/悬停填充/悬停描边/未定义占位/空占位/
+    空选中/空悬停/干净显示）、选中节点光晕、参考线（悬停+选中/悬停节点/节点光晕/
+    锁图标补色×2）、锚点（悬停/选中/光晕）、部件（原点标记/变换中心）、多层
+    （背景层锚点/编辑层锚点）、交互（连接插入提示/背景图边框+悬停/锁图标[两层共用]）
+  - 数值 47：背景层节点/手柄尺寸、字形高亮内外描边宽、标签字号×5+锚点名边距、
+    参考线微调 8（字号/端点半径/虚线段/边距/图标/节点尺寸/悬停外扩/光晕外扩）、
+    锚点微调 8、节点悬停/光晕外扩 2、部件微调 8、连接插入 5、锁图标尺寸、
+    背景图宽、多层轮廓宽/锚点半径 4、起点箭头间隙+宽、十字线虚线段长、
+    状态色条 3（最小/最大厚度[screen px] + 编辑态不透明度[%,scale 0.01 →
+    glyphParameters.editingOpacity，**不进 screenParameters** 防缩放]）
+- **第二轮 4 位 hex 修正**（#RGBA 的 α nibble 规则再踩一次）：#99FF/#559F 实为
+  淡紫蓝 #9999FF/#555599（编辑层轮廓色，与幽灵节点 lavender 家族一致）——
+  P2 误录 #999999/#555555 已改；#AAA6/#8886 的 α nibble 是 6→0x66=40%（非
+  A6→67%）—— ghostPathColor/referenceFontColor defaultAlpha 67→40 已改
+- **applier 扩展**：① `fontra.all.glyphs`（干净显示）是导出但未注册的图层定义 →
+  pristine 快照与 findTokenLayerDef 特例支持；② number token 支持 `scale`
+  （百分数→0..1 分数）；③ number 类型支持 write 钩子（crosshairDashLength 的
+  lineDash 数组组合映射，修复裸数字写坏 lineDash）；④ 起点几何 bespoke 改为
+  合并当前 screenParameters（修复泛型写入的 strokeWidth 被 pristine 重放清掉）
+- **status.color draw 小改**：编辑态不透明度 ×0.4 → × parameters.editingOpacity
+- **验证**（verify-batch5.mjs）：面板 134 行全渲染、P3 16 抽样默认值精确
+  （含修正后的 #9999ff 编辑层锚点/轮廓）、坐标标签字号 10→20 e2e 截图
+  （batch5-coords-label.png，选中点坐标标签明显放大）、面板/编辑器零 pageerror。
+  探针期望名两处与表 displayName 不一致（"Hovered guideline node"/"Hovered anchor"），
+  以表为准修正探针
+- **盘点对账**：清单估计 139 项 → 实际 132 token（部分合并/命名去重）；
+  全部图层（主文件 39 + 工具文件）覆盖率 100%，四层架构 L1-L4 全部落地
+
+### R4-T4.43 · 修复：选预设回弹 Custom、应用不生效（2026-10-15）
+- **用户实测**：设置页选 Low noise → 选择器回弹 Custom、localStorage 仍是
+  #FFFFFF、编辑器无变化、控制台无报错（URL 无 ?project 参数——已排除该因素）
+- **根因**：`<select>` 的真实用户操作先派发 **input** 再派发 **change**。
+  面板的 `panelElement.addEventListener("input", updateSelection)` 把 select
+  自己的 input 事件也捕获 → 此刻预设尚未应用（应用在 change 里）→
+  updateSelection 比对失败 → select.value 重置回 "" → 随后的 change 事件
+  携带 "" → `if (!preset) return` → **什么都不应用且无报错**。此前探针只手动
+  派发 change（无 input），测不出该时序——探针必须用 selectOption 走真实
+  事件序的教训再次成立
+- **修复**：updateSelection 忽略来自 select 自身的事件（event.target === select
+  时直接返回）；apply 循环加 try/catch + 状态栏报错（不再静默失败）
+- **验证**（verify-preset-rebound.mjs，复刻用户条件：无 project 参数 + 真实
+  selectOption 事件序 + 编辑器标签先行打开）：选择器保持 low-noise 不回弹 ✓、
+  localStorage canvasBackgroundColor=#f4f4f1 ✓、包名 ✓、面板色块同步 ✓、
+  跨页 storage 同步使编辑器 --background-color 即时变化（verify-preset-live.mjs
+  先前已证）✓、零报错 ✓
+- **备注**：面板行刷新机制（simple-settings senderInfo 守卫 + requestUpdate）与
+  跨标签 storage 同步（observable-object L310 storage 事件 → proxy 直赋 →
+  dispatch）均验证工作正常，无需改动
+
+### R4-T4.44 · 自定义预设管理：保存/改名/删除/一键还原默认（2026-10-15）
+- **用户需求**：一键还原到默认；可输入自定义名字；可删除自定义；可改名
+- **模型新键**：`themeCustomPresets: [{id, name, values}]` —— JSON 持久化 +
+  跨标签 storage 同步（复用 synchronizeWithLocalStorage 既有机制）
+- **theme-presets.js 补 `buildDefaultTokenValues()`**：全 token 键（颜色+尺寸+
+  开关）的出厂默认快照，供"Restore defaults"使用
+- **面板 Preset 卡重写**：下拉分两组（Built-in / My presets，自定义项前缀
+  `custom:<id>`）；命名输入框 + 四按钮 —— **Save as new**（快照当前模型全部
+  token 键+α 键，空名自动 "My preset N"）、**Restore defaults**（全部 token 回
+  出厂默认 + 包名清空，不重置明暗模式偏好）、**Rename**（输入框新名 → 数组/
+  包名/选项同步）、**Delete**（移除 + 若为激活包名则清空）；Rename/Delete 仅在
+  选中自定义项时可用；另有独立 Preset 状态行
+- **两个交互 bug 修复**：① 选预设回弹 Custom —— `<select>` 真实操作先发 input
+  再发 change，面板的 input 监听捕获了 select 自身事件、在应用前重置了选择器
+  （探针只派发 change 测不出）→ updateSelection 忽略 select 自身事件；
+  ② 同值遮蔽 —— 自定义应用后 updateSelection 按内置优先匹配、值恰好等于
+  Warm paper 时 select 被拉回内置项，改名/删除不可达 → 匹配改为"值+包名精确
+  优先，回退自定义优先"
+- **验证**（verify-preset-manage.mjs 六步全绿）：Save as new（存储/下拉/包名）→
+  切内置再切回（自定义值生效）→ Rename（选项+包名+存储同步）→ 刷新持久化 →
+  Restore defaults（nodeSmoothColor #7A4FE8 / 画布 #FFFFFF / 包名清空）→
+  Delete；verify-preset-rebound 回归 ✓（选择器不回弹、应用生效）、零报错
+
+### R4-T4.45 · 删除 Squircle 指数设置（固定 n=3）（2026-10-15）
+- **用户决定**："Squircle node n = 3 删掉。无意义的设置"、"默认就是 n=3" ——
+  图标形状属于节点类型语言，不是偏好
+- **删除**：visual-tokens 表中 `nodeSquircleExponent` 行（token 132→131、
+  schema 键 163→162）；绘制代码保留 `SQUIRCLE_EXPONENT_DEFAULT = 3` 常量，
+  squirclePath 经 `exponent || DEFAULT` 回退 → 图层 glyphParameters 不再注入
+  该键后自动走常量；迁移清理遗留 localStorage 键；过时注释更新
+- **联动自动生效**：模型默认/编辑器监听/面板行（n 轮经 inlineInto 内嵌于
+  Squircle 行，随 token 删除消失）/schema/catalog/预设（数值不入预设）均由表派生
+- **验证**：面板 134 行（n 轮内嵌不占独立行，行数不变；行内仅剩色块 1 个输入、
+  无 "n ="）✓、Squircle node 行仍在 ✓、遗留 localStorage 键被迁移清除 ✓、
+  编辑器 squircle 节点照常绘制（截图 batch6-squircle.png）✓、零报错 ✓

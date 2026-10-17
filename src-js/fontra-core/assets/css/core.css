@@ -42,7 +42,7 @@
   --foreground-color-light: var(--engramfont-theme-marker) black;
   --foreground-color-dark: white;
 
-  --background-color-light: var(--engramfont-theme-marker) #f6f6f6;
+  --background-color-light: var(--engramfont-theme-marker) #fff;
   --background-color-dark: #333;
 
   --ui-element-foreground-color-light: var(--engramfont-theme-marker) black;

@@ -36,6 +36,7 @@ export class EditorBehaviorPanel extends MultiPanelBasePanel {
 
   async setupUI() {
     this.panelElement.innerHTML = "";
+    this.panelElement.style = "gap: 1em; max-width: 32em;";
     const container = html.createDomElement("div", {
       class: "engramfont-ui-editor-behavior-panel-card",
     });

@@ -236,6 +236,7 @@ export const strings = {
   "edit-tools-pointer.undo.resize-selection": "選択範囲の拡大縮小",
   "edit-tools-pointer.undo.rotate-selection": "選択範囲の回転",
   "edit-tools-pointer.undo.toggle-smooth": "ポイントをスムーズにする",
+  "edit-tools-pointer.undo.toggle-squircle": "スクワークルを切り替え",
   "editor.hand-tool": "手のひらツール",
   "editor.kerning-tool": "Kerning Tool",
   "editor.knife-tool": "ナイフツール",

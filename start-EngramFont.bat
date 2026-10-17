@@ -17,6 +17,21 @@ if not exist "%FONTDIR%\Untitled.fontra" (
   "%FONTRA_EXE%" new "%FONTDIR%\Untitled.fontra"
 )
 
+rem Stop any instance already holding PORT, so this launcher is idempotent.
+rem Without this, a second run dies with "OSError: [Errno 10048] ... bind on
+rem address ('127.0.0.1', 8800)" because the old server still owns the port.
+rem Two chained findstr calls rather than one regex: with /C: the pattern is
+rem taken literally, so ".*" would never match. Only LISTENING sockets whose
+rem local address carries our PORT are touched (token 5 of a netstat row is the
+rem owning PID).
+rem NOTE: no parentheses in the echo below. An unescaped ")" inside a
+rem "for ... do ( ... )" block closes the block early, which silently drops the
+rem taskkill from it -- the kill then never runs and the port stays taken.
+for /f "tokens=5" %%p in ('netstat -ano ^| findstr "LISTENING" ^| findstr ":%PORT%"') do (
+  echo Stopping existing server on port %PORT%, PID %%p
+  taskkill /F /PID %%p >nul 2>nul
+)
+
 rem Start the server - prefer Windows Terminal, fall back to a minimized cmd
 where wt >nul 2>nul
 if not errorlevel 1 (

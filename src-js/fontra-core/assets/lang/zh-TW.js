@@ -225,6 +225,7 @@ export const strings = {
   "edit-tools-pointer.undo.resize-selection": "改變尺寸",
   "edit-tools-pointer.undo.rotate-selection": "旋轉",
   "edit-tools-pointer.undo.toggle-smooth": "切換平滑節點",
+  "edit-tools-pointer.undo.toggle-squircle": "切換超橢圓節點",
   "editor.hand-tool": "拖曳工具",
   "editor.kerning-tool": "字偶距調節工具",
   "editor.knife-tool": "切割工具",

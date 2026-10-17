@@ -271,3 +271,7 @@ src/fontra/client
 .e2e-fonts/
 .exports
 test-results/
+
+# Obsidian editor-local config + deleted notes
+docs/.obsidian/
+docs/.trash/

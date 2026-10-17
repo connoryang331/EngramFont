@@ -1,3 +1,5 @@
+# Fontra 架构图（Mermaid）
+
 ## Fontra Block Diagram
 
 ```mermaid

@@ -87,9 +87,10 @@ import {
 import { MIN_SIDEBAR_WIDTH, Sidebar } from "./sidebar.js";
 import {
   allGlyphsCleanVisualizationLayerDefinition,
-  applyNodeAppearanceSettings,
+  applyVisualTokenSettings,
   visualizationLayerDefinitions,
 } from "./visualization-layer-definitions.js";
+import { VISUAL_TOKEN_KEYS } from "@fontra/core/visual-tokens.js";
 import { VisualizationContext, VisualizationLayers } from "./visualization-layers.js";
 
 import { applicationSettingsController } from "@fontra/core/application-settings.js";
@@ -152,20 +153,13 @@ export class EditorController extends ViewController {
       this.isThemeDark
     );
 
-    // apply the user's node appearance settings (colors + sizes) and live-
-    // update when they change in the application settings
-    applyNodeAppearanceSettings(themeController.model);
-    for (const key of [
-      "nodeAppearanceCustom",
-      "nodeSmoothColor",
-      "nodeCornerColor",
-      "nodeHandleColor",
-      "nodeCornerSize",
-      "nodeSmoothSize",
-      "nodeHandleSize",
-    ]) {
+    // apply the user's visual-token settings (colors + sizes, derived dark
+    // theme) and live-update when they change in the application settings;
+    // the key list is DERIVED from VISUAL_TOKENS (single source of truth)
+    applyVisualTokenSettings(themeController.model);
+    for (const key of VISUAL_TOKEN_KEYS) {
       themeController.addKeyListener(key, () => {
-        applyNodeAppearanceSettings(visualizationLayerDefinitions);
+        applyVisualTokenSettings(themeController.model);
         this.visualizationLayers.requestUpdate();
         this.canvasController.requestUpdate();
       });

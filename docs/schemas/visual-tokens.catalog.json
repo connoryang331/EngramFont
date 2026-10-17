@@ -1,0 +1,1771 @@
+{
+  "format": "engramfont-token-catalog",
+  "version": 1,
+  "packFormat": "engramfont-theme",
+  "packVersion": 1,
+  "tokens": [
+    {
+      "key": "canvasBackgroundColor",
+      "type": "color",
+      "category": "canvas",
+      "displayName": "Canvas color",
+      "defaultLight": "#FFFFFF",
+      "defaultDark": "#FFFFFF",
+      "layers": []
+    },
+    {
+      "key": "upmGridColor",
+      "type": "color",
+      "category": "canvas",
+      "displayName": "UPM grid color",
+      "defaultLight": "#E6E6E6",
+      "defaultDark": "#3C3C3C",
+      "layers": [
+        "fontra.upm.grid"
+      ]
+    },
+    {
+      "key": "nodeSize",
+      "type": "number",
+      "category": "node",
+      "displayName": "Node size",
+      "default": 8,
+      "control": {
+        "min": 4,
+        "max": 24,
+        "step": 1
+      },
+      "layers": [
+        "fontra.nodes",
+        "fontra.selected.nodes",
+        "fontra.component.nodes"
+      ]
+    },
+    {
+      "key": "nodeSmoothColor",
+      "type": "color",
+      "category": "node",
+      "displayName": "Smooth node",
+      "defaultLight": "#7A4FE8",
+      "defaultDark": "#A78BFA",
+      "shape": "eye",
+      "layers": [
+        "fontra.nodes",
+        "fontra.selected.nodes",
+        "fontra.component.nodes"
+      ]
+    },
+    {
+      "key": "nodeSquircleColor",
+      "type": "color",
+      "category": "node",
+      "displayName": "Squircle node",
+      "defaultLight": "#0D9488",
+      "defaultDark": "#2DD4BF",
+      "shape": "squircle",
+      "layers": [
+        "fontra.nodes",
+        "fontra.selected.nodes",
+        "fontra.component.nodes"
+      ]
+    },
+    {
+      "key": "nodeCornerColor",
+      "type": "color",
+      "category": "node",
+      "displayName": "Corner node",
+      "defaultLight": "#C2410C",
+      "defaultDark": "#FB923C",
+      "shape": "square",
+      "layers": [
+        "fontra.nodes",
+        "fontra.selected.nodes",
+        "fontra.component.nodes"
+      ]
+    },
+    {
+      "key": "nodeHandleColor",
+      "type": "color",
+      "category": "node",
+      "displayName": "Handle",
+      "defaultLight": "#A0A0B0",
+      "defaultDark": "#7E8290",
+      "shape": "round",
+      "layers": [
+        "fontra.nodes",
+        "fontra.selected.nodes",
+        "fontra.component.nodes"
+      ]
+    },
+    {
+      "key": "selectedHandleColor",
+      "type": "color",
+      "category": "node",
+      "displayName": "Selected handle",
+      "defaultLight": "#A0A0B0",
+      "defaultDark": "#7E8290",
+      "shape": "round",
+      "layers": [
+        "fontra.selected.nodes"
+      ]
+    },
+    {
+      "key": "nodeHandleSize",
+      "type": "number",
+      "category": "node",
+      "displayName": "Handle size",
+      "default": 6,
+      "control": {
+        "min": 3,
+        "max": 24,
+        "step": 1
+      },
+      "layers": [
+        "fontra.nodes",
+        "fontra.selected.nodes",
+        "fontra.component.nodes"
+      ]
+    },
+    {
+      "key": "nodeHandleShapeDiamond",
+      "type": "boolean",
+      "category": "node",
+      "displayName": "Diamond handle",
+      "default": false,
+      "layers": [
+        "fontra.nodes",
+        "fontra.selected.nodes",
+        "fontra.component.nodes"
+      ]
+    },
+    {
+      "key": "editingLayerNodesColor",
+      "type": "color-alpha",
+      "category": "node",
+      "displayName": "Editing layer nodes",
+      "defaultLight": "#BBBBFF",
+      "defaultDark": "#BBBBFF",
+      "alphaKey": "editingLayerNodesAlpha",
+      "defaultAlpha": 0,
+      "layers": [
+        "fontra.edit.editing.layers.nodes-and-handles"
+      ]
+    },
+    {
+      "key": "selectedNodeColor",
+      "type": "color",
+      "category": "node",
+      "displayName": "Selected node fill",
+      "defaultLight": "#000000",
+      "defaultDark": "#FFFFFF",
+      "layers": [
+        "fontra.selected.nodes"
+      ]
+    },
+    {
+      "key": "handleLineColor",
+      "type": "color",
+      "category": "node",
+      "displayName": "Handle line",
+      "defaultLight": "#BBBBBB",
+      "defaultDark": "#777777",
+      "layers": [
+        "fontra.handles"
+      ]
+    },
+    {
+      "key": "bgLayerNodesColor",
+      "type": "color",
+      "category": "node",
+      "displayName": "Background layer nodes",
+      "defaultLight": "#DDDDDD",
+      "defaultDark": "#555555",
+      "layers": [
+        "fontra.edit.background.layers.nodes-and-handles"
+      ]
+    },
+    {
+      "key": "contextGlyphColor",
+      "type": "color",
+      "category": "glyph",
+      "displayName": "Context glyph fill",
+      "defaultLight": "#000000",
+      "defaultDark": "#FFFFFF",
+      "layers": [
+        "fontra.context.glyphs"
+      ]
+    },
+    {
+      "key": "selectedGlyphColor",
+      "type": "color",
+      "category": "glyph",
+      "displayName": "Selected glyph fill",
+      "defaultLight": "#000000",
+      "defaultDark": "#FFFFFF",
+      "layers": [
+        "fontra.selected.glyph"
+      ]
+    },
+    {
+      "key": "selectedGlyphOutlineColor",
+      "type": "color-alpha",
+      "category": "glyph",
+      "displayName": "Selected glyph outline",
+      "defaultLight": "#777777",
+      "defaultDark": "#FFFFFF88",
+      "alphaKey": "selectedGlyphOutlineColorAlpha",
+      "defaultAlpha": 53,
+      "layers": [
+        "fontra.selected.glyph"
+      ]
+    },
+    {
+      "key": "transformHandleFillColor",
+      "type": "color",
+      "category": "transform",
+      "displayName": "Handle fill",
+      "defaultLight": "#BBBBFF",
+      "defaultDark": "#555599",
+      "shape": "round",
+      "layers": [
+        "fontra.transform.selection"
+      ]
+    },
+    {
+      "key": "transformHandleSize",
+      "type": "number",
+      "category": "transform",
+      "displayName": "Handle size",
+      "default": 8,
+      "control": {
+        "min": 3,
+        "max": 24,
+        "step": 1
+      },
+      "layers": [
+        "fontra.transform.selection"
+      ]
+    },
+    {
+      "key": "transformBorderColor",
+      "type": "color",
+      "category": "transform",
+      "displayName": "Dashed border",
+      "defaultLight": "#AAAAAA",
+      "defaultDark": "#888888",
+      "layers": [
+        "fontra.transform.selection"
+      ]
+    },
+    {
+      "key": "transformBorderWidth",
+      "type": "number",
+      "category": "transform",
+      "displayName": "Dashed border width",
+      "default": 1,
+      "control": {
+        "min": 0.5,
+        "max": 6,
+        "step": 0.5
+      },
+      "layers": [
+        "fontra.transform.selection"
+      ]
+    },
+    {
+      "key": "startpointChevronColor",
+      "type": "color",
+      "category": "startpoint",
+      "displayName": "Chevron color",
+      "defaultLight": "#989898",
+      "defaultDark": "#989898",
+      "layers": [
+        "fontra.startpoint.indicator"
+      ]
+    },
+    {
+      "key": "startpointChevronSize",
+      "type": "number",
+      "category": "startpoint",
+      "displayName": "Chevron size",
+      "default": 1,
+      "control": {
+        "min": 0.5,
+        "max": 3,
+        "step": 0.25
+      },
+      "layers": []
+    },
+    {
+      "key": "crosshairColor",
+      "type": "color",
+      "category": "crosshair",
+      "displayName": "Crosshair color",
+      "defaultLight": "#888888",
+      "defaultDark": "#AAAAAA",
+      "layers": [
+        "fontra.crosshair"
+      ]
+    },
+    {
+      "key": "crosshairStrokeWidth",
+      "type": "number",
+      "category": "crosshair",
+      "displayName": "Crosshair width",
+      "default": 1,
+      "control": {
+        "min": 0.5,
+        "max": 6,
+        "step": 0.5
+      },
+      "layers": [
+        "fontra.crosshair"
+      ]
+    },
+    {
+      "key": "crosshairDashed",
+      "type": "boolean",
+      "category": "crosshair",
+      "displayName": "Dashed",
+      "default": true,
+      "layers": [
+        "fontra.crosshair"
+      ]
+    },
+    {
+      "key": "crosshairDashLength",
+      "type": "number",
+      "category": "crosshair",
+      "displayName": "Dash length",
+      "default": 4,
+      "control": {
+        "min": 1,
+        "max": 16,
+        "step": 1
+      },
+      "layers": [
+        "fontra.crosshair"
+      ]
+    },
+    {
+      "key": "rectSelectSolidColor",
+      "type": "color",
+      "category": "rectselect",
+      "displayName": "Solid color",
+      "defaultLight": "#000000",
+      "defaultDark": "#000000",
+      "layers": [
+        "fontra.rect.select"
+      ]
+    },
+    {
+      "key": "rectSelectDashColor",
+      "type": "color",
+      "category": "rectselect",
+      "displayName": "Dash color",
+      "defaultLight": "#FFFFFF",
+      "defaultDark": "#FFFFFF",
+      "layers": [
+        "fontra.rect.select"
+      ]
+    },
+    {
+      "key": "rectSelectStrokeWidth",
+      "type": "number",
+      "category": "rectselect",
+      "displayName": "Stroke width",
+      "default": 1,
+      "control": {
+        "min": 0.5,
+        "max": 6,
+        "step": 0.5
+      },
+      "layers": [
+        "fontra.rect.select"
+      ]
+    },
+    {
+      "key": "rectSelectDashLength",
+      "type": "number",
+      "category": "rectselect",
+      "displayName": "Dash length",
+      "default": 10,
+      "control": {
+        "min": 2,
+        "max": 40,
+        "step": 1
+      },
+      "layers": [
+        "fontra.rect.select"
+      ]
+    },
+    {
+      "key": "editPathStrokeColor",
+      "type": "color",
+      "category": "path",
+      "displayName": "Outline color",
+      "defaultLight": "#000000",
+      "defaultDark": "#FFFFFF",
+      "layers": [
+        "fontra.edit.path.stroke"
+      ]
+    },
+    {
+      "key": "editPathUnderStrokeColor",
+      "type": "color-alpha",
+      "category": "path",
+      "displayName": "Under-stroke color",
+      "defaultLight": "#FFFFFF",
+      "defaultDark": "#00000044",
+      "alphaKey": "editPathUnderStrokeColorAlpha",
+      "defaultAlpha": 40,
+      "layers": [
+        "fontra.edit.path.under.stroke"
+      ]
+    },
+    {
+      "key": "editPathFillColor",
+      "type": "color-alpha",
+      "category": "path",
+      "displayName": "Outline fill",
+      "defaultLight": "#000000",
+      "defaultDark": "#FFFFFF33",
+      "alphaKey": "editPathFillColorAlpha",
+      "defaultAlpha": 7,
+      "layers": [
+        "fontra.edit.path.fill"
+      ]
+    },
+    {
+      "key": "editPathStrokeWidth",
+      "type": "number",
+      "category": "path",
+      "displayName": "Outline stroke width",
+      "default": 1,
+      "control": {
+        "min": 0.5,
+        "max": 6,
+        "step": 0.5
+      },
+      "layers": [
+        "fontra.edit.path.stroke"
+      ]
+    },
+    {
+      "key": "labelBoxColor",
+      "type": "color-alpha",
+      "category": "labels",
+      "displayName": "Label box color",
+      "defaultLight": "#FFFFFF",
+      "defaultDark": "#11111118",
+      "alphaKey": "labelBoxColorAlpha",
+      "defaultAlpha": 73,
+      "layers": [
+        "fontra.coordinates",
+        "fontra.point.index",
+        "fontra.contour.index",
+        "fontra.component.index",
+        "fontra.anchor.names"
+      ]
+    },
+    {
+      "key": "labelTextColor",
+      "type": "color",
+      "category": "labels",
+      "displayName": "Label text color",
+      "defaultLight": "#000000",
+      "defaultDark": "#FFFFFF",
+      "layers": [
+        "fontra.coordinates",
+        "fontra.point.index",
+        "fontra.contour.index",
+        "fontra.component.index",
+        "fontra.anchor.names"
+      ]
+    },
+    {
+      "key": "guidelineColor",
+      "type": "color-alpha",
+      "category": "guidelines",
+      "displayName": "Glyph guideline",
+      "defaultLight": "#000000",
+      "defaultDark": "#FFFFFF88",
+      "alphaKey": "guidelineColorAlpha",
+      "defaultAlpha": 40,
+      "layers": [
+        "fontra.guidelines"
+      ]
+    },
+    {
+      "key": "fontGuidelineColor",
+      "type": "color-alpha",
+      "category": "guidelines",
+      "displayName": "Font guideline",
+      "defaultLight": "#00BFFF",
+      "defaultDark": "#00BFFFC0",
+      "alphaKey": "fontGuidelineColorAlpha",
+      "defaultAlpha": 100,
+      "layers": [
+        "fontra.guidelines"
+      ]
+    },
+    {
+      "key": "guidelineHoveredColor",
+      "type": "color-alpha",
+      "category": "guidelines",
+      "displayName": "Hovered guideline",
+      "defaultLight": "#000000",
+      "defaultDark": "#FFFFFF18",
+      "alphaKey": "guidelineHoveredColorAlpha",
+      "defaultAlpha": 7,
+      "layers": [
+        "fontra.guidelines"
+      ]
+    },
+    {
+      "key": "guidelineSelectedColor",
+      "type": "color-alpha",
+      "category": "guidelines",
+      "displayName": "Selected guideline",
+      "defaultLight": "#000000",
+      "defaultDark": "#FFFFFF33",
+      "alphaKey": "guidelineSelectedColorAlpha",
+      "defaultAlpha": 13,
+      "layers": [
+        "fontra.guidelines"
+      ]
+    },
+    {
+      "key": "guidelineNodeSelectedColor",
+      "type": "color",
+      "category": "guidelines",
+      "displayName": "Selected guideline node",
+      "defaultLight": "#000000",
+      "defaultDark": "#FFFFFF",
+      "layers": [
+        "fontra.guidelines"
+      ]
+    },
+    {
+      "key": "guidelineStrokeWidth",
+      "type": "number",
+      "category": "guidelines",
+      "displayName": "Guideline stroke width",
+      "default": 1,
+      "control": {
+        "min": 0.5,
+        "max": 6,
+        "step": 0.5
+      },
+      "layers": [
+        "fontra.guidelines"
+      ]
+    },
+    {
+      "key": "baselineColor",
+      "type": "color-alpha",
+      "category": "metrics",
+      "displayName": "Baseline",
+      "defaultLight": "#000000",
+      "defaultDark": "#FFFFFF66",
+      "alphaKey": "baselineColorAlpha",
+      "defaultAlpha": 27,
+      "layers": [
+        "fontra.baseline"
+      ]
+    },
+    {
+      "key": "lineMetricsColor",
+      "type": "color-alpha",
+      "category": "metrics",
+      "displayName": "Metrics line",
+      "defaultLight": "#000000",
+      "defaultDark": "#FFFFFF66",
+      "alphaKey": "lineMetricsColorAlpha",
+      "defaultAlpha": 27,
+      "layers": [
+        "fontra.lineMetrics"
+      ]
+    },
+    {
+      "key": "lineMetricsZoneColor",
+      "type": "color-alpha",
+      "category": "metrics",
+      "displayName": "Alignment zone",
+      "defaultLight": "#00BFFF",
+      "defaultDark": "#00BFFF18",
+      "alphaKey": "lineMetricsZoneColorAlpha",
+      "defaultAlpha": 9,
+      "layers": [
+        "fontra.lineMetrics"
+      ]
+    },
+    {
+      "key": "lineMetricsZoneStrokeColor",
+      "type": "color-alpha",
+      "category": "metrics",
+      "displayName": "Zone boundary line",
+      "defaultLight": "#006080",
+      "defaultDark": "#80DFFF18",
+      "alphaKey": "lineMetricsZoneStrokeColorAlpha",
+      "defaultAlpha": 9,
+      "layers": [
+        "fontra.lineMetrics"
+      ]
+    },
+    {
+      "key": "anchorColor",
+      "type": "color",
+      "category": "anchors",
+      "displayName": "Anchor color",
+      "defaultLight": "#999999",
+      "defaultDark": "#999999",
+      "layers": [
+        "fontra.anchors"
+      ]
+    },
+    {
+      "key": "componentHoveredColor",
+      "type": "color",
+      "category": "components",
+      "displayName": "Hovered component",
+      "defaultLight": "#CCCCCC",
+      "defaultDark": "#666666",
+      "layers": [
+        "fontra.component.selection"
+      ]
+    },
+    {
+      "key": "componentSelectedColor",
+      "type": "color",
+      "category": "components",
+      "displayName": "Selected component",
+      "defaultLight": "#888888",
+      "defaultDark": "#AAAAAA",
+      "layers": [
+        "fontra.component.selection"
+      ]
+    },
+    {
+      "key": "bgLayerOutlineColor",
+      "type": "color",
+      "category": "layers",
+      "displayName": "Background layer outline",
+      "defaultLight": "#CCCCCC",
+      "defaultDark": "#666666",
+      "layers": [
+        "fontra.edit.background.layers"
+      ]
+    },
+    {
+      "key": "editingLayerOutlineColor",
+      "type": "color",
+      "category": "layers",
+      "displayName": "Editing layer outline",
+      "defaultLight": "#9999FF",
+      "defaultDark": "#555599",
+      "layers": [
+        "fontra.edit.editing.layers"
+      ]
+    },
+    {
+      "key": "ghostPathColor",
+      "type": "color-alpha",
+      "category": "interaction",
+      "displayName": "Drag ghost path",
+      "defaultLight": "#AAAAAA",
+      "defaultDark": "#88888866",
+      "alphaKey": "ghostPathColorAlpha",
+      "defaultAlpha": 40,
+      "layers": [
+        "fontra.ghostpath"
+      ]
+    },
+    {
+      "key": "powerRulerStrokeColor",
+      "type": "color-alpha",
+      "category": "tools",
+      "displayName": "Power ruler line",
+      "defaultLight": "#000000",
+      "defaultDark": "#FFFFFF66",
+      "alphaKey": "powerRulerStrokeColorAlpha",
+      "defaultAlpha": 27,
+      "layers": [
+        "fontra.power.ruler"
+      ]
+    },
+    {
+      "key": "powerRulerInsideBlobColor",
+      "type": "color-alpha",
+      "category": "tools",
+      "displayName": "Ruler distance box (inside)",
+      "defaultLight": "#FFFFFF",
+      "defaultDark": "#444444",
+      "alphaKey": "powerRulerInsideBlobColorAlpha",
+      "defaultAlpha": 73,
+      "layers": [
+        "fontra.power.ruler"
+      ]
+    },
+    {
+      "key": "powerRulerIntersectionColor",
+      "type": "color-alpha",
+      "category": "tools",
+      "displayName": "Ruler intersection",
+      "defaultLight": "#FF0088",
+      "defaultDark": "#FF6699",
+      "alphaKey": "powerRulerIntersectionColorAlpha",
+      "defaultAlpha": 33,
+      "layers": [
+        "fontra.power.ruler"
+      ]
+    },
+    {
+      "key": "knifeLineColor",
+      "type": "color-alpha",
+      "category": "tools",
+      "displayName": "Knife line",
+      "defaultLight": "#111111",
+      "defaultDark": "#FFFFFFBB",
+      "alphaKey": "knifeLineColorAlpha",
+      "defaultAlpha": 53,
+      "layers": [
+        "fontra.knifetool.line"
+      ]
+    },
+    {
+      "key": "sidebearingColor",
+      "type": "color-alpha",
+      "category": "tools",
+      "displayName": "Sidebearing line",
+      "defaultLight": "#000000",
+      "defaultDark": "#FFFFFF66",
+      "alphaKey": "sidebearingColorAlpha",
+      "defaultAlpha": 27,
+      "layers": [
+        "fontra.sidebearings.unselected",
+        "fontra.sidebearings-tool",
+        "fontra.sidebearings"
+      ]
+    },
+    {
+      "key": "referenceFontColor",
+      "type": "color-alpha",
+      "category": "tools",
+      "displayName": "Reference font fill",
+      "defaultLight": "#AAAAAA",
+      "defaultDark": "#AAAAAA66",
+      "alphaKey": "referenceFontColorAlpha",
+      "defaultAlpha": 40,
+      "layers": [
+        "fontra.reference.font"
+      ]
+    },
+    {
+      "key": "glyphErrorColor",
+      "type": "color",
+      "category": "glyph",
+      "displayName": "Error glyph color",
+      "defaultLight": "#AAAAAA",
+      "defaultDark": "#999999",
+      "layers": [
+        "fontra.context.glyphs",
+        "fontra.selected.glyph",
+        "fontra.hovered.glyph"
+      ]
+    },
+    {
+      "key": "hoveredGlyphColor",
+      "type": "color",
+      "category": "glyph",
+      "displayName": "Hovered glyph fill",
+      "defaultLight": "#000000",
+      "defaultDark": "#FFFFFF",
+      "layers": [
+        "fontra.hovered.glyph"
+      ]
+    },
+    {
+      "key": "hoveredGlyphOutlineColor",
+      "type": "color-alpha",
+      "category": "glyph",
+      "displayName": "Hovered glyph outline",
+      "defaultLight": "#BBBBBB",
+      "defaultDark": "#CCCCCC88",
+      "alphaKey": "hoveredGlyphOutlineColorAlpha",
+      "defaultAlpha": 53,
+      "layers": [
+        "fontra.hovered.glyph"
+      ]
+    },
+    {
+      "key": "undefinedGlyphColor",
+      "type": "color-alpha",
+      "category": "glyph",
+      "displayName": "Undefined glyph color",
+      "defaultLight": "#000000",
+      "defaultDark": "#FFFFFF66",
+      "alphaKey": "undefinedGlyphColorAlpha",
+      "defaultAlpha": 40,
+      "layers": [
+        "fontra.undefined.glyph"
+      ]
+    },
+    {
+      "key": "emptyGlyphColor",
+      "type": "color-alpha",
+      "category": "glyph",
+      "displayName": "Empty glyph placeholder",
+      "defaultLight": "#000000",
+      "defaultDark": "#FFFFFF33",
+      "alphaKey": "emptyGlyphColorAlpha",
+      "defaultAlpha": 13,
+      "layers": [
+        "fontra.undefined.glyph"
+      ]
+    },
+    {
+      "key": "emptySelectedGlyphColor",
+      "type": "color",
+      "category": "glyph",
+      "displayName": "Empty selected glyph",
+      "defaultLight": "#D8D8D8",
+      "defaultDark": "#585858",
+      "layers": [
+        "fontra.empty.selected.glyph"
+      ]
+    },
+    {
+      "key": "emptyHoveredGlyphColor",
+      "type": "color",
+      "category": "glyph",
+      "displayName": "Empty hovered glyph",
+      "defaultLight": "#E8E8E8",
+      "defaultDark": "#484848",
+      "layers": [
+        "fontra.empty.hovered.glyph"
+      ]
+    },
+    {
+      "key": "cleanGlyphColor",
+      "type": "color",
+      "category": "glyph",
+      "displayName": "Clean display fill",
+      "defaultLight": "#000000",
+      "defaultDark": "#FFFFFF",
+      "layers": [
+        "fontra.all.glyphs"
+      ]
+    },
+    {
+      "key": "glyphOuterStrokeWidth",
+      "type": "number",
+      "category": "glyph",
+      "displayName": "Glyph highlight outer width",
+      "default": 10,
+      "control": {
+        "min": 4,
+        "max": 24,
+        "step": 1
+      },
+      "layers": [
+        "fontra.selected.glyph",
+        "fontra.hovered.glyph"
+      ]
+    },
+    {
+      "key": "glyphInnerStrokeWidth",
+      "type": "number",
+      "category": "glyph",
+      "displayName": "Glyph highlight inner width",
+      "default": 3,
+      "control": {
+        "min": 1,
+        "max": 8,
+        "step": 0.5
+      },
+      "layers": [
+        "fontra.selected.glyph",
+        "fontra.hovered.glyph"
+      ]
+    },
+    {
+      "key": "selectedNodeUnderColor",
+      "type": "color-alpha",
+      "category": "node",
+      "displayName": "Selected node halo",
+      "defaultLight": "#FFFFFF",
+      "defaultDark": "#00000088",
+      "alphaKey": "selectedNodeUnderColorAlpha",
+      "defaultAlpha": 67,
+      "layers": [
+        "fontra.selected.nodes"
+      ]
+    },
+    {
+      "key": "nodeHoverStrokeOffset",
+      "type": "number",
+      "category": "node",
+      "displayName": "Hover ring offset",
+      "default": 4,
+      "control": {
+        "min": 0,
+        "max": 10,
+        "step": 1
+      },
+      "layers": [
+        "fontra.selected.nodes"
+      ]
+    },
+    {
+      "key": "nodeUnderlayOffset",
+      "type": "number",
+      "category": "node",
+      "displayName": "Selection halo offset",
+      "default": 2,
+      "control": {
+        "min": 0,
+        "max": 8,
+        "step": 1
+      },
+      "layers": [
+        "fontra.selected.nodes"
+      ]
+    },
+    {
+      "key": "bgLayerNodeSize",
+      "type": "number",
+      "category": "node",
+      "displayName": "Background layer node size",
+      "default": 5.5,
+      "control": {
+        "min": 3,
+        "max": 16,
+        "step": 0.5
+      },
+      "layers": [
+        "fontra.edit.background.layers.nodes-and-handles"
+      ]
+    },
+    {
+      "key": "bgLayerHandleSize",
+      "type": "number",
+      "category": "node",
+      "displayName": "Background layer handle size",
+      "default": 4.5,
+      "control": {
+        "min": 2,
+        "max": 16,
+        "step": 0.5
+      },
+      "layers": [
+        "fontra.edit.background.layers.nodes-and-handles"
+      ]
+    },
+    {
+      "key": "labelFontSizeCoordinates",
+      "type": "number",
+      "category": "labels",
+      "displayName": "Coordinates label size",
+      "default": 10,
+      "control": {
+        "min": 6,
+        "max": 20,
+        "step": 1
+      },
+      "layers": [
+        "fontra.coordinates"
+      ]
+    },
+    {
+      "key": "labelFontSizePointIndex",
+      "type": "number",
+      "category": "labels",
+      "displayName": "Point index label size",
+      "default": 10,
+      "control": {
+        "min": 6,
+        "max": 20,
+        "step": 1
+      },
+      "layers": [
+        "fontra.point.index"
+      ]
+    },
+    {
+      "key": "labelFontSizeContourIndex",
+      "type": "number",
+      "category": "labels",
+      "displayName": "Contour index label size",
+      "default": 11,
+      "control": {
+        "min": 6,
+        "max": 20,
+        "step": 1
+      },
+      "layers": [
+        "fontra.contour.index"
+      ]
+    },
+    {
+      "key": "labelFontSizeComponentIndex",
+      "type": "number",
+      "category": "labels",
+      "displayName": "Component index label size",
+      "default": 11,
+      "control": {
+        "min": 6,
+        "max": 20,
+        "step": 1
+      },
+      "layers": [
+        "fontra.component.index"
+      ]
+    },
+    {
+      "key": "labelFontSizeAnchorNames",
+      "type": "number",
+      "category": "labels",
+      "displayName": "Anchor name label size",
+      "default": 10,
+      "control": {
+        "min": 6,
+        "max": 20,
+        "step": 1
+      },
+      "layers": [
+        "fontra.anchor.names"
+      ]
+    },
+    {
+      "key": "anchorNamesMarginFromTop",
+      "type": "number",
+      "category": "labels",
+      "displayName": "Anchor name top margin",
+      "default": 6,
+      "control": {
+        "min": 0,
+        "max": 20,
+        "step": 1
+      },
+      "layers": [
+        "fontra.anchor.names"
+      ]
+    },
+    {
+      "key": "guidelineHoveredSelectedColor",
+      "type": "color-alpha",
+      "category": "guidelines",
+      "displayName": "Hovered + selected guideline",
+      "defaultLight": "#000000",
+      "defaultDark": "#FFFFFF44",
+      "alphaKey": "guidelineHoveredSelectedColorAlpha",
+      "defaultAlpha": 17,
+      "layers": [
+        "fontra.guidelines"
+      ]
+    },
+    {
+      "key": "guidelineNodeHoveredColor",
+      "type": "color",
+      "category": "guidelines",
+      "displayName": "Hovered guideline node",
+      "defaultLight": "#BBBBBB",
+      "defaultDark": "#BBBBBB",
+      "layers": [
+        "fontra.guidelines"
+      ]
+    },
+    {
+      "key": "guidelineNodeUnderColor",
+      "type": "color-alpha",
+      "category": "guidelines",
+      "displayName": "Guideline node halo",
+      "defaultLight": "#FFFFFF",
+      "defaultDark": "#00000088",
+      "alphaKey": "guidelineNodeUnderColorAlpha",
+      "defaultAlpha": 67,
+      "layers": [
+        "fontra.guidelines"
+      ]
+    },
+    {
+      "key": "guidelineIconUnderColor",
+      "type": "color",
+      "category": "guidelines",
+      "displayName": "Lock icon underlay",
+      "defaultLight": "#F6F6F6",
+      "defaultDark": "#333333",
+      "layers": [
+        "fontra.guidelines"
+      ]
+    },
+    {
+      "key": "guidelineIconHoveredColor",
+      "type": "color-alpha",
+      "category": "guidelines",
+      "displayName": "Lock icon hovered",
+      "defaultLight": "#000000",
+      "defaultDark": "#BBBBBB",
+      "alphaKey": "guidelineIconHoveredColorAlpha",
+      "defaultAlpha": 40,
+      "layers": [
+        "fontra.guidelines"
+      ]
+    },
+    {
+      "key": "guidelineFontSize",
+      "type": "number",
+      "category": "guidelines",
+      "displayName": "Guideline name size",
+      "default": 10,
+      "control": {
+        "min": 6,
+        "max": 20,
+        "step": 1
+      },
+      "layers": [
+        "fontra.guidelines"
+      ]
+    },
+    {
+      "key": "guidelineMarkerRadius",
+      "type": "number",
+      "category": "guidelines",
+      "displayName": "Guideline marker radius",
+      "default": 4,
+      "control": {
+        "min": 2,
+        "max": 12,
+        "step": 0.5
+      },
+      "layers": [
+        "fontra.guidelines"
+      ]
+    },
+    {
+      "key": "guidelineDash",
+      "type": "number",
+      "category": "guidelines",
+      "displayName": "Guideline dash length",
+      "default": 3,
+      "control": {
+        "min": 1,
+        "max": 8,
+        "step": 0.5
+      },
+      "layers": [
+        "fontra.guidelines"
+      ]
+    },
+    {
+      "key": "guidelineMargin",
+      "type": "number",
+      "category": "guidelines",
+      "displayName": "Guideline name margin",
+      "default": 5,
+      "control": {
+        "min": 0,
+        "max": 20,
+        "step": 1
+      },
+      "layers": [
+        "fontra.guidelines"
+      ]
+    },
+    {
+      "key": "guidelineIconSize",
+      "type": "number",
+      "category": "guidelines",
+      "displayName": "Guideline lock icon size",
+      "default": 12,
+      "control": {
+        "min": 8,
+        "max": 24,
+        "step": 1
+      },
+      "layers": [
+        "fontra.guidelines"
+      ]
+    },
+    {
+      "key": "guidelineNodeSize",
+      "type": "number",
+      "category": "guidelines",
+      "displayName": "Guideline node size",
+      "default": 8,
+      "control": {
+        "min": 4,
+        "max": 16,
+        "step": 1
+      },
+      "layers": [
+        "fontra.guidelines"
+      ]
+    },
+    {
+      "key": "guidelineHoverStrokeOffset",
+      "type": "number",
+      "category": "guidelines",
+      "displayName": "Guideline hover ring offset",
+      "default": 4,
+      "control": {
+        "min": 0,
+        "max": 10,
+        "step": 1
+      },
+      "layers": [
+        "fontra.guidelines"
+      ]
+    },
+    {
+      "key": "guidelineUnderlayOffset",
+      "type": "number",
+      "category": "guidelines",
+      "displayName": "Guideline halo offset",
+      "default": 2,
+      "control": {
+        "min": 0,
+        "max": 8,
+        "step": 1
+      },
+      "layers": [
+        "fontra.guidelines"
+      ]
+    },
+    {
+      "key": "anchorMarkerRadius",
+      "type": "number",
+      "category": "anchors",
+      "displayName": "Anchor marker radius",
+      "default": 4,
+      "control": {
+        "min": 2,
+        "max": 12,
+        "step": 0.5
+      },
+      "layers": [
+        "fontra.anchors"
+      ]
+    },
+    {
+      "key": "anchorHoveredColor",
+      "type": "color",
+      "category": "anchors",
+      "displayName": "Hovered anchor",
+      "defaultLight": "#BBBBBB",
+      "defaultDark": "#BBBBBB",
+      "layers": [
+        "fontra.selected.anchors"
+      ]
+    },
+    {
+      "key": "anchorSelectedColor",
+      "type": "color",
+      "category": "anchors",
+      "displayName": "Selected anchor",
+      "defaultLight": "#000000",
+      "defaultDark": "#FFFFFF",
+      "layers": [
+        "fontra.selected.anchors"
+      ]
+    },
+    {
+      "key": "anchorUnderColor",
+      "type": "color-alpha",
+      "category": "anchors",
+      "displayName": "Selected anchor halo",
+      "defaultLight": "#FFFFFF",
+      "defaultDark": "#00000088",
+      "alphaKey": "anchorUnderColorAlpha",
+      "defaultAlpha": 67,
+      "layers": [
+        "fontra.selected.anchors"
+      ]
+    },
+    {
+      "key": "anchorSelectedSize",
+      "type": "number",
+      "category": "anchors",
+      "displayName": "Selected anchor size",
+      "default": 8,
+      "control": {
+        "min": 4,
+        "max": 16,
+        "step": 1
+      },
+      "layers": [
+        "fontra.selected.anchors"
+      ]
+    },
+    {
+      "key": "anchorSelectedStrokeWidth",
+      "type": "number",
+      "category": "anchors",
+      "displayName": "Anchor stroke width",
+      "default": 1,
+      "control": {
+        "min": 0.5,
+        "max": 6,
+        "step": 0.5
+      },
+      "layers": [
+        "fontra.selected.anchors"
+      ]
+    },
+    {
+      "key": "anchorHoverStrokeOffset",
+      "type": "number",
+      "category": "anchors",
+      "displayName": "Anchor hover ring offset",
+      "default": 4,
+      "control": {
+        "min": 0,
+        "max": 10,
+        "step": 1
+      },
+      "layers": [
+        "fontra.selected.anchors"
+      ]
+    },
+    {
+      "key": "anchorUnderlayOffset",
+      "type": "number",
+      "category": "anchors",
+      "displayName": "Anchor halo offset",
+      "default": 2,
+      "control": {
+        "min": 0,
+        "max": 8,
+        "step": 1
+      },
+      "layers": [
+        "fontra.selected.anchors"
+      ]
+    },
+    {
+      "key": "componentOriginColor",
+      "type": "color",
+      "category": "components",
+      "displayName": "Component origin marker",
+      "defaultLight": "#BBBBBB",
+      "defaultDark": "#BBBBBB",
+      "layers": [
+        "fontra.component.selection"
+      ]
+    },
+    {
+      "key": "componentTCenterColor",
+      "type": "color",
+      "category": "components",
+      "displayName": "Component transform center",
+      "defaultLight": "#777777",
+      "defaultDark": "#DDDDDD",
+      "layers": [
+        "fontra.component.selection"
+      ]
+    },
+    {
+      "key": "componentHoverStrokeWidth",
+      "type": "number",
+      "category": "components",
+      "displayName": "Hovered component width",
+      "default": 3,
+      "control": {
+        "min": 0.5,
+        "max": 6,
+        "step": 0.5
+      },
+      "layers": [
+        "fontra.component.selection"
+      ]
+    },
+    {
+      "key": "componentSelectedStrokeWidth",
+      "type": "number",
+      "category": "components",
+      "displayName": "Selected component width",
+      "default": 3,
+      "control": {
+        "min": 0.5,
+        "max": 6,
+        "step": 0.5
+      },
+      "layers": [
+        "fontra.component.selection"
+      ]
+    },
+    {
+      "key": "componentOriginMarkerStrokeWidth",
+      "type": "number",
+      "category": "components",
+      "displayName": "Origin marker line width",
+      "default": 1,
+      "control": {
+        "min": 0.5,
+        "max": 4,
+        "step": 0.5
+      },
+      "layers": [
+        "fontra.component.selection"
+      ]
+    },
+    {
+      "key": "componentOriginMarkerSelectedStrokeWidth",
+      "type": "number",
+      "category": "components",
+      "displayName": "Origin marker selected width",
+      "default": 2,
+      "control": {
+        "min": 0.5,
+        "max": 4,
+        "step": 0.5
+      },
+      "layers": [
+        "fontra.component.selection"
+      ]
+    },
+    {
+      "key": "componentOriginMarkerSize",
+      "type": "number",
+      "category": "components",
+      "displayName": "Origin marker size",
+      "default": 10,
+      "control": {
+        "min": 4,
+        "max": 24,
+        "step": 1
+      },
+      "layers": [
+        "fontra.component.selection"
+      ]
+    },
+    {
+      "key": "componentOriginMarkerRadius",
+      "type": "number",
+      "category": "components",
+      "displayName": "Origin marker radius",
+      "default": 4,
+      "control": {
+        "min": 2,
+        "max": 12,
+        "step": 0.5
+      },
+      "layers": [
+        "fontra.component.selection"
+      ]
+    },
+    {
+      "key": "bgLayerAnchorColor",
+      "type": "color",
+      "category": "layers",
+      "displayName": "Background layer anchor",
+      "defaultLight": "#DDDDDD",
+      "defaultDark": "#555555",
+      "layers": [
+        "fontra.edit.background.layers"
+      ]
+    },
+    {
+      "key": "editingLayerAnchorColor",
+      "type": "color",
+      "category": "layers",
+      "displayName": "Editing layer anchor",
+      "defaultLight": "#AAAAFF",
+      "defaultDark": "#555588",
+      "layers": [
+        "fontra.edit.editing.layers"
+      ]
+    },
+    {
+      "key": "bgLayerOutlineStrokeWidth",
+      "type": "number",
+      "category": "layers",
+      "displayName": "Background layer outline width",
+      "default": 1,
+      "control": {
+        "min": 0.5,
+        "max": 6,
+        "step": 0.5
+      },
+      "layers": [
+        "fontra.edit.background.layers"
+      ]
+    },
+    {
+      "key": "bgLayerAnchorRadius",
+      "type": "number",
+      "category": "layers",
+      "displayName": "Background layer anchor radius",
+      "default": 4,
+      "control": {
+        "min": 2,
+        "max": 12,
+        "step": 0.5
+      },
+      "layers": [
+        "fontra.edit.background.layers"
+      ]
+    },
+    {
+      "key": "editingLayerOutlineStrokeWidth",
+      "type": "number",
+      "category": "layers",
+      "displayName": "Editing layer outline width",
+      "default": 1,
+      "control": {
+        "min": 0.5,
+        "max": 6,
+        "step": 0.5
+      },
+      "layers": [
+        "fontra.edit.editing.layers"
+      ]
+    },
+    {
+      "key": "editingLayerAnchorRadius",
+      "type": "number",
+      "category": "layers",
+      "displayName": "Editing layer anchor radius",
+      "default": 4,
+      "control": {
+        "min": 2,
+        "max": 12,
+        "step": 0.5
+      },
+      "layers": [
+        "fontra.edit.editing.layers"
+      ]
+    },
+    {
+      "key": "connectInsertColor",
+      "type": "color-alpha",
+      "category": "interaction",
+      "displayName": "Connect / insert marker",
+      "defaultLight": "#3080FF",
+      "defaultDark": "#50A0FF",
+      "alphaKey": "connectInsertColorAlpha",
+      "defaultAlpha": 50,
+      "layers": [
+        "fontra.connect-insert.point"
+      ]
+    },
+    {
+      "key": "connectInsertRadius",
+      "type": "number",
+      "category": "interaction",
+      "displayName": "Connect radius",
+      "default": 11,
+      "control": {
+        "min": 4,
+        "max": 24,
+        "step": 1
+      },
+      "layers": [
+        "fontra.connect-insert.point"
+      ]
+    },
+    {
+      "key": "connectInsertHandlesRadius",
+      "type": "number",
+      "category": "interaction",
+      "displayName": "Insert handle radius",
+      "default": 5,
+      "control": {
+        "min": 2,
+        "max": 16,
+        "step": 1
+      },
+      "layers": [
+        "fontra.connect-insert.point"
+      ]
+    },
+    {
+      "key": "connectInsertDeleteIndicatorLength",
+      "type": "number",
+      "category": "interaction",
+      "displayName": "Delete indicator size",
+      "default": 7,
+      "control": {
+        "min": 3,
+        "max": 16,
+        "step": 1
+      },
+      "layers": [
+        "fontra.connect-insert.point"
+      ]
+    },
+    {
+      "key": "connectInsertDragIndicatorRadius",
+      "type": "number",
+      "category": "interaction",
+      "displayName": "Drag indicator radius",
+      "default": 9,
+      "control": {
+        "min": 4,
+        "max": 20,
+        "step": 1
+      },
+      "layers": [
+        "fontra.connect-insert.point"
+      ]
+    },
+    {
+      "key": "connectInsertStrokeWidth",
+      "type": "number",
+      "category": "interaction",
+      "displayName": "Connect / insert width",
+      "default": 2,
+      "control": {
+        "min": 0.5,
+        "max": 6,
+        "step": 0.5
+      },
+      "layers": [
+        "fontra.connect-insert.point"
+      ]
+    },
+    {
+      "key": "backgroundImageColor",
+      "type": "color",
+      "category": "interaction",
+      "displayName": "Background image border",
+      "defaultLight": "#888888",
+      "defaultDark": "#FFFFFF",
+      "layers": [
+        "fontra.background-image"
+      ]
+    },
+    {
+      "key": "backgroundImageHoverColor",
+      "type": "color-alpha",
+      "category": "interaction",
+      "displayName": "Background image hover",
+      "defaultLight": "#888888",
+      "defaultDark": "#FFFFFF55",
+      "alphaKey": "backgroundImageHoverColorAlpha",
+      "defaultAlpha": 33,
+      "layers": [
+        "fontra.background-image"
+      ]
+    },
+    {
+      "key": "backgroundImageStrokeWidth",
+      "type": "number",
+      "category": "interaction",
+      "displayName": "Background image width",
+      "default": 2,
+      "control": {
+        "min": 0.5,
+        "max": 6,
+        "step": 0.5
+      },
+      "layers": [
+        "fontra.background-image"
+      ]
+    },
+    {
+      "key": "lockIconColor",
+      "type": "color-alpha",
+      "category": "interaction",
+      "displayName": "Lock icon",
+      "defaultLight": "#000000",
+      "defaultDark": "#FFFFFFCC",
+      "alphaKey": "lockIconColorAlpha",
+      "defaultAlpha": 80,
+      "layers": [
+        "fontra.glyph.locking",
+        "fontra.glyph.locking.non-editing"
+      ]
+    },
+    {
+      "key": "lockIconSize",
+      "type": "number",
+      "category": "interaction",
+      "displayName": "Lock icon size",
+      "default": 19,
+      "control": {
+        "min": 10,
+        "max": 32,
+        "step": 1
+      },
+      "layers": [
+        "fontra.glyph.locking",
+        "fontra.glyph.locking.non-editing"
+      ]
+    },
+    {
+      "key": "startpointChevronGap",
+      "type": "number",
+      "category": "startpoint",
+      "displayName": "Chevron gap",
+      "default": 5,
+      "control": {
+        "min": 2,
+        "max": 16,
+        "step": 1
+      },
+      "layers": []
+    },
+    {
+      "key": "startpointChevronStrokeWidth",
+      "type": "number",
+      "category": "startpoint",
+      "displayName": "Chevron width",
+      "default": 2,
+      "control": {
+        "min": 0.5,
+        "max": 6,
+        "step": 0.5
+      },
+      "layers": [
+        "fontra.startpoint.indicator"
+      ]
+    },
+    {
+      "key": "statusBarMinThickness",
+      "type": "number",
+      "category": "status",
+      "displayName": "Status bar min thickness",
+      "default": 3,
+      "control": {
+        "min": 1,
+        "max": 20,
+        "step": 1
+      },
+      "layers": [
+        "fontra.status.color"
+      ]
+    },
+    {
+      "key": "statusBarMaxThickness",
+      "type": "number",
+      "category": "status",
+      "displayName": "Status bar max thickness",
+      "default": 15,
+      "control": {
+        "min": 2,
+        "max": 40,
+        "step": 1
+      },
+      "layers": [
+        "fontra.status.color"
+      ]
+    },
+    {
+      "key": "statusBarEditingOpacity",
+      "type": "number",
+      "category": "status",
+      "displayName": "Status bar editing opacity",
+      "default": 40,
+      "control": {
+        "min": 0,
+        "max": 100,
+        "step": 5
+      },
+      "layers": [
+        "fontra.status.color"
+      ]
+    }
+  ]
+}

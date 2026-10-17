@@ -237,6 +237,7 @@ export const strings = {
   "edit-tools-pointer.undo.resize-selection": "Auswahl skalieren",
   "edit-tools-pointer.undo.rotate-selection": "Auswahl drehen",
   "edit-tools-pointer.undo.toggle-smooth": '"smooth" umschalten',
+  "edit-tools-pointer.undo.toggle-squircle": "Squircle umschalten",
   "editor.hand-tool": "Hand Werkzeug",
   "editor.kerning-tool": "Kerning Werkzeug",
   "editor.knife-tool": "Messer Werkzeug",

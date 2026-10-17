@@ -1164,6 +1164,15 @@ export class SceneController {
     this.canvasController.requestUpdate();
   }
 
+  get selectionParallelogram() {
+    return this.sceneModel.selectionParallelogram;
+  }
+
+  set selectionParallelogram(selPara) {
+    this.sceneModel.selectionParallelogram = selPara;
+    this.canvasController.requestUpdate();
+  }
+
   get editingLayerNames() {
     const primaryLayerName =
       this.sceneModel.getSelectedPositionedGlyph()?.glyph?.layerName;

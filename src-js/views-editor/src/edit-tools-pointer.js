@@ -43,6 +43,7 @@ import { handlesEqual } from "./edit-tools-pen.js";
 import { getPinPoint } from "./panel-transformation.js";
 import { equalGlyphSelection } from "./scene-controller.js";
 import {
+  fillRoundNode,
   glyphSelector,
   registerVisualizationLayerDefinition,
   strokeRoundNode,
@@ -1025,8 +1026,21 @@ registerVisualizationLayerDefinition({
     margin: transformHandleMargin,
   },
 
-  colors: { handleColor: "#BBB", strokeColor: "#DDD" },
-  colorsDarkMode: { handleColor: "#777", strokeColor: "#555" },
+  // The corner handles are FILLED with the same lavender as the editing-layer
+  // ghost nodes (R4-T4.28) so they read as one family with the node icons;
+  // the dashed border was darkened from #DDD/#555, which was illegible on the
+  // canvas at typical zooms. Both colors are user settings via
+  // applyVisualTokenSettings() (themeController).
+  colors: {
+    handleColor: "#BBB",
+    handleFillColor: "#BBBBFF",
+    strokeColor: "#AAA",
+  },
+  colorsDarkMode: {
+    handleColor: "#777",
+    handleFillColor: "#555599",
+    strokeColor: "#888",
+  },
   draw: ({ context, positionedGlyph, parameters, model, controller }) => {
     if (!model.showTransformSelection) {
       return;
@@ -1050,12 +1064,13 @@ registerVisualizationLayerDefinition({
     //   strokeSquareNode(context, handle, parameters.handleSize * rotationHandleSizeFactor);
     // }
 
-    // draw resize handles
+    // draw resize handles: lavender fill + thin ring
     const handles = getTransformHandles(
       transformBounds,
       parameters.margin + parameters.handleSize / 2
     );
     for (const [handleName, handle] of Object.entries(handles)) {
+      fillRoundNode(context, handle, parameters.handleSize, parameters.handleFillColor);
       strokeRoundNode(context, handle, parameters.handleSize);
     }
 
@@ -1070,6 +1085,7 @@ registerVisualizationLayerDefinition({
 
     // because of the dashed line draw resize bounding box last
     context.strokeStyle = parameters.strokeColor;
+    context.lineWidth = parameters.strokeWidth;
     context.setLineDash(parameters.lineDash);
     context.strokeRect(
       transformBounds.xMin,

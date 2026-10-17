@@ -25,7 +25,7 @@ export class DisplayLanguagePanel extends MultiPanelBasePanel {
 
   async setupUI() {
     this.panelElement.innerHTML = "";
-    this.panelElement.style = "gap: 1em;";
+    this.panelElement.style = "gap: 1em; max-width: 32em;";
 
     for (const cardContent of this.cards()) {
       const container = html.createDomElement("grouped-settings", {

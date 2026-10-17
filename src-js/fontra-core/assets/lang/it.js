@@ -245,6 +245,7 @@ export const strings = {
   "edit-tools-pointer.undo.resize-selection": "ridimensiona selezione",
   "edit-tools-pointer.undo.rotate-selection": "ruota selezione",
   "edit-tools-pointer.undo.toggle-smooth": "Alterna punto fluido",
+  "edit-tools-pointer.undo.toggle-squircle": "Alterna squircle",
   "editor.hand-tool": "Strumento mano",
   "editor.kerning-tool": "Strumento crenatura",
   "editor.knife-tool": "Strumento taglierina",

@@ -235,6 +235,7 @@ export const strings = {
   "edit-tools-pointer.undo.resize-selection": "изменение размера выделенного",
   "edit-tools-pointer.undo.rotate-selection": "поворот выделенного",
   "edit-tools-pointer.undo.toggle-smooth": "изменение типа точки",
+  "edit-tools-pointer.undo.toggle-squircle": "переключение сквиркла",
   "editor.hand-tool": "Рука",
   "editor.kerning-tool": "Кернинг",
   "editor.knife-tool": "Нож",

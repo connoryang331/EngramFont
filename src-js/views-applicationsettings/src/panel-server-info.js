@@ -22,7 +22,7 @@ export class ServerInfoPanel extends MultiPanelBasePanel {
 
   async setupUI() {
     this.panelElement.innerHTML = "";
-    this.panelElement.style = "gap: 1em;";
+    this.panelElement.style = "gap: 1em; max-width: 32em;";
 
     Object.entries(serverInfo).flatMap(([key, value]) => {
       const container = html.div({ class: "engramfont-ui-server-info-panel-card" }, []);

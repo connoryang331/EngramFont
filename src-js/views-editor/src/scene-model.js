@@ -922,7 +922,11 @@ export class SceneModel {
     return this._backgroundImageSelectionAtPointOrRect(undefined, selRect);
   }
 
-  _backgroundImageSelectionAtPointOrRect(point = undefined, selRect = undefined) {
+  _backgroundImageSelectionAtPointOrRect(
+    point = undefined,
+    selRect = undefined,
+    paraGlyph = undefined
+  ) {
     if (
       !this.visualizationLayersSettings.model["fontra.background-image"] ||
       this.sceneSettings.backgroundImagesAreLocked
@@ -943,7 +947,7 @@ export class SceneModel {
       selRect = centeredRect(x, y, 0);
     }
 
-    if (!selRect) {
+    if (!selRect && !paraGlyph) {
       return new Set();
     }
 
@@ -961,6 +965,29 @@ export class SceneModel {
     }
     const rectPoly = rectToPoints(backgroundImageBounds);
     const polygon = rectPoly.map((point) => affine.transformPointObject(point));
+
+    if (paraGlyph) {
+      // Slanted (sheared) rect selection: shear the background image polygon
+      // into shear space, where the parallelogram becomes the plain rect
+      const rect = normalizeRect({
+        xMin: paraGlyph.x0,
+        yMin: paraGlyph.y0,
+        xMax: paraGlyph.x1,
+        yMax: paraGlyph.y1,
+      });
+      const shearedPolygon = polygon.map((p) => ({
+        x: p.x - paraGlyph.shearK * (p.y - paraGlyph.y0),
+        y: p.y,
+      }));
+      if (
+        pointInConvexPolygon(rect.xMin, rect.yMin, shearedPolygon) ||
+        rectIntersectsPolygon(rect, shearedPolygon) ||
+        shearedPolygon.some((p) => pointInRect(p.x, p.y, rect))
+      ) {
+        return new Set(["backgroundImage/0"]);
+      }
+      return new Set();
+    }
 
     if (
       pointInConvexPolygon(selRect.xMin, selRect.yMin, polygon) ||
@@ -1002,6 +1029,89 @@ export class SceneModel {
     }
 
     const backgroundImageSelection = this.backgroundImageSelectionAtRect(selRect);
+    if (backgroundImageSelection.size) {
+      // As long as we don't have multiple background images,
+      // we can just add a single selection
+      selection.add("backgroundImage/0");
+    }
+
+    return selection;
+  }
+
+  selectionAtParallelogram(para, pointFilterFunc) {
+    // A slanted (sheared) rectangle selection, Glyphs-app style. para is in
+    // canvas coordinates: {x0, y0, x1, y1, shearK}. Its corners are
+    // (x0, y0), (x1, y0), (x1 + shearK * (y1 - y0), y1),
+    // (x0 + shearK * (y1 - y0), y1): horizontal top/bottom edges, slanted sides.
+    // Tests happen in "shear space", where the parallelogram becomes the
+    // plain axis-aligned rect (x0, y0, x1, y1).
+    const selection = new Set();
+    if (!this.selectedGlyph?.isEditing) {
+      return selection;
+    }
+    const positionedGlyph = this.getSelectedPositionedGlyph();
+    if (!positionedGlyph) {
+      return selection;
+    }
+    const paraGlyph = {
+      x0: para.x0 - positionedGlyph.x,
+      y0: para.y0 - positionedGlyph.y,
+      x1: para.x1 - positionedGlyph.x,
+      y1: para.y1 - positionedGlyph.y,
+      shearK: para.shearK,
+    };
+    const selRect = normalizeRect({
+      xMin: paraGlyph.x0,
+      yMin: paraGlyph.y0,
+      xMax: paraGlyph.x1,
+      yMax: paraGlyph.y1,
+    });
+    const shearPoint = (point) => ({
+      x: point.x - paraGlyph.shearK * (point.y - paraGlyph.y0),
+      y: point.y,
+    });
+
+    // Cheap pre-filter: shear the glyph control bounds and compare
+    const controlBounds = positionedGlyph.glyph.controlBounds;
+    if (
+      !controlBounds ||
+      !sectRect(selRect, rectFromPoints(rectToPoints(controlBounds).map(shearPoint)))
+    ) {
+      return selection;
+    }
+
+    for (const [pointIndex, point] of enumerate(
+      positionedGlyph.glyph.path.iterPoints()
+    )) {
+      const shearedPoint = shearPoint(point);
+      if (
+        pointInRect(shearedPoint.x, shearedPoint.y, selRect) &&
+        (!pointFilterFunc || pointFilterFunc(point))
+      ) {
+        selection.add(`point/${pointIndex}`);
+      }
+    }
+
+    const components = positionedGlyph.glyph.components;
+    for (let i = 0; i < components.length; i++) {
+      if (componentIntersectsShearedRect(components[i], selRect, shearPoint)) {
+        selection.add(`component/${i}`);
+      }
+    }
+
+    const anchors = positionedGlyph.glyph.anchors;
+    for (let i = 0; i < anchors.length; i++) {
+      const shearedPoint = shearPoint(anchors[i]);
+      if (pointInRect(shearedPoint.x, shearedPoint.y, selRect)) {
+        selection.add(`anchor/${i}`);
+      }
+    }
+
+    const backgroundImageSelection = this._backgroundImageSelectionAtPointOrRect(
+      undefined,
+      undefined,
+      paraGlyph
+    );
     if (backgroundImageSelection.size) {
       // As long as we don't have multiple background images,
       // we can just add a single selection
@@ -1515,5 +1625,40 @@ function addBoundingBoxes(glyphs, descender, ascender) {
     }
     item.bounds = offsetRect(bounds, item.x, item.y);
     item.unpositionedBounds = bounds;
+  });
+}
+
+function componentIntersectsShearedRect(component, selRect, shearPoint) {
+  // Mirror of ComponentPath.intersectsRect, with all geometry sheared into
+  // "shear space", where the slanted selection is a plain rect
+  const controlBounds = component.controlBounds;
+  if (!controlBounds) {
+    return false;
+  }
+  const shearedControlBounds = rectFromPoints(
+    rectToPoints(controlBounds).map(shearPoint)
+  );
+  if (!sectRect(selRect, shearedControlBounds)) {
+    return false;
+  }
+  const shearedHull = component.convexHull?.map(shearPoint);
+  if (
+    !shearedHull ||
+    pointInConvexPolygon(selRect.xMin, selRect.yMin, shearedHull) ||
+    rectIntersectsPolygon(selRect, shearedHull)
+  ) {
+    return true;
+  }
+  return component.unpackedContours.some((contour) => {
+    const shearedContourBounds = rectFromPoints(
+      rectToPoints(contour.controlBounds).map(shearPoint)
+    );
+    if (!sectRect(selRect, shearedContourBounds)) {
+      return false;
+    }
+    return rectIntersectsPolygon(
+      selRect,
+      contour.points.map(shearPoint)
+    );
   });
 }

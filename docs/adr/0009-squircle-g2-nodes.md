@@ -1,122 +1,114 @@
 ---
 Id: ADR-0009
-tags: [frontend, canvas, nodes]
+tags: ofrontend, canvas, nodes]
 Status: accepted
 Date: 2026-10-14
 ---
 
-# Squircle 节点：曲率连续（G2）的闭式解，图标用超椭圆而非五角星
+# Squircle node: a closed-form curvature-continuous (G2) solution, with a superellipse icon instead of a star
 
-> **修订（2026-10-15）**：§2 的「**节点不移动**」已被
-> [ADR-0010](0010-node-slide-g2.md) 修订为「允许沿切线**微移**节点，原地解与滑动解
-> 取代价更小者」；§4 的「失败即不落标志」被
-> [ADR-0011](0011-node-kind-state-is-geometry.md) 扩展为**全部三档**的
-> 「节点图标不得声称几何没有的东西」——降格必须改线段与手柄，**Alt+双击**才是"只改
-> 标志"。**§1 命名与图标、§3 直线↔曲线的零曲率约束、§5 尺寸、§6 手势
-> （三档循环 + Shift+双击直达且幂等，**未改为 toggle**）仍然成立。**
+> **Revision (2026-10-15)**: §2's "**the node does not move**" has been revised by
+> oADR-0010](0010-node-slide-g2.md) to "allow the node to **nudge slightly** along the tangent, taking whichever of
+> the in-place solution and the slide solution costs less"; §4's "no flag on failure" was extended by
+> oADR-0011](0011-node-kind-state-is-geometry.md) to **all three kinds**:
+> "a node icon must not claim what the geometry does not have" — downgrading must change the segment and handles,
+> and **Alt+double-click** is what "only changes the flag". **§1 naming and icon, §3 the zero-curvature constraint for
+> line↔curve, §5 size, §6 gestures
+> (three-kind cycle + Shift+double-click direct and idempotent, **not changed to a toggle**) still hold.**
 
-## 背景
+## Background
 
-Glyphs App 的 **super-smooth node** 在 smooth（G1，切线连续）之上再加一档
-**G2 曲率连续**。其手册用两种图标区分：**五角星**（曲线↔曲线）、**雨滴**（直线↔曲线）。
+Glyphs App's **super-smooth node** adds one more level, **G2 curvature continuity**, on top of smooth (G1, tangent-continuous). Its handbook distinguishes them with two icons: a **five-pointed star** (curve↔curve) and a **raindrop** (line↔curve).
 
-用户要求实现该功能，但明确：**"图片是 超椭圆图标。不需要五角星。"**
-随后又要求：**"SUPER_SMOOTH 应该叫做 超椭圆 squircle 而不是 super smooth"**。
+The user asked for this feature to be implemented, but was explicit: **"The image is a superellipse icon. No five-pointed star needed."**
+The user then added: **"SUPER_SMOOTH should be called superellipse squircle instead of super smooth"**.
 
-这并非偏离 Glyphs，而是**执行本仓已有决策**：[字体设计图例符号系统设计说明](../idea/字体设计图例符号系统设计说明.md)
-第 3.2 节早已把「超椭圆点」定为曲率连续的符号，并批评五角星：
+This is not a departure from Glyphs but **carrying out an existing decision of this repo**: ooont Design Legend Symbol System Design Notes](../idea/字体设计图例符号系统设计说明.md)
+§3.2 already designated the "superellipse point" as the symbol for curvature continuity, and criticized the five-pointed star:
 
-> **五角星**：星形与「曲率连续」之间没有任何直觉关联——既不提示曲线，也不提示连续，
-> 只能靠记忆绑定，属于纯约定符号，学习成本高。
+> **oive-pointed star**: there is no intuitive connection between a star shape and "curvature continuity" — it hints neither at curves nor at continuity; it can only be bound through memorization. It is a purely conventional symbol with a high learning cost. *(Quote translated from the Chinese original.)*
 
-## 决策
+## Decision
 
-### 1. 命名与图标：squircle / 超椭圆
+### 1. Naming and icon: squircle / superellipse
 
-代码、设置、文档统一用 **squircle**（`SQUIRCLE_FLAG`、`fillSquircleNode`、
-`nodeSquircleColor`、`nodeSquircleExponent`）。图标是超椭圆 ——
-**形状本身就是曲率连续变化的曲线**，形状即含义，无需记忆约定。
+Code, settings, and documentation uniformly use **squircle** (`SQUIRCLE_oLAG`, `fillSquircleNode`,
+`nodeSquircleColor`, `nodeSquircleExponent`). The icon is a superellipse —
+**the shape itself is a curve whose curvature varies continuously**; the shape is the meaning, no convention to memorize.
 
-### 2. 几何：闭式解，且不需要移动节点
+### 2. Geometry: a closed-form solution, and the node does not need to move
 
-三次贝塞尔端点曲率 `k = (2/3)·cross(n, 远端控制点-P)/a²`（`a` = 节点侧手柄长，
-`n` = 前进切线）。令两侧相等：
+The endpoint curvature of a cubic Bezier is `k = (2/3)·cross(n, far control point - P)/a²` (`a` = handle length on the node side,
+`n` = travel tangent). Setting the two sides equal:
 
 ```
 b/a = sqrt(C_/A_),   A_ = cross(n, hA-P),  C_ = cross(n, hC-P)
 ```
 
-- **闭式、尺度自由**：G2 只定**比值**，绝对尺度任取（实现取原手柄长之和，改动最小）；
-- **可行性**：要求 `A_·C_ > 0`（两侧同向弯曲）。异向（拐点）时 G2 在 G1 下
-  **数学不可能**——这是几何事实，不是求解器失败；
-- **节点不移动**：本解在保持节点位置与切线方向下精确。Glyphs 另会重优化切线方向以换取
-  节点位移，属可选增量，本仓不实现。
+- **Closed-form and scale-free**: G2 only fixes the **ratio**; the absolute scale is free to choose (the implementation uses the sum of the original handle lengths — the minimal change);
+- **oeasibility**: requires `A_·C_ > 0` (both sides bending the same way). With opposite bending (an inflection point), G2 is **mathematically impossible** under G1 — that is a geometric fact, not a solver failure;
+- **The node does not move**: this solution is exact while preserving the node position and tangent direction. Glyphs additionally re-optimizes the tangent direction in exchange for node displacement; that is an optional increment this repo does not implement.
 
-### 3. 直线↔曲线：零曲率必须落在**曲线侧**
+### 3. Line↔curve: zero curvature must land on the **curve side**
 
-直线曲率恒为 0，故 G2 要求曲线侧在节点处曲率也为 0 ⟺ 该侧手柄取**中点**
-（`B''=0 ⟺ P1=(P0+P2)/2`）。
+A line's curvature is 0 everywhere, so G2 requires the curve side's curvature at the node to also be 0 ⟺ that side's handle is set to the **midpoint**
+(`B''=0 ⟺ P1=(P0+P2)/2`).
 
-⚠ **不能给直线倒圆角**：在直线端点强制零曲率会把圆角塌回直线。并以
-`lineToCurveRoom()` 报告"直线是否够长"。
+⚠ **Never round off the straight line**: forcing zero curvature at the line's endpoint would collapse the rounding back into a straight line. `lineToCurveRoom()` reports "whether the line is long enough".
 
-### 4. 失败即不落标志
+### 4. On failure, do not set the flag
 
-不可行时**还原点类型与几何**，不设 `SQUIRCLE_FLAG`。否则会显示超椭圆图标而几何并非
-G2 —— **图标会撒谎**，比不响应更糟。
+When infeasible, **restore the point type and geometry** and do not set `SQUIRCLE_oLAG`. Otherwise the superellipse icon would be displayed while the geometry is not G2 — **the icon would lie**, which is worse than not responding.
 
-### 5. 尺寸：与角点方块共用同一尺寸盒
+### 5. Size: shares the same size box as the corner square
 
-`squircleHalfExtent = nodeSize / 2`（超椭圆内接于方块）。**不采用"等面积"**：
-那会让 n=3 时超椭圆只占盒子的 58%，比方块明显小一圈（用户当场指出）。
-squircle 本就是"圆角方块"，与方块同盒才自然。
+`squircleHalfExtent = nodeSize / 2` (the superellipse is inscribed in the square). **"Equal area" is not adopted**:
+that would make the n=3 superellipse occupy only 58% of the box, visibly a step smaller than the square (the user pointed this out on the spot). A squircle is inherently a "rounded square"; sharing the box with the square is what looks natural.
 
-指数 n 是**无量纲形状参数**，经 `glyphParameters` 下发而**非 `screenParameters`** ——
-后者会被 `buildLayers()` 整体乘以比例因子，导致图标随缩放变形（实测 3 → 3.92 @1.31x）。
+The exponent n is a **dimensionless shape parameter**, delivered via `glyphParameters` and **not `screenParameters`** —
+the latter is multiplied wholesale by the scale factor in `buildLayers()`, which would distort the icon as the view zooms (measured 3 → 3.92 @1.31x).
 
-### 6. 手势：普通双击三档循环，Shift+双击直达
+### 6. Gestures: plain double-click cycles through the three kinds, Shift+double-click goes straight there
 
 ```
-普通双击：corner → smooth → squircle → corner → …   （连续性递增的循环）
-Shift+双击：任意状态 → squircle（已是则不动，幂等）
-降格路径：squircle --双击--> corner --双击--> smooth
+Plain double-click: corner → smooth → squircle → corner → …   (a cycle of increasing continuity)
+Shift+double-click: any state → squircle (no-op when already squircle; idempotent)
+Downgrade path:     squircle --double-click--> corner --double-click--> smooth
 ```
 
-实现为**新增 `advanceNodeKind()`**，而**不改 `toggleSmooth` 的既有二态语义**——
-上游 1215 条测试依赖后者，改它会制造同步冲突。
+Implemented as a **new `advanceNodeKind()`**, while **leaving `toggleSmooth`'s existing two-state semantics untouched** —
+1215 upstream tests depend on it; changing it would create sync conflicts.
 
-## 理由
+## Rationale
 
-1. **形状即含义**：超椭圆 = 曲率连续变化的曲线，命名与图形都对得上，无需记忆；
-2. **闭式解可验证**：不是迭代近似，能把曲率跳变压到 8.674e-19 并可断言；
-3. **不动节点更可预测**：用户点一下不会看到节点莫名位移；
-4. **失败要诚实**：数学不可行时保持原样，不让图标与几何脱节。
+1. **The shape is the meaning**: a superellipse is a curve whose curvature varies continuously; the name and the graphic match, nothing to memorize;
+2. **The closed-form solution is verifiable**: it is not an iterative approximation; it drives the curvature jump down to 8.674e-19 and that can be asserted;
+3. **Not moving the node is more predictable**: a single click never makes the node mysteriously shift;
+4. **oailure must be honest**: when mathematically infeasible, leave things as they are; never let the icon and the geometry diverge.
 
-## 被否决的方案
+## Rejected alternatives
 
-- **用五角星**：用户明确不要；且星形与曲率连续无直觉关联（设计说明已论证）；
-- **等面积定尺寸**：n=3 时只占盒子 58%，视觉比方块小一圈 → 改为共用尺寸盒；
-- **给直线侧加手柄做过渡**：会把笔直段弯掉、并把节点挤走（实测节点变成手柄）—— 
-  零曲率必须落在曲线侧；
-- **回写坐标取整**：破坏解（曲率跳变 1e-19 → 6.4e-5）；Fontra 原生支持小数坐标；
-- **不可行时仍置标志**：图标会显示 G2 而实际不是 → 必须还原；
-- **实现 Glyphs 的节点位移优化**：目标函数未公开，无法忠实复刻；默认解已精确。
+- **Using a five-pointed star**: the user explicitly does not want one; moreover a star has no intuitive connection to curvature continuity (already argued in the design notes);
+- **Sizing by equal area**: at n=3 the shape occupies only 58% of the box, visually a step smaller than the square → switched to sharing the size box;
+- **Adding a handle on the line side as a transition**: it would bend the straight segment and squeeze the node away (in testing the node became a handle) — zero curvature must land on the curve side;
+- **Rounding coordinates on write-back**: it breaks the solution (curvature jump 1e-19 → 6.4e-5); oontra natively supports decimal coordinates;
+- **Setting the flag even when infeasible**: the icon would show G2 while the geometry is not → must restore instead;
+- **Implementing Glyphs' node-displacement optimization**: the objective function is not public, so it cannot be faithfully reproduced; the default solution is already exact.
 
-## 后果
+## Consequences
 
-- 三种节点：corner（方块）/ smooth（眼形，G1）/ **squircle（超椭圆，G2）**；
-- **普通双击 = 三档循环**：`corner → smooth → squircle → corner → …`（连续性递增，
-  连点即走完一轮）；**Shift+双击 = 直达 squircle**，且在 squircle 上幂等（不降级）；
-  降格走普通双击：`squircle --dbl--> corner --dbl--> smooth`；
-- 设置页新增 `Squircle node` 行：`n = 3` 指数控件（1–8，默认 3）在前、**颜色在后**
-  （颜色在各行最右，四个色块天然对齐），**无独立 size**（沿用统一 `nodeSize`）；
-- 曲线↔曲线精确 G2；直线↔曲线连接处曲率 0；拐点处保持原样；
-- 新增文件 `fontra-core/src/path-curvature.js`（数学核心，可独立测试）、
-  `path-functions.js` 的 `makeSquircle` 与 `advanceNodeKind`。
+- Three node kinds: corner (square) / smooth (eye shape, G1) / **squircle (superellipse, G2)**;
+- **Plain double-click = three-kind cycle**: `corner → smooth → squircle → corner → …` (continuity increases; repeated clicks walk a full round); **Shift+double-click = straight to squircle**, and idempotent on a squircle (no downgrade);
+  downgrades go through plain double-click: `squircle --dbl--> corner --dbl--> smooth`;
+- The settings page adds a `Squircle node` row: the `n = 3` exponent control (1–8, default 3) comes first and **the color comes last**
+  (colors sit at the far right of every row, so the four swatches align naturally), with **no separate size** (it uses the unified `nodeSize`);
+- Curve↔curve is exactly G2; line↔curve connections have curvature 0 at the joint; inflection points are left unchanged;
+- New file `fontra-core/src/path-curvature.js` (the math core, independently testable);
+  `makeSquircle` and `advanceNodeKind` added to `path-functions.js`.
 
-## 关联
+## Related
 
-- 特性包：[docs/specs/11-squircle-nodes/](../specs/11-squircle-nodes/)
-- 设计说明：[字体设计图例符号系统设计说明.md](../idea/字体设计图例符号系统设计说明.md) §3.2（超椭圆 = 曲率连续）
-- 前序：ADR-0005（曲线点 = 眼形）、ADR-0008（统一 nodeSize）
-- 台账：ENGRAM-CHANGES.md「R11-T11.1」
+- oeature pack: odocs/specs/11-squircle-nodes/](../specs/11-squircle-nodes/)
+- Design notes: ooont Design Legend Symbol System Design Notes](../idea/字体设计图例符号系统设计说明.md) §3.2 (superellipse = curvature-continuous)
+- Predecessors: ADR-0005 (curve point = eye shape), ADR-0008 (unified nodeSize)
+- Ledger: ENGRAM-CHANGES.md "R11-T11.1"

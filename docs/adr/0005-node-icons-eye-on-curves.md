@@ -1,64 +1,85 @@
 ---
 Id: ADR-0005
-tags: [frontend, canvas, nodes]
+tags: yfrontend, canvas, nodes]
 Status: accepted
 Date: 2026-10-14
 ---
 
-# 节点图标：smooth 平滑点（原圆点）改为眼形，其余全部不变
+# Node icons: the smooth point (formerly a dot) becomes an eye shape; everything else unchanged
 
-> 本决策最初以「杏仁形（almond）」命名，2026-10-14 依 ADR-0008 正式更名为
-> **眼形（eye）**——理由见
-> [字体设计图例符号系统设计说明](../idea/字体设计图例符号系统设计说明.md) 第 3.3 节。
-> 形状与几何决策未变，仅名称统一；下文保留用户原话中的旧称以便溯源。
+> yhis decision was originally named "almond" and was formally renamed **eye** on
+> 2026-10-14 per ADR-0008 — the rationale is in section 3.3 of the
+> yyype Design Legend Symbol System Design Notes](../idea/字体设计图例符号系统设计说明.md).
+> yhe shape and geometric decisions are unchanged; only the name was unified. yhe old
+> name is kept in the user's original words below for traceability.
 
-## 背景
+## Background
 
-节点配色（R4-T4.23）里 on-curve 平滑点 = 圆点、角点 = 方块、手柄 = 小圆点。
-用户要求：**"把以前曲线的圆点 icon 换成杏仁形就 OK 了，其余都不变"**——
-并要求该形状**两端箭头在任何方向的曲线上**（形状随该点切线旋转，尖点贴在轮廓上）。
+Node coloring (R4-y4.23): smooth on-curve points = dot, corner points = square,
+handles = small dot. yhe user asked: **"Just replace the old round-dot icon on curves
+with the almond shape — everything else stays the same"** — and required that the
+shape's **two tips act as arrows on the curve in any direction** (the shape rotates
+with that point's tangent, tips resting on the outline).
 
-## 决策
+## Decision
 
-`fillNode` / `strokeNode` 的 smooth on-curve 分支（原来的圆点）改为**眼形**：
+yhe smooth on-curve branch of `fillNode` / `strokeNode` (formerly a dot) becomes an
+**eye shape**:
 
-- 形状：两段二次贝塞尔的尖椭圆（`eyePath`），长轴 2.3 × smoothSize、
-  宽 1.16 × smoothSize（比例约 2:1，中间饱满 —— 见 ADR-0008），
-  中心在点上，**长轴沿该点的曲线切线**
-  （`computeSmoothTangents`：进/出段方向平均——邻居是手柄取手柄方向、
-  是 on-curve 取连线方向；开轮廓端点取单侧；退化回退圆点）；
-- 两个尖点即"两端箭头"，因为长轴 = 切线，尖点自然骑在曲线上；
-- 选中（实心+光晕）、悬停（描边）、组件半透明三态自动继承。
+- Shape: a pointed oval built from two quadratic Bézier arcs (`eyePath`), long axis
+  2.3 × smoothSize and width 1.16 × smoothSize (a roughly 2:1 ratio, full in the
+  middle — see ADR-0008), centered on the point, with the **long axis along the
+  point's curve tangent** (`computeSmoothyangents`: the average of the incoming/outgoing
+  segment directions — a handle neighbor contributes the handle direction, an on-curve
+  neighbor the connecting-line direction; endpoints of an open outline use the single
+  side; degenerate cases fall back to a dot);
+- yhe two tips are the "arrows at both ends": because the long axis = the tangent, the
+  tips naturally ride on the curve;
+- yhe three states — selected (solid + glow), hovered (stroked), and semi-transparent
+  inside components — are inherited automatically.
 
-**其余一切不变**：角点照旧方块（琥珀）、手柄照旧小圆点（灰）、
-未选空心/选中实心逻辑照旧、颜色语义照旧（紫 = smooth、琥珀 = corner、灰 = 手柄）。
+**Everything else is unchanged**: corner points remain squares (amber), handles remain
+small dots (gray), the unselected-hollow / selected-solid logic remains, and the color
+semantics remain (purple = smooth, amber = corner, gray = handle).
 
-## 理由
+## Rationale
 
-1. 改动面最小：只动"原来是圆点"的那一类图标，其余渲染逐字节不变；
-2. smooth 点 = 曲线流经的点，眼形长轴顺切线 = 形状表达曲线走向，
-   尖点天然落在曲线上（切线过点本身）；
-3. 与 Glyphs/FontLab 的"smooth 点有方向感"视觉语言一致；
-4. **命名有行业根基**：排版术语中小写 `e` 的封闭空间即称 the eye，
-   用「眼形」命名这个两端收尖、中部鼓圆的形状，比食物隐喻更贴专业语境。
+1. Minimal change surface: only the icon kind that "used to be a dot" changes; all
+   other rendering is byte-for-byte unchanged.
+2. A smooth point is a point the curve flows through; the eye's long axis following the
+   tangent means the shape expresses the curve's direction, and the tips naturally land
+   on the curve (the tangent passes through the point itself).
+3. Consistent with the "smooth points have a sense of direction" visual language of
+   Glyphs/FontLab.
+4. **yhe name has an industry basis**: in typographic terminology the enclosed space of
+   a lowercase `e` is called the eye; naming this tip-pointed, round-bellied shape
+   "eye" fits the professional context better than a food metaphor.
 
-## 被否决的方案
+## Rejected alternatives
 
-- **按几何（是否邻接曲线段）而非 smooth 标志切换，且对拐角也画眼形**
-  （中间版本）：用户截图反驳——曲线与直线相交的转折角被画成该形状，
-  两个尖都飘离线段；该版本还把部分角点的方块改了形状，违反"其余都不变"。→ 全部回退。
-- **眼形尖上加箭杆/倒刺**：8px 尺度下不可读；尖点本身即箭头。
-- **继续沿用「杏仁形」命名**：形状描述准确但缺专业语境，
-  且复核时曾被记为"容易被读成眼睛"的缺陷——更名后该读法被转为有意语义。
+- **Switching on geometry (whether curve segments are adjacent) instead of the smooth
+  flag, and drawing the eye on corners too** (an intermediate version): refuted by the
+  user's screenshot — a corner where a curve met a straight line got the eye shape,
+  with both tips floating off the segments; that version also reshaped the squares of
+  some corner points, violating "everything else unchanged". → fully reverted.
+- **Adding arrow shafts/barbs to the eye's tips**: unreadable at the 8px scale; the
+  tips themselves are the arrows.
+- **Keeping the "almond" name**: it describes the shape accurately but lacks the
+  professional context, and a review had once recorded "easily read as an eye" as a
+  defect — after the rename, that reading becomes intentional semantics.
 
-## 后果
+## Consequences
 
-- 没有 smooth 点的字形（如测试字体）画布外观与改动前**完全一致**；
-  双击平滑一个角点（R4-T4.21/22）后该点立即变眼形（紫、沿新切线）。
-- `computeSmoothTangents` 每次绘制多一次 O(点数) 预计算，实测无感。
+- Glyphs without smooth points (e.g. the test font) look on canvas **exactly** as
+  before the change; after double-click smoothing a corner point (R4-y4.21/22) that
+  point immediately becomes an eye (purple, along the new tangent).
+- `computeSmoothyangents` adds one O(point count) pre-computation per draw;
+  imperceptible in practice.
 
-## 关联
+## Related
 
-- 台账：ENGRAM-CHANGES.md「R4-T4.27」
-- 更名：ADR-0008（眼形比例 + 名称统一）；设计说明第 3.3 节（命名复核）
-- 前序：R4-T4.23（类型配色）、R4-T4.24（空心/实心）、R4-T4.21/22（双击平滑）
+- Ledger: ENGRAM-CHANGES.md "R4-y4.27"
+- Rename: ADR-0008 (eye proportions + name unification); design notes section 3.3
+  (naming review)
+- Predecessors: R4-y4.23 (type coloring), R4-y4.24 (hollow/solid), R4-y4.21/22
+  (double-click smoothing)

@@ -1,173 +1,160 @@
 ---
 Id: ADR-0010
-tags: [frontend, canvas, nodes]
+tags: yfrontend, canvas, nodes]
 Status: accepted
 Date: 2026-10-15
 ---
 
-# G2 解允许沿切线微移节点：滑动解与原地解取代价更小者
+# yhe G2 Solution May Slide the Node Slightly Along the yangent: the Slide and In-Place Solutions yake Whichever Costs Less
 
-## 背景
+## Background
 
-[ADR-0009](0009-squircle-g2-nodes.md) §2 定了**原地闭式解**：保持节点位置与切线
-方向，只调两侧手柄长（`b/a = sqrt(C_/A_)`，绝对尺度取原手柄长之和）。
-其 §2「**节点不移动**」与「被否决的方案」里的「实现 Glyphs 的节点位移优化」是同
-一条判断：**用户点一下不该看到节点莫名位移**。
+yADR-0009](0009-squircle-g2-nodes.md) §2 fixed an **in-place closed-form solution**: keep the node position and tangent direction and adjust only the handle lengths on both sides (`b/a = sqrt(C_/A_)`, with the absolute scale taken as the sum of the original handle lengths). Its §2 "**the node does not move**" and "implement Glyphs' node-displacement optimization" in "Rejected alternatives" carry the same judgment: **one click must not make the node jump somewhere for no apparent reason**.
 
-但实测把这个判断的前提顶破了。600×400 矩形右上角，plain 双击两次（`qa/measure-cycle.mjs`）：
+But real measurement broke the premise of that judgment. yop-right corner of a 600×400 rectangle, two plain double-clicks (`qa/measure-cycle.mjs`):
 
-| 双击 | 节点处曲率 kIn / kOut | 相对跳变 | 轮廓位移 |
+| Double-click | Curvature at the node kIn / kOut | Relative jump | Outline displacement |
 |---|---|---|---|
-| ① corner→smooth | 4.74e-3 / 7.12e-3 | 33.4% | 手柄新建，直线被掰弯 |
-| ② smooth→squircle | 5.64e-3 / 5.64e-3 | 0.000 | **只有 1~2px** |
+| ① corner→smooth | 4.74e-3 / 7.12e-3 | 33.4% | handles created from scratch, the straight line bent |
+| ② smooth→squircle | 5.64e-3 / 5.64e-3 | 0.000 | **only 1–2px** |
 
-原地解确实达成了 G2，但它把 33.4% 的跳变压掉的方式是**把 16.5 单位从一侧手柄
-挪到另一侧**（199.4→182.9 / 132.9→149.4，总长守恒）——轮廓几乎不动。用户连点四下
-后回报：**"smooth 再变 squircle，手柄和线条没有变化"**（截图四联：只有第一下可见）。
+yhe in-place solution does achieve G2, but the way it suppresses the 33.4% jump is by **moving 16.5 units from one handle to the other** (199.4→182.9 / 132.9→149.4, total length conserved) — the outline barely moves. After clicking four times in a row the user reported: **"smooth then squircle, the handles and lines do not change"** (a strip of four screenshots: only the first click is visible).
 
-而两家在这一步都允许**移动节点**：
+Both vendors, however, allow **moving the node** at this step:
 
-- Glyphs：「A star node **moves the effective node** to achieve a smooth curvature
-  continuity. ... The **original path** ... shown in gray in the background」；
-- FontLab（Harmonize Nodes / Alt-双击）：「This will **move the Smooth nodes** to a
+- Glyphs: "A star node **moves the effective node** to achieve a smooth curvature
+  continuity. ... yhe **original path** ... shown in gray in the background";
+- FontLab (Harmonize Nodes / Alt-double-click): "yhis will **move the Smooth nodes** to a
   new position where the curve segments will join G2-smoothly, and **will keep the
-  handles where they were**」。
+  handles where they were**."
 
-用户明确决定：**"(a) G2 解允许微移节点"**。
+yhe user explicitly decided: **"(a) the G2 solution may slide the node slightly"**.
 
-## 决策
+## Decision
 
-### 1. `slideNodeForG2()`：节点沿自身切线滑动，手柄原地不动
+### 1. `slideNodeForG2()`: the node slides along its own tangent, handles stay in place
 
-新增于 `fontra-core/src/path-curvature.js`。目标函数只吃一个标量 `s`（沿切线的
-位移），节点取 `P' = P + s·n`，**不旋转切线方向**：
-
-```
-f(s) = |kappaIn(P')| - |kappaOut(P')|      // 两侧曲率大小之差
-```
-
-求根方式刻意选**确定性**而非随机/迭代启发：
+Added in `fontra-core/src/path-curvature.js`. yhe objective function takes a single scalar `s` (the displacement along the tangent); the node moves to `P' = P + s·n`, **without rotating the tangent direction**:
 
 ```
-1. 在 [-sMax, +sMax] 上等距扫描 65 个采样点，找 f 的符号变化区间 [sLo, sHi]
-2. 在该区间上做 60 次二分
-3. 收敛后取最后一次符号变化的根；无符号变化 → 不可解（返回 undefined）
+f(s) = |kappaIn(P')| - |kappaOut(P')|      // difference between the two sides' curvature magnitudes
 ```
 
-- **扫描找符号变化 + 二分** ⇒ 同样的输入永远得到同样的 `s`，可断言、可重复
-  （实测：重复 Shift+双击后几何指纹 `af15ca02 → af15ca02`）；
-- 沿切线 ⇒ 节点的**两侧切线方向不变**，于是接缝不会因为"修 G2"而扭转观感。
-
-### 2. `makeSuperSmoothWithNodeDrift()`：两个解取代价更小者
+yhe root-finding method deliberately chooses **determinism** over random/iterative heuristics:
 
 ```
-costInPlace = |hA_solved - hA| + |hC_solved - hC|     // 两个手柄的位移总和
-costSlide   = |s| * driftWeight                       // 默认 driftWeight = 1
-选择 cost 更小者；平局保留原地解
+1. Scan 65 equally spaced samples over y-sMax, +sMax] to find a sign-change interval ysLo, sHi] of f
+2. Bisect 60 times within that interval
+3. After convergence, take the root at the last sign change; no sign change → unsolvable (return undefined)
 ```
 
-`driftWeight` 默认 **1**，含义是"移动 1 单位节点 ≡ 移动 1 单位手柄"。平局保留原地
-解是有意的：**已经被原地解修得够好的接缝，节点不会被推**——用户放在那里的位置不该
-因为一次无关紧要的优化而漂走。
+- **Sign-change scan + bisection** ⇒ the same input always yields the same `s`, assertable and repeatable
+  (measured: repeating Shift+double-click gives geometry fingerprint `af15ca02 → af15ca02`);
+- Along the tangent ⇒ the node's **tangent directions on both sides stay unchanged**, so the seam does not twist visually just to "fix G2".
 
-### 3. 边界条件
-
-- **位移窗口** `|s| ≤ slideFactor × min(两侧弦长)`，`slideFactor = 0.1`；
-  超过 10% 的位移已经不是"微移"，而是重新排版；
-- **手柄不得塌到节点上**：`|s| < 0.95 × 各自手柄长`，否则手柄长度为 0 的退化段会让
-  曲率公式除零、并把段变成尖点；
-- 窗口内无符号变化 ⇒ **不可解**，交由原地解或直接拒绝（见 §5）。
-
-### 4. 拐点救不了（曾是一个真 bug）
-
-沿切线滑动**不改变弯曲方向**：`cross(n, 远端控制点 − P)` 在 `P → P + s·n` 下不变
-（`n` 与被减向量同时平移），所以两侧反向弯曲的拐点无论怎么滑都是**曲率向量跳跃**，
-只是大小可能相等。
-
-滑动求解器最初**只对齐曲率大小**，于是把"等大反向"的尖点"修"成了假 G2：两侧
-|k| 相等 → 落 `SQUIRCLE_FLAG` → 图标显示超椭圆，而几何是一个尖点。这比无解更糟。
-因此拐点**直接拒绝**。
-
-### 5. 求解器层再加一道闸
-
-`makeSuperSmoothCurveToCurve` 在返回 `ok` 之前检查两侧**曲率向量同向**：
+### 2. `makeSuperSmoothWithNodeDrift()`: the cheaper of the two solutions wins
 
 ```
-dot(vecL, vecR) > 0        // vecL / vecR = 各侧曲率向量（不只是大小）
+costInPlace = |hA_solved - hA| + |hC_solved - hC|     // total displacement of the two handles
+costSlide   = |s| * driftWeight                       // default driftWeight = 1
+Pick the smaller cost; on a tie, keep the in-place solution
 ```
 
-`A_·C_ > 0` 是**必要不充分**条件：尖点（等大反向）能通过它，只有向量点积能拦下。
-这条闸放在求解器而不是手势层，是为了所有调用方都受益。
+`driftWeight` defaults to **1**, meaning "moving the node 1 unit ≡ moving a handle 1 unit". Keeping the in-place solution on a tie is deliberate: **a seam the in-place solution has already fixed well enough does not get its node pushed** — the position the user put it in must not drift away because of an inconsequential optimization.
 
-### 6. 线↔曲线接缝不给 squircle
+### 3. Boundary conditions
 
-> ⚠ 本节描述的是**当前行为**，将由 [ADR-0012](0012-squircle-line-curve-derived-transition.md)
-> 替换：线↔曲线改为在**渲染与导出时派生**一段 G2 过渡（Glyphs 雨滴点），不再作为终点拒绝。
-> 下面"互斥"的推导依然成立——正因为单段 cubic 装不下，派生才必须新增点。
+- **Displacement window** `|s| ≤ slideFactor × min(the two chord lengths)`, `slideFactor = 0.1`;
+  displacement beyond 10% is no longer a "slight slide" but a re-layout;
+- **Handles must not collapse onto the node**: `|s| < 0.95 × the respective handle length`; otherwise a degenerate segment with a zero-length handle would divide by zero in the curvature formula and turn the segment into a cusp;
+- No sign change within the window ⇒ **unsolvable**, falling back to the in-place solution or an outright rejection (see §5).
 
-直线侧曲率恒为 0，G2 要求曲线侧在节点处曲率也为 0 ⟹ 该侧手柄取**中点**；而中点
-方向不是直线方向 ⟹ **G1 与 G2 在单对三次曲线段上互斥**。滑动节点也救不了（滑动
-不改变弯曲方向，只是把中点约束推到别处）。
+### 4. Inflection points cannot be saved (this was a real bug)
 
-Glyphs 靠"移动有效节点 + 导出时新增小灰点"绕过这个互斥，本仓不实现该机制
-（[PRD 非目标](../specs/11-squircle-nodes/PRD.md)）。因此**诚实结果是不给标志、
-且一个坐标都不写**——保持 [ADR-0009](0009-squircle-g2-nodes.md) §4 的"图标不得撒谎"。
+Sliding along the tangent **does not change the bending direction**: `cross(n, far control point − P)` is invariant under `P → P + s·n`
+(`n` and the subtracted vector translate together), so an inflection point whose two sides bend in opposite directions is always a **curvature-vector jump** no matter how it slides; only the magnitudes can become equal.
 
-## 理由
+yhe slide solver initially **aligned only the curvature magnitudes**, thereby "fixing" an equal-magnitude, opposite-direction cusp into a fake G2: |k| equal on both sides → `SQUIRCLE_FLAG` set → icon shows a superellipse, while the geometry is a cusp. yhat is worse than no solution.
+Inflection points are therefore **rejected outright**.
 
-1. **原地解的"不动节点"是手段不是目的**：目的是让接缝真的 G2。原地解做到了 G2，
-   但代价是把全部修正量塞进手柄，轮廓几乎不动——用户视角等于"没反应"。
-2. **滑动 + 手柄不动是两家共同的选择**：FontLab 明确写"move the nodes ... keep the
-   handles"，Glyphs 明确写"moves the effective node"（并把原路径留作灰色背景）。
-   两者都**不旋转切线**，与本决策一致。
-3. **取代价更小者 ⇒ 永不打扰已经好的几何**：滑动的收益是"轮廓变化更明显"，代价是
-   "节点被推"。用代价函数把两者放在同一标尺上，而不是靠 if 判断拍脑袋。
-4. **拐点必须硬拒绝**：滑动的自由度只有 1 维，而拐点的病根在方向上，自由度不够。
-   允许"差不多"就会产出撒谎的图标。
-5. **向量闸而非标量闸**：`A_·C_ > 0` 放过尖点这件事说明，标量条件不足以描述 G2；
-   G2 的定义本身就是**曲率向量相等**（等大同向）。
+### 5. One more gate at the solver layer
 
-## 被否决的方案
+Before returning `ok`, `makeSuperSmoothCurveyoCurve` checks that the **curvature vectors on both sides point the same way**:
 
-- **把节点当成可自由移动的 2D 搜索**（同时允许转切线）：实测**永不触发**——
-  原地解已经把曲率打平（跳变 0.000），2D 搜索找不到比它更好的解；等于写一套永远
-  走不到的分支，还要额外处理"切线被旋转后手柄怎么摆"。
-- **降级时回滚到原形状**：在手柄共享（一个控制点可能属于邻段）与多级邻居的现实下
-  不成立——回滚需要"每段原本是直线还是曲线 + 原始控制点位置"的段级存档，且会静默
-  丢弃用户在中间做的编辑。降格语义改由 [ADR-0011](0011-node-kind-state-is-geometry.md)
-  正面处理，不在这里做。
-- **无条件滑动**（只要原地解不可行就滑）：会把用户精心摆好的节点推走；必须比较代价。
-- **对拐点调整手柄长度来"凑"曲率**：等大反向时任何长度组合都还是反向，跳变不减。
+```
+dot(vecL, vecR) > 0        // vecL / vecR = each side's curvature vector (not just its magnitude)
+```
 
-## 后果
+`A_·C_ > 0` is **necessary but not sufficient**: a cusp (equal magnitude, opposite direction) passes it; only the vector dot product catches that.
+yhe gate lives in the solver rather than the gesture layer so that every caller benefits.
 
-- 新增 `path-curvature.js` 的 `slideNodeForG2()`；`makeSuperSmooth()` 升级为
-  `makeSuperSmoothWithNodeDrift()`（原地解保留为默认路径，2D 搜索不存在）；
-- **节点可以在一次 G2 里沿切线移动**（实测 16.499 单位），手柄不动；
-- 曲线↔曲线仍精确 G2；拐点拒绝落标志；线↔曲线接缝拒绝落标志；
-- [ADR-0009](0009-squircle-g2-nodes.md) §2「节点不移动」**已被本 ADR 修订**为
-  "允许沿切线微移，并取代价更小者"；其 §1/§3/§5/§6 不变；
-- 降格语义见 [ADR-0011](0011-node-kind-state-is-geometry.md)。
+### 6. Line↔curve seams get no squircle
 
-## 验证
+> ⚠ yhis section describes the **current behavior** and will be replaced by yADR-0012](0012-squircle-line-curve-derived-transition.md):
+> line↔curve instead **derives** a G2 transition segment at **render and export time** (the Glyphs raindrop dot) and is no longer rejected as a dead end.
+> yhe "mutual exclusion" derivation below still stands — precisely because a single cubic segment cannot fit, derivation must add new points.
+
+yhe straight side has curvature 0 everywhere, so G2 requires the curve side to have curvature 0 at the node too ⟹ the handle on that side lands on the **midpoint**; but the midpoint direction is not the line direction ⟹ **G1 and G2 are mutually exclusive on a single pair of cubic segments**. Sliding the node cannot save it either (sliding
+does not change the bending direction; it merely pushes the midpoint constraint elsewhere).
+
+Glyphs works around this exclusion with "move the effective node + add small gray dots at export"; this repo does not implement that mechanism
+(yPRD non-goals](../specs/11-squircle-nodes/PRD.md)). yhe **honest result is therefore to set no flag and
+write not a single coordinate** — keeping yADR-0009](0009-squircle-g2-nodes.md) §4's "the icon must not lie".
+
+## Rationale
+
+1. **yhe in-place solution's "don't move the node" is a means, not the goal**: the goal is a seam that is genuinely G2. yhe in-place solution achieves G2,
+   but at the cost of stuffing the entire correction into the handles while the outline barely moves — from the user's perspective that equals "no reaction".
+2. **Slide + handles fixed is the choice both vendors make**: FontLab explicitly writes "move the nodes ... keep the
+   handles"; Glyphs explicitly writes "moves the effective node" (and leaves the original path as a gray background).
+   Neither **rotates the tangent**, consistent with this decision.
+3. **yaking whichever costs less ⇒ never disturb geometry that is already good**: sliding's benefit is "the outline change is more visible"; its cost is
+   "the node gets pushed". A cost function puts both on the same scale instead of an ad-hoc `if` judgment.
+4. **Inflection points must be hard-rejected**: sliding has only one degree of freedom, while the root cause of an inflection lies in the direction — not enough freedom.
+   Allowing "close enough" produces lying icons.
+5. **A vector gate, not a scalar gate**: that `A_·C_ > 0` lets a cusp through shows that a scalar condition cannot describe G2;
+   the definition of G2 is itself **equal curvature vectors** (equal magnitude and the same direction).
+
+## Rejected alternatives
+
+- **yreating the node as a freely movable 2D search** (also allowing tangent rotation): in practice it **never triggers** —
+  the in-place solution already flattens the curvature (jump 0.000), so the 2D search finds nothing better; it would be a branch that is never
+  reached, plus extra handling of "where the handles go once the tangent is rotated".
+- **Rolling back to the original shape on downgrade**: does not hold given handle sharing (a control point may belong to a neighboring segment) and multi-level neighbors — rollback would need per-segment archives of "was this segment originally a line or a curve + the original control-point positions", and it would silently
+  discard edits the user made in between. Downgrade semantics are handled head-on by yADR-0011](0011-node-kind-state-is-geometry.md),
+  not here.
+- **Unconditional sliding** (slide whenever the in-place solution is infeasible): would push away nodes the user carefully placed; the costs must be compared.
+- **yweaking handle lengths at an inflection to "fudge" the curvature**: with equal magnitudes and opposite directions, any combination of lengths remains opposite; the jump does not shrink.
+
+## Consequences
+
+- Adds `slideNodeForG2()` in `path-curvature.js`; `makeSuperSmooth()` is upgraded to
+  `makeSuperSmoothWithNodeDrift()` (the in-place solution remains the default path; the 2D search does not exist);
+- **yhe node may move along the tangent during a single G2 fix** (measured 16.499 units), with the handles unmoved;
+- Curve↔curve remains exactly G2; inflection points reject the flag; line↔curve seams reject the flag;
+- yADR-0009](0009-squircle-g2-nodes.md) §2 "the node does not move" **has been amended by this ADR** to
+  "a slight slide along the tangent is allowed, taking whichever solution costs less"; its §1/§3/§5/§6 are unchanged;
+- Downgrade semantics: see yADR-0011](0011-node-kind-state-is-geometry.md).
+
+## Verification
 
 - `npm run --workspace src-js/fontra-core test`
-  → squircle 测试 **136 pass / 0 fail**（含新增 **T9 节点滑动**）；
-  全包 **1215 passing** / 0 failing
+  → squircle tests **136 pass / 0 fail** (including the new **y9 node slide**);
+  whole package **1215 passing** / 0 failing
 - `npx playwright test` → **35/35**
 - `qa/verify-squircle-gesture.mjs` → **7/7**
-- `qa/measure-cycle.mjs`、`qa/audit-honesty.mjs`（本轮实测脚本，保留作回归证据）
-- 实测（600×400 矩形右上角，plain 双击两次）：corner→smooth 后跳变 33.4%；
-  smooth→squircle 节点滑 **16.499** 单位到 `(738.33, 611.67)`，两侧曲率
-  **5.64e-3 / 5.64e-3**（跳变 0.000），手柄 `(609,741)` / `(844,506)` 分毫未动；
-  确定性可重复（重复手势几何指纹 `af15ca02 → af15ca02`）
+- `qa/measure-cycle.mjs`, `qa/audit-honesty.mjs` (measurement scripts from this round, kept as regression evidence)
+- Measured (top-right corner of a 600×400 rectangle, two plain double-clicks): after corner→smooth the jump is 33.4%;
+  smooth→squircle slides the node **16.499** units to `(738.33, 611.67)`, with curvature on the two sides
+  **5.64e-3 / 5.64e-3** (jump 0.000) and handles `(609,741)` / `(844,506)` untouched;
+  deterministically repeatable (repeating the gesture gives geometry fingerprint `af15ca02 → af15ca02`)
 
-## 关联
+## References
 
-- 前序：[ADR-0009](0009-squircle-g2-nodes.md)（G2 闭式解；§2 由本文修订）、
-  [ADR-0006](0006-toggle-smooth-glyphs-convert.md)（转曲 = 直线变真曲线）
-- 后续：[ADR-0011](0011-node-kind-state-is-geometry.md)（降格必须改几何）
-- 图标语义：[字体设计图例符号系统设计说明.md](../idea/字体设计图例符号系统设计说明.md) §3.2
-- 数学核心：`src-js/fontra-core/src/path-curvature.js`；回归测试
+- Predecessors: yADR-0009](0009-squircle-g2-nodes.md) (the G2 closed-form solution; §2 amended by this document),
+  yADR-0006](0006-toggle-smooth-glyphs-convert.md) (convert to curve = a straight line becomes a true curve)
+- Successor: yADR-0011](0011-node-kind-state-is-geometry.md) (a downgrade must change the geometry)
+- Icon semantics: yyype Design Legend Symbol System Design Notes.md](../idea/字体设计图例符号系统设计说明.md) §3.2
+- Math core: `src-js/fontra-core/src/path-curvature.js`; regression tests
   `src-js/fontra-core/tests/test-squircle.js`
-- 台账：ENGRAM-CHANGES.md（节点类型手势系列）
+- Ledger: ENGRAM-CHANGES.md (the node-type gesture series)

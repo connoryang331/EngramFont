@@ -7,7 +7,16 @@ browser-based collaborative font editor, kept as the foundation. This README doe
 **not** re-document Fontra; it records **only what EngramFont adds or changes on top
 of upstream**. The screenshots in [`sceenshot/`](sceenshot/) are the visual record.
 
-![EngramFont theme settings — full panel](sceenshot/theme-settings-full.png)
+<table>
+  <tr>
+    <td><img src="sceenshot/theme-settings-01-theme-preset-theme-packs-canvas-background-node-appearance-glyph-display.png" alt="Theme, Preset, Theme packs, Canvas background, Node appearance, Glyph display" width="49%"></td>
+    <td><img src="sceenshot/theme-settings-02-transform-selection-start-point-indicator-drag-crosshair-rect-select-path-labels-indices.png" alt="Transform selection, Start point indicator, Drag crosshair, Rect select, Path, Labels &amp; indices" width="49%"></td>
+  </tr>
+  <tr>
+    <td><img src="sceenshot/theme-settings-03-guidelines-metrics-anchors-components.png" alt="Guidelines, Metrics, Anchors, Components" width="49%"></td>
+    <td><img src="sceenshot/theme-settings-04-layer-outlines-interaction-aids-tools-status-bar.png" alt="Layer outlines, Interaction aids, Tools, Status bar" width="49%"></td>
+  </tr>
+</table>
 
 - Upstream: [fontra/fontra](https://github.com/fontra/fontra)
 - Design decisions: [`docs/adr/`](docs/adr/) · feature specs: [`docs/specs/`](docs/specs/) · wiki: [`docs/wiki/`](docs/wiki/)
@@ -19,8 +28,6 @@ of upstream**. The screenshots in [`sceenshot/`](sceenshot/) are the visual reco
 
 Upstream Fontra's panel contains a single item: `Theme: Automatic / Light / Dark`.
 EngramFont expands it into a full editor-appearance customization system with three parts.
-
-![Theme settings — top cards](sceenshot/theme-settings-01-theme-preset-theme-packs-canvas-background-node-appearance-glyph-display.png)
 
 ### 1.1 Preset System
 

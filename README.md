@@ -168,7 +168,27 @@ which controls keycap corner shape only.
 
 ---
 
-## 4. Repository Map (customization-related)
+## 4. Slanted Selection (Ctrl + drag)
+
+While dragging a rectangular selection, holding **Ctrl** turns the marquee into a
+**parallelogram**: with Ctrl held the drag changes the selection **angle**, and after
+releasing Ctrl the drag keeps that angle and changes size again — mirroring Glyphs'
+slanted selection. The angle is clamped to roughly ±85°.
+
+Hit-testing runs in **shear space**: every candidate geometry (nodes, components,
+anchors, background images) is sheared back by `x -= shearK·(y − y0)`, which exactly
+degenerates the parallelogram into the axis-aligned rectangle the existing per-element
+rect tests already handle — one judgment path instead of four divergent ones.
+Implementation: `scene-model.selectionAtParallelogram`, angle state machine in
+`edit-tools-pointer.handleRectSelect`. See
+[ADR-0003](docs/adr/0003-slanted-selection-shear-space.md) and
+[specs/09](docs/specs/09-slanted-selection/).
+
+![Slanted selection — Ctrl turns the rect marquee into a parallelogram](sceenshot/slanted-selection-ctrl.png)
+
+---
+
+## 5. Repository Map (customization-related)
 
 | Path | Content |
 |---|---|
